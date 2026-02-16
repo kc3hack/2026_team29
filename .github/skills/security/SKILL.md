@@ -17,7 +17,7 @@ description: Security Standard, Vulnerability Prevention (SQLi, XSS, CSRF), IPA 
 日本のIPA（情報処理推進機構）が発行する**『安全なウェブサイトの作り方』**のセキュリティ要件に準拠します。
 実装時は以下のチェックリスト観点を考慮してください（URLの内容を知識として参照すること）。
 
-- 参考: https://www.ipa.go.jp/security/vuln/websecurity/ug65p900000196e2-att/000017316.pdf
+- 参考：IPA「安全なウェブサイトの作り方」PDF（https://www.ipa.go.jp/security/vuln/websecurity/ug65p900000196e2-att/000017316.pdf ）。リンク切れの場合は、IPA公式サイト上で「安全なウェブサイトの作り方」を検索して参照してください。
 
 ## 3. 具体的な実装チェック
 
