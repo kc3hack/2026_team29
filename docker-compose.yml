@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    container_name: my-app-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # ホットリロード用
+    environment:
+      - ENVIRONMENT=development
+
+  frontend:
+    build: ./frontend
+    container_name: my-app-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app # ホットリロード用
+      - /app/node_modules # ホストのnode_modulesと混ざらないように除外
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
