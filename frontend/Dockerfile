@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# M2チップ対応の Node.js イメージを使用
+FROM node:20-slim 
 
 WORKDIR /app
 

@@ -9,8 +9,10 @@ RUN pip install poetry
 COPY pyproject.toml poetry.lock* ./
 
 # 仮想環境を作成せずにシステムにインストール（コンテナ内なので問題なし）
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false
+
+# 依存関係のインストール（詳細なログを出力するために -vv 追加、ルートパッケージを除外）
+RUN poetry install --no-interaction --no-ansi --no-root -vv
 
 # ソースコードのコピー
 COPY . .
