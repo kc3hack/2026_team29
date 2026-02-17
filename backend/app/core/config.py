@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     # API
     API_V1_STR: str = "/api/v1"
 
+    # CORS設定
+    BACKEND_CORS_ORIGINS: list[str] = ["*"]  # 本番環境では具体的なオリジンを指定
+
     # プロジェクト情報
     PROJECT_NAME: str = "Team29 Backend"
 
