@@ -14,7 +14,7 @@ uvicorn = {extras = ["standard"], version = "^0.32.0"}
 [tool.poetry.group.dev.dependencies]
 # Decision: Pin dev dependencies to prevent CI instability
 # Reason: Unpinned versions can introduce breaking changes unexpectedly
-ruff = "^0.8.0"
+ruff = "^0.15.1"
 pytest = "^8.3.0"
 pip-audit = "^2.7.0"  # Security: Pin version for reproducible CI security scans
 
