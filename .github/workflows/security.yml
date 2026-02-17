@@ -35,7 +35,7 @@ jobs:
       # Reason: Scheduled scans should audit entire codebase to prevent blind spots
       - name: Secret Scan
         id: trufflehog
-        uses: trufflesecurity/trufflehog@v3.82.13
+        uses: trufflesecurity/trufflehog@v3.93.3
         with:
           path: ./
           # Note: No base/head specified = full repository scan
