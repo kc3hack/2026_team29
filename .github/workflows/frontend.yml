@@ -46,8 +46,11 @@ jobs:
       - name: Run Lint
         run: npm run lint
 
-      # Note: Security scanning moved to dedicated security.yml workflow (Trivy)
-      # Reason: Centralized security checks with GitHub Code Scanning integration
+      # Decision: Lightweight security check with npm audit (built-in tool)
+      # Reason: Fast vulnerability check (seconds) without blocking PR
+      - name: Security Scan (npm audit)
+        run: npm audit --audit-level=critical || echo "Vulnerabilities found, see Dependabot for details"
+        continue-on-error: true
 
       - name: Run Build
         # This checks for type errors and build capability
