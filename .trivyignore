@@ -1,0 +1,19 @@
+# Trivy ignore patterns
+# Decision: Exclude paths that are not our code or cause noise
+# Reason: Focus on actual application vulnerabilities, not 3rd-party dependencies in node_modules
+
+# Exclude node_modules (managed by Dependabot)
+**/node_modules/**
+
+# Exclude Python virtual environments
+**/.venv/**
+**/venv/**
+
+# Exclude build outputs
+**/dist/**
+**/build/**
+**/.next/**
+
+# Exclude test fixtures
+**/tests/**/__fixtures__/**
+**/test/**/__fixtures__/**
