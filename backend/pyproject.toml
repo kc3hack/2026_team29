@@ -9,7 +9,7 @@ python = "^3.13"
 # Decision: Pin dependencies to specific version ranges (not "*")
 # Reason: Mitigates supply-chain risk from hijacked package updates
 fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.32.0"}
+uvicorn = {extras = ["standard"], version = "^0.41.0"}
 
 [tool.poetry.group.dev.dependencies]
 # Decision: Pin dev dependencies to prevent CI instability
