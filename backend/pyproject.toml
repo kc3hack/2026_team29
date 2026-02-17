@@ -10,6 +10,7 @@ python = "^3.13"
 # Reason: Mitigates supply-chain risk from hijacked package updates
 fastapi = "^0.115.0"
 uvicorn = {extras = ["standard"], version = "^0.32.0"}
+pydantic-settings = "^2.13.0"
 
 [tool.poetry.group.dev.dependencies]
 # Decision: Pin dev dependencies to prevent CI instability

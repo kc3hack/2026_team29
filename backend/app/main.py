@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api import api_router
 
 app = FastAPI(
     title="Team29 Backend API",
@@ -19,11 +20,16 @@ app.add_middleware(
 
 @app.get("/")
 def health_check():
-    """ヘルスチェックエンドポイント"""
-    return {"message": "Hello from Team29 Backend", "status": "ok"}
-
+    """ルートエンドポイント"""
+    return{
+        "Health": "/health",
+        "docs": "/docs",
+        "API": "/api/v1"
+    }
 
 @app.get("/health")
 def health():
     """ヘルスチェック用エンドポイント"""
     return {"status": "ok"}
+
+app.include_router(prefix="/api/v1", router=api_router)

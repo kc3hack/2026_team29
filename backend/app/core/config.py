@@ -1,7 +1,23 @@
 """アプリケーション設定"""
 
-# API バージョン
-API_V1_STR = "/api/v1"
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# プロジェクト情報
-PROJECT_NAME = "Team29 Backend"
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+    # API
+    API_V1_STR: str = "/api/v1"
+
+    # プロジェクト情報
+    PROJECT_NAME: str = "Team29 Backend"
+
+    # データベース
+    DATABASE_URL: str = "sqlite:///./test.db"
+
+
+settings = Settings()
