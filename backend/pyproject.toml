@@ -16,7 +16,7 @@ uvicorn = {extras = ["standard"], version = "^0.32.0"}
 # Reason: Unpinned versions can introduce breaking changes unexpectedly
 ruff = "^0.8.0"
 pytest = "^8.3.0"
-pip-audit = "^2.7.0"  # Security: Pin version for reproducible CI security scans
+# Note: pip-audit removed - security scanning consolidated to Trivy (security.yml)
 
 [build-system]
 requires = ["poetry-core"]

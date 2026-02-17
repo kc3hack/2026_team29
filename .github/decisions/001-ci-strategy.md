@@ -79,6 +79,20 @@ Accepted
   - 修正が存在しない場合や、他の制御で緩和されている場合の対応が必要。
   - 除外には文書化された正当な理由（notes）を必須とし、四半期ごとにレビューする運用を前提とする。
 
+### 10. Trivy Migration (2026-02-17)
+
+- **Decision**: Grype+Syftを廃止し、Trivy + GitHub Code Scanningに移行する。
+- **Reason**:
+  - **パフォーマンス**: Grype (3-5分) → Trivy (30秒)、90%高速化。
+  - **UX改善**: Issue乱立 → GitHub Security タブ統合（Dependabotと同じダッシュボード）。
+  - **ハッカソン最適化**: `exit-code: 0` でCIをブロックせず、結果は永続的にSecurity タブで追跡可能。
+  - **統合**: pip-audit / npm audit を廃止し、Trivyに一元化。
+- **実装**:
+  - `.github/workflows/security.yml` を完全書き換え（Trivy + SARIF upload）。
+  - `.trivyignore` でnode_modules, venv, ビルド成果物を除外。
+  - `.grype.yaml` を削除（不要）。
+  - `backend.yml` / `frontend.yml` から重複スキャンを削除。
+
 ## Consequences
 
 - Backend開発者はローカルでも `ruff` を使用してコード規約を遵守する必要がある。
