@@ -55,7 +55,7 @@ jobs:
       # Reason: Need actual failure signal to trigger issue creation
       - name: Vulnerability Scan
         id: grype
-        uses: anchore/scan-action@v5.1.0
+        uses: anchore/scan-action@v7.3.2
         with:
           sbom: sbom.spdx.json
           fail-build: true # Exit code 1 on vulnerabilities (enables detection)
