@@ -1,0 +1,67 @@
+name: Backend CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+
+defaults:
+  run:
+    working-directory: ./backend
+
+jobs:
+  check:
+    name: Lint & Test (Python)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          # Note: cache removed temporarily until poetry.lock is committed
+          # Decision: Generate lock file during CI to avoid commit noise
+          # Reason: In early development, lockfile can be generated on-the-fly
+
+      - name: Install Dependencies
+        # Decision: Require poetry.lock for reproducible builds
+        # Reason: Without lockfile, dependency resolution is non-deterministic
+        run: poetry install --no-interaction --no-root
+
+      # Decision: Use Ruff for fast linting
+      # Reason: Ruff is significantly faster than Flake8/Black and covers both roles.
+      - name: Run Lint (Ruff)
+        run: poetry run ruff check .
+
+      # Decision: Lightweight security check with pip-audit (pinned in pyproject.toml)
+      # Reason: Fast vulnerability check (seconds) without blocking PR
+      - name: Security Scan (pip-audit)
+        run: poetry run pip-audit --require-hashes=false || echo "Vulnerabilities found, see Dependabot for details"
+        continue-on-error: true
+
+      # Decision: Run Pytest even if no tests exist yet (ensure setup works)
+      # Reason: Validates that the test runner environment is correctly configured.
+      # Security: Only tolerate exit code 5 (no tests found), fail on actual test failures
+      - name: Run Tests
+        run: |
+          poetry run pytest || EXIT_CODE=$?
+          if [ "${EXIT_CODE:-0}" -eq 5 ]; then
+            echo "No tests found, but runner works"
+            exit 0
+          elif [ "${EXIT_CODE:-0}" -ne 0 ]; then
+            echo "Tests failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi

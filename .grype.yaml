@@ -1,0 +1,34 @@
+# Grype Vulnerability Scan Configuration
+# Purpose: Define exceptions for known vulnerabilities with documented justification
+# Decision: Allow exclusion of vulnerabilities with valid business/technical reasons
+# Reason: Not all CVEs apply to our context; some may have no available fix
+
+# Format:
+# ignore:
+#   - vulnerability: CVE-YYYY-XXXXX
+#     fix-state: unknown|fixed|not-fixed|wont-fix
+#     package:
+#       name: package-name
+#       version: version-pattern
+#     notes: |
+#       Justification for ignoring this vulnerability.
+#       Example reasons:
+#       - Not exploitable in our usage pattern
+#       - Mitigated by other controls (WAF, network isolation)
+#       - Awaiting upstream fix (link to issue)
+#       - False positive (explain why)
+
+# Example:
+# ignore:
+#   - vulnerability: CVE-2024-12345
+#     fix-state: not-fixed
+#     package:
+#       name: example-package
+#       version: "1.2.3"
+#     notes: |
+#       This vulnerability affects a feature we do not use (admin panel).
+#       Our application only uses the public API, which is not vulnerable.
+#       Tracking upstream fix: https://github.com/example/example-package/issues/123
+
+# Decision Log: All exceptions must be reviewed quarterly and removed when fixed
+ignore: []
