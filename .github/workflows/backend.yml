@@ -46,11 +46,8 @@ jobs:
       - name: Run Lint (Ruff)
         run: poetry run ruff check .
 
-      # Decision: Lightweight security check with pip-audit (pinned in pyproject.toml)
-      # Reason: Fast vulnerability check (seconds) without blocking PR
-      - name: Security Scan (pip-audit)
-        run: poetry run pip-audit --require-hashes=false || echo "Vulnerabilities found, see Dependabot for details"
-        continue-on-error: true
+      # Note: Security scanning moved to dedicated security.yml workflow (Trivy)
+      # Reason: Centralized security checks with GitHub Code Scanning integration
 
       # Decision: Run Pytest even if no tests exist yet (ensure setup works)
       # Reason: Validates that the test runner environment is correctly configured.
