@@ -10,10 +10,17 @@ app = FastAPI(
 )
 
 # CORS設定
+allow_credentials = True
+if "*" in settings.BACKEND_CORS_ORIGINS or not settings.BACKEND_CORS_ORIGINS:
+    allow_origins = ["*"]
+    allow_credentials = False
+else:
+    allow_origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,  # 本番環境では具体的なオリジンを指定
-    allow_credentials=True,
+    allow_origins=allow_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -22,15 +29,17 @@ app.add_middleware(
 @app.get("/")
 def health_check():
     """ルートエンドポイント"""
-    return{
-        "Health": "/health",
+    return {
+        "health": "/health",
         "docs": "/docs",
-        "API": settings.API_V1_STR
+        "api": settings.API_V1_STR,
     }
+
 
 @app.get("/health")
 def health():
     """ヘルスチェック用エンドポイント"""
     return {"status": "ok"}
+
 
 app.include_router(api_router, prefix=settings.API_V1_STR)

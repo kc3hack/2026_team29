@@ -1,19 +1,22 @@
-from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class UserBase(BaseModel):
     username: str
 
+
 class UserCreate(UserBase):
     pass
+
 
 class User(UserBase):
     id: int
     level: int
     exp: int
     rank: int
-    skills: Optional[list[str]] = []
+    skills: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

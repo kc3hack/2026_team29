@@ -15,6 +15,10 @@ def get_user_by_username(db: Session, username: str) -> User | None:
 def create_user(db: Session, user: UserCreate) -> User:
     db_user = User(username=user.username)
     db.add(db_user)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(db_user)
     return db_user
