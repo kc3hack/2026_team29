@@ -3,6 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.13"
@@ -13,8 +14,9 @@ uvicorn = {extras = ["standard"], version = "^0.32.0"}
 pydantic-settings = "^2.13.0"
 sqlalchemy = "^2.0.46"
 alembic = "^1.18.4"
-# AI/LLM dependencies
+# AI/LLM dependencies (CVE-2025-68664, CVE-2025-65106対策)
 langchain = "^0.3.0"
+langchain-core = "^0.3.81"
 langchain-openai = "^0.2.0"
 langchain-anthropic = "^0.3.0"
 httpx = "^0.28.0"

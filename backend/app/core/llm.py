@@ -5,8 +5,6 @@ LangChainを使用したOpenAI/Anthropic API呼び出しの基盤。
 環境変数でプロバイダーを切り替え可能。
 """
 
-from typing import Any
-
 from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import ChatOpenAI
