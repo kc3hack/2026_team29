@@ -79,6 +79,9 @@ ADRは以下のステータスを持ちます：
 | ID  | タイトル                                           | ステータス | 日付       |
 | --- | -------------------------------------------------- | ---------- | ---------- |
 | 001 | [CI Strategy & Tool Selection](001-ci-strategy.md) | 決定       | 2026-02-17 |
+| 002 | [DB接続基盤とORM選定](002-database-orm-selection.md) | 決定       | 2026-02-19 |
+| 003 | [CRUD実装パターン](003-crud-pattern.md) | 決定       | 2026-02-19 |
+| 004 | [AI基盤とLLM統合戦略](004-ai-infrastructure-langchain.md) | 決定       | 2026-02-19 |
 
 ## 🎯 ADRの目的
 
