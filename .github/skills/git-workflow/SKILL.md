@@ -33,7 +33,48 @@ fix: ユーザー登録時のバリデーションロジックを修正
 自作正規表現よりも保守性とセキュリティが担保されるため。
 ```
 
-## 3. Pull Request (PR) Rules
+## 3. Branch Naming Convention
+
+**必須ルール**: すべてのブランチ名にIssue番号を含めること
+
+### Feature branches（新機能）
+```
+feature/issue-{issue_number}-{short-description}
+```
+**例**:
+- `feature/issue-36-rank-ai`
+- `feature/issue-32-ai-setup`
+- `feature/issue-27-db-setup`
+
+### Bugfix branches（バグ修正）
+```
+fix/issue-{issue_number}-{short-description}
+```
+**例**:
+- `fix/issue-42-login-error`
+
+### Hotfix branches（緊急修正）
+```
+hotfix/{short-description}
+```
+**例**:
+- `hotfix/security-patch`
+- `hotfix/production-crash`
+
+**注**: Issueが存在しない緊急修正のみ、Issue番号なしで可
+
+### 命名ガイドライン
+- `{short-description}`: 3-4単語以内、ケバブケース（kebab-case）
+- 英語推奨、日本語の場合はローマ字
+- ブランチ名だけで内容が推測できること
+
+### 禁止パターン
+- ❌ `feature/new-feature`（Issue番号なし）
+- ❌ `my-branch`（個人名）
+- ❌ `test`（抽象的）
+- ❌ `feature/issue-36`（説明なし）
+
+## 4. Pull Request (PR) Rules
 
 - **Evidence of Functionality (Must)**: 機能追加やバグ修正を行った場合は、**動作を保証する客観的な証拠**を必ずPRに添付してください。証拠がないPRはレビューしません（Closeします）。
   - **UI等の視覚的な変更**: 変更前後のスクリーンショット、または操作動画（GIF/MP4）。
