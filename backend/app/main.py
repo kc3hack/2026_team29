@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.api import api_router
+from app.core.config import settings
 
 app = FastAPI(
     title="Team29 Backend API",
@@ -7,11 +9,18 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# CORS設定（開発環境用）
+# CORS設定
+allow_credentials = True
+if "*" in settings.BACKEND_CORS_ORIGINS or not settings.BACKEND_CORS_ORIGINS:
+    allow_origins = ["*"]
+    allow_credentials = False
+else:
+    allow_origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 本番環境では具体的なオリジンを指定
-    allow_credentials=True,
+    allow_origins=allow_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -19,11 +28,18 @@ app.add_middleware(
 
 @app.get("/")
 def health_check():
-    """ヘルスチェックエンドポイント"""
-    return {"message": "Hello from Team29 Backend", "status": "ok"}
+    """ルートエンドポイント"""
+    return {
+        "health": "/health",
+        "docs": "/docs",
+        "api": settings.API_V1_STR,
+    }
 
 
 @app.get("/health")
 def health():
     """ヘルスチェック用エンドポイント"""
     return {"status": "ok"}
+
+
+app.include_router(api_router, prefix=settings.API_V1_STR)
