@@ -21,6 +21,7 @@ cryptography = "^44.0.0"
 ruff = "^0.8.0"
 pytest = "^8.3.0"
 # Note: pip-audit removed - security scanning consolidated to Trivy (security.yml)
+pytest-cov = "^7.0.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
