@@ -1,11 +1,11 @@
 ---
 name: git-workflow
-description: Git Commit Guidelines (Conventional Commits), Pull Request Templates, Atomic PRs
+description: Git Commit Guidelines (Conventional Commits), Pull Request Templates, Atomic PRs, Evidence Requirements
 ---
 
 # Git & Commit Guidelines
 
-コードの変更理由を明確にするため、以下のルールに従ってコミットメッセージやPRを作成してください。
+コードの変更理由を明確にし、レビューコストを下げるため、以下のルールに従ってコミットメッセージやPRを作成してください。
 
 ## 1. Conventional Commits
 
@@ -35,6 +35,9 @@ fix: ユーザー登録時のバリデーションロジックを修正
 
 ## 3. Pull Request (PR) Rules
 
+- **Evidence of Functionality (Must)**: 機能追加やバグ修正を行った場合は、**動作を保証する客観的な証拠**を必ずPRに添付してください。証拠がないPRはレビューしません（Closeします）。
+  - **UI等の視覚的な変更**: 変更前後のスクリーンショット、または操作動画（GIF/MP4）。
+  - **API/ロジックの変更**: テストスイートがPassしたログ、またはcURL等の実行コマンドとそのレスポンス結果。
 - **Template Compliance**: PR作成時は必ずリポジトリの `PULL_REQUEST_TEMPLATE.md` を使用し、全ての項目（特にセキュリティ自己評価）を埋めてください。
 - **Atomic PRs**: 1つのPRには1つの機能・修正のみを含めてください。巨大なPRはレビュー負荷が高まるため拒否します。
 - **Self-Review**: PRを作成する前に、あなた自身で生成されたコードを見直し、不要なデバッグ出力やコメントアウトされたコードが残っていないか確認してください。
