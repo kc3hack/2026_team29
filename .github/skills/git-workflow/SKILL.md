@@ -18,6 +18,30 @@ description: Git Commit Guidelines (Conventional Commits), Pull Request Template
 - `test:`: テストの追加・修正
 - `chore:`: ビルドプロセスやツールの変更
 
+### Issue番号の記載（必須）
+
+**すべてのコミットメッセージにIssue番号を含めること**
+
+```
+type: #issue-number 簡潔な説明
+```
+
+**例**:
+
+```bash
+feat: #36 ランク判定AI APIエンドポイント追加
+fix: #27 JSON型のミュータブルデフォルト問題を修正
+docs: #40 PRテンプレート拡張とADR導入
+```
+
+**理由**:
+
+- GitHubがコミットを自動的にIssueと紐づける
+- Issue画面でコミット履歴が追跡可能になる
+- レビュワーが文脈をすぐに理解できる
+
+**例外**: 初回コミット（`chore: 初期セットアップ`）やhotfixのみIssue番号なしで可
+
 ## 2. Commit Body (Explain "Why")
 
 変更理由はコード内のコメントではなく、**コミットメッセージの本文（Body）**に記述してください。
@@ -38,37 +62,48 @@ fix: ユーザー登録時のバリデーションロジックを修正
 **必須ルール**: すべてのブランチ名にIssue番号を含めること
 
 ### Feature branches（新機能）
+
 ```
 feature/issue-{issue_number}-{short-description}
 ```
+
 **例**:
+
 - `feature/issue-36-rank-ai`
 - `feature/issue-32-ai-setup`
 - `feature/issue-27-db-setup`
 
 ### Bugfix branches（バグ修正）
+
 ```
 fix/issue-{issue_number}-{short-description}
 ```
+
 **例**:
+
 - `fix/issue-42-login-error`
 
 ### Hotfix branches（緊急修正）
+
 ```
 hotfix/{short-description}
 ```
+
 **例**:
+
 - `hotfix/security-patch`
 - `hotfix/production-crash`
 
 **注**: Issueが存在しない緊急修正のみ、Issue番号なしで可
 
 ### 命名ガイドライン
+
 - `{short-description}`: 3-4単語以内、ケバブケース（kebab-case）
 - 英語推奨、日本語の場合はローマ字
 - ブランチ名だけで内容が推測できること
 
 ### 禁止パターン
+
 - ❌ `feature/new-feature`（Issue番号なし）
 - ❌ `my-branch`（個人名）
 - ❌ `test`（抽象的）
@@ -76,6 +111,13 @@ hotfix/{short-description}
 
 ## 4. Pull Request (PR) Rules
 
+- **Issue Linking (Must)**: すべてのPRは必ずIssueと紐づけてください。
+  - **PR本文の先頭**に `**Issue**: #issue-number` を記載（PRテンプレートのデフォルト形式）
+  - **PR本文の末尾**に以下のキーワードを含めることで、マージ時に自動でIssueをクローズ:
+    - `Closes #issue-number` (機能実装完了)
+    - `Fixes #issue-number` (バグ修正完了)
+    - `Resolves #issue-number` (問題解決完了)
+  - **例**: PR本文末尾に `Closes #36` と記載すると、PRマージ時にIssue #36が自動クローズ
 - **Evidence of Functionality (Must)**: 機能追加やバグ修正を行った場合は、**動作を保証する客観的な証拠**を必ずPRに添付してください。証拠がないPRはレビューしません（Closeします）。
   - **UI等の視覚的な変更**: 変更前後のスクリーンショット、または操作動画（GIF/MP4）。
   - **API/ロジックの変更**: テストスイートがPassしたログ、またはcURL等の実行コマンドとそのレスポンス結果。
