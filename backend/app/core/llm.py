@@ -31,11 +31,16 @@ def get_llm(
         BaseChatModel: LangChain ChatModel
 
     Raises:
-        ValueError: 未サポートのLLMプロバイダー
+        ValueError: 未サポートのLLMプロバイダーまたはAPIキー未設定
     """
     provider = settings.LLM_PROVIDER.lower()
 
     if provider == "openai":
+        if not settings.OPENAI_API_KEY:
+            raise ValueError(
+                "OPENAI_API_KEY is required when LLM_PROVIDER is 'openai'. "
+                "Please set it in your .env file."
+            )
         return ChatOpenAI(
             model=model or settings.OPENAI_MODEL,
             temperature=temperature,
@@ -44,6 +49,11 @@ def get_llm(
             api_key=settings.OPENAI_API_KEY,
         )
     elif provider == "anthropic":
+        if not settings.ANTHROPIC_API_KEY:
+            raise ValueError(
+                "ANTHROPIC_API_KEY is required when LLM_PROVIDER is 'anthropic'. "
+                "Please set it in your .env file."
+            )
         return ChatAnthropic(
             model=model or settings.ANTHROPIC_MODEL,
             temperature=temperature,
@@ -78,7 +88,11 @@ async def invoke_llm(
 
     try:
         response = await llm.ainvoke(prompt)
-        return response.content
+        content = response.content
+        # LangChainの応答がリストの場合があるため文字列変換
+        if isinstance(content, list):
+            content = "".join(str(item) for item in content)
+        return str(content)
     except Exception as e:
         # ログ出力（本番環境ではロギングライブラリ使用推奨）
         print(f"LLM invocation failed: {e}")
@@ -108,7 +122,11 @@ def invoke_llm_sync(
 
     try:
         response = llm.invoke(prompt)
-        return response.content
+        content = response.content
+        # LangChainの応答がリストの場合があるため文字列変換
+        if isinstance(content, list):
+            content = "".join(str(item) for item in content)
+        return str(content)
     except Exception as e:
         print(f"LLM invocation failed: {e}")
         raise

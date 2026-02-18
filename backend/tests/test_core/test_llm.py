@@ -20,7 +20,7 @@ class TestGetLLM:
         """OpenAI LLMの初期化テスト"""
         mock_settings.LLM_PROVIDER = "openai"
         mock_settings.OPENAI_MODEL = "gpt-4o-mini"
-        mock_settings.OPENAI_API_KEY = "test-key"
+        mock_settings.OPENAI_API_KEY = "sk-test-key"
 
         llm = get_llm()
         assert llm is not None
@@ -31,7 +31,7 @@ class TestGetLLM:
         """Anthropic LLMの初期化テスト"""
         mock_settings.LLM_PROVIDER = "anthropic"
         mock_settings.ANTHROPIC_MODEL = "claude-3-5-sonnet-20241022"
-        mock_settings.ANTHROPIC_API_KEY = "test-key"
+        mock_settings.ANTHROPIC_API_KEY = "anthropic-test-key"
 
         llm = get_llm()
         assert llm is not None
@@ -43,6 +43,24 @@ class TestGetLLM:
         mock_settings.LLM_PROVIDER = "unsupported"
 
         with pytest.raises(ValueError, match="Unsupported LLM provider"):
+            get_llm()
+
+    @patch("app.core.llm.settings")
+    def test_get_llm_openai_without_api_key(self, mock_settings):
+        """OpenAI APIキー未設定時はエラー"""
+        mock_settings.LLM_PROVIDER = "openai"
+        mock_settings.OPENAI_API_KEY = ""
+
+        with pytest.raises(ValueError, match="OPENAI_API_KEY is required"):
+            get_llm()
+
+    @patch("app.core.llm.settings")
+    def test_get_llm_anthropic_without_api_key(self, mock_settings):
+        """Anthropic APIキー未設定時はエラー"""
+        mock_settings.LLM_PROVIDER = "anthropic"
+        mock_settings.ANTHROPIC_API_KEY = ""
+
+        with pytest.raises(ValueError, match="ANTHROPIC_API_KEY is required"):
             get_llm()
 
 
