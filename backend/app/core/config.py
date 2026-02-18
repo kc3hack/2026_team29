@@ -22,5 +22,16 @@ class Settings(BaseSettings):
     # データベース
     DATABASE_URL: str = "sqlite:///./test.db"
 
+    # LLM設定
+    LLM_PROVIDER: str = "openai"  # "openai" or "anthropic"
+
+    # OpenAI
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o-mini"
+
+    # Anthropic
+    ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+
 
 settings = Settings()

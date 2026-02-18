@@ -13,6 +13,11 @@ uvicorn = {extras = ["standard"], version = "^0.32.0"}
 pydantic-settings = "^2.13.0"
 sqlalchemy = "^2.0.46"
 alembic = "^1.18.4"
+# AI/LLM dependencies
+langchain = "^0.3.0"
+langchain-openai = "^0.2.0"
+langchain-anthropic = "^0.3.0"
+httpx = "^0.28.0"
 
 [tool.poetry.group.dev.dependencies]
 # Decision: Pin dev dependencies to prevent CI instability
