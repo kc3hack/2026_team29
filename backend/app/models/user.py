@@ -13,7 +13,7 @@ class User(Base):
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)
     rank = Column(Integer, default=0)
-    skills = Column(JSON, default=list)
+    skills = Column(JSON, default=lambda: [])
 
     # タイムスタンプ
     created_at = Column(DateTime(timezone=True), server_default=func.now())
