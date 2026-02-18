@@ -22,5 +22,8 @@ class Settings(BaseSettings):
     # データベース
     DATABASE_URL: str = "sqlite:///./test.db"
 
+    # 暗号化（OAuthトークン保護用）
+    ENCRYPTION_KEY: str = ""  # 本番では必ず.envで設定すること
+
 
 settings = Settings()
