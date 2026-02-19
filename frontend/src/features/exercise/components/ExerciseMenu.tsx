@@ -18,11 +18,22 @@ const TAB_ITEMS = [
 export function ExerciseMenu() {
   const [activeTab, setActiveTab] = useState<TabType>('regular');
 
-  // Dummy data for the cards (9 placeholders for 3x3 grid)
-  const items = Array.from({ length: 9 }).map((_, i) => ({
+  const exercises = [
+    { title: 'Web', image: '/images/exercises/Web.png' },
+    { title: 'Mobile', image: '/images/exercises/Mobile.png' },
+    { title: 'Network', image: '/images/exercises/Network.png' },
+    { title: 'Game', image: '/images/exercises/Game.png' },
+    { title: 'Design', image: '/images/exercises/Design.png' },
+    { title: 'Infrastructure', image: '/images/exercises/Infrastructure.png' },
+    { title: 'AI', image: '/images/exercises/ai.png' },
+    { title: 'Security', image: '/images/exercises/Security.png' },
+    { title: 'Coming Soon...', image: null },
+  ];
+
+  const items = exercises.map((exercise, i) => ({
     id: i,
-    title: i === 0 ? 'Web' : i === 1 ? 'Mobile' : i === 2 ? 'Network' : i === 3 ? 'Game' : i === 4 ? 'Design' : i === 5 ? 'Infrastructure' : i === 6 ? 'AI' : i === 7 ? 'Security' : i === 8 ? 'Coming Soon...':`Exercise ${i + 1}`,
-    image: i === 0 ? '/images/exercises/Web.png' : i === 1 ? '/images/exercises/Mobile.png' : i === 2 ? '/images/exercises/Network.png' : i === 3 ? '/images/exercises/game.png' : i === 4 ? '/images/exercises/Design.png' : i === 5 ? '/images/exercises/Infr.png' : i === 6 ? '/images/exercises/Ai.png' : i === 7 ? '/images/exercises/Security.png' : null,
+    title: exercise.title,
+    image: exercise.image,
   }));
 
   return (
