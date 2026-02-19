@@ -22,14 +22,15 @@ from app.core.config import settings
 @pytest.mark.asyncio
 async def test_analyze_real_user_rank():
     """
-    実際のLLM APIを使用したランク判定テスト
+    実際のLLM APIを使用したランク判定テスト（torvalds: 世界的エンジニア）
 
     検証項目:
     - API呼び出しが成功する
     - JSON形式で正しい応答が返る
     - 必須フィールド（percentile, rank, rank_name, reasoning）が含まれる
-    - percentileが0.0-100.0の範囲内
-    - rankが0-6の範囲内
+    - percentileが0.0-100.0の範囲内（100=最上位、0=最下位）
+    - rankが0-9の範囲内
+    - torvaldsは高ランク（rank 8-9, percentile 99+）が期待される
     """
     # APIキーが設定されているか確認
     if settings.LLM_PROVIDER.lower() == "openai":
@@ -73,11 +74,11 @@ async def test_analyze_real_user_rank():
 @pytest.mark.asyncio
 async def test_analyze_beginner_user():
     """
-    初心者レベルのユーザーでテスト
+    初心者レベルのユーザーでテスト（Progate学習中）
 
     期待結果:
     - rank が 0-2（種子、苗木、若木）の範囲
-    - percentile が低め（0-40程度）
+    - percentile が低め（0-80程度、上位20-100%に該当）
     """
     if settings.LLM_PROVIDER.lower() == "openai":
         if not settings.OPENAI_API_KEY or "REPLACE" in settings.OPENAI_API_KEY:
@@ -108,11 +109,11 @@ async def test_analyze_beginner_user():
 @pytest.mark.asyncio
 async def test_analyze_intermediate_user():
     """
-    中級レベルのユーザーでテスト
+    中級レベルのユーザーでテスト（実務経験あり、個人開発3つ）
 
     期待結果:
-    - rank が 3-4（巨木、母樹）の範囲
-    - percentile が中程度（35-65程度）
+    - rank が 3-5（巨木、母樹、林）の範囲
+    - percentile が中～やや高め（80-95程度、上位5-20%に該当）
     """
     if settings.LLM_PROVIDER.lower() == "openai":
         if not settings.OPENAI_API_KEY or "REPLACE" in settings.OPENAI_API_KEY:

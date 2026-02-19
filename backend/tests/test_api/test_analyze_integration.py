@@ -161,10 +161,10 @@ def test_analyze_rank_endpoint_custom():
     response = client.post(
         "/api/v1/analyze/rank",
         json={
-            "github_username": "your_github_username",
-            "portfolio_text": "あなたのポートフォリオ情報",
-            "qiita_id": "your_qiita_id",
-            "other_info": "その他の活動",
+            "github_username": "Inlet-back",
+            "portfolio_text": "https://www.wantedly.com/id/masachika_ura",
+            "qiita_id": "Inlet-back",
+            "other_info": "現在はFlatt Securityにてエンジニアインターンとして活動中。主な実績・経験；インターンシップ: サイボウズ（PSIRTサマーインターン）、One Career（セキュリティ）など。技術活動: ハッカソンでのPaaS開発（JPHACKS 2025等）、CTFへの参加、バグバウンティ活動。自己研鑽: TryHackMeやHack The Boxを活用したペネトレーションテストやマルウェア解析の学習。",
         },
     )
 
@@ -178,7 +178,9 @@ def test_analyze_rank_endpoint_custom():
 
     print("\n=== Custom User API Response ===")
     print(f"Status Code: {response.status_code}")
-    print(f"Percentile: {data['percentile']} (上位 {100 - data['percentile']:.1f}%)")
+    print(
+        f"Percentile: {data['percentile']:.1f}% (上位 {(100 - data['percentile']):.1f}%)"
+    )
     print(f"Rank: {data['rank']} ({data['rank_name']})")
     print(f"Reasoning: {data['reasoning']}")
     print("=" * 40)

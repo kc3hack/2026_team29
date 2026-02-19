@@ -100,10 +100,10 @@ poetry run pytest tests/test_services/test_rank_service_integration.py::test_ana
 ```
 === LLM Response ===
 {
-  "percentile": 95.0,
-  "rank": 6,
-  "rank_name": "大樹",
-  "reasoning": "Linux kernelの開発者であり、Gitの発明者として世界中のエンジニアに影響を与えています。技術の幅、深さ、継続性、コミュニティへの貢献のすべてにおいて最高レベルです。"
+  "percentile": 99.95,
+  "rank": 9,
+  "rank_name": "世界樹",
+  "reasoning": "Linux kernelの開発者であり、Gitの発明者として世界中のエンジニアに影響を与えています。技術の幅、深さ、継続性、コミュニティへの貢献のすべてにおいて最高レベルです。プレデター級、上位0.05%に位置します。"
 }
 ========================================
 ```
