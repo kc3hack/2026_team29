@@ -29,11 +29,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "category", name="uq_skill_tree_user_category"),
     )
-    op.create_index(op.f("ix_skill_trees_id"), "skill_trees", ["id"], unique=False)
     op.create_index(op.f("ix_skill_trees_user_id"), "skill_trees", ["user_id"], unique=False)
 
 
 def downgrade() -> None:
     op.drop_index(op.f("ix_skill_trees_user_id"), table_name="skill_trees")
-    op.drop_index(op.f("ix_skill_trees_id"), table_name="skill_trees")
-    op.drop_table("skill_trees")

@@ -29,9 +29,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_quests_id"), "quests", ["id"], unique=False)
 
 
 def downgrade() -> None:
-    op.drop_index(op.f("ix_quests_id"), table_name="quests")
     op.drop_table("quests")

@@ -2,7 +2,7 @@ from app.crud.profile import create_profile, get_profile_by_user_id, update_prof
 from app.crud.user import create_user
 from app.schemas.profile import ProfileCreate, ProfileUpdate
 from app.schemas.user import UserCreate
-
+import pytest
 
 def test_create_profile(db):
     user = create_user(db, UserCreate(username="profile_user"))
@@ -46,3 +46,21 @@ def test_update_profile(db):
     )
     assert updated.github_username == "new_gh"
     assert updated.portfolio_url == "https://example.com/portfolio"
+
+def test_update_profile_not_found(db):
+    with pytest.raises(ValueError, match="Profile with id=999 not found"):
+        update_profile(db, 999, ProfileUpdate(github_username="test"))
+
+def test_update_skill_tree_not_found(db):
+    # 存在しないユーザーIDを指定
+    with pytest.raises(ValueError, match="SkillTree not found"):
+        update_skill_tree(
+            db, 
+            user_id=999, 
+            category=SkillCategory.BACKEND, 
+            tree_in=SkillTreeUpdate(tree_data={})
+        )
+
+def test_complete_quest_not_found(db):
+    with pytest.raises(ValueError, match="Quest with id=999 not found"):
+        complete_quest(db, 999)

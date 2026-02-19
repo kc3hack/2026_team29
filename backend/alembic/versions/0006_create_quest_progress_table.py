@@ -31,7 +31,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "quest_id", name="uq_progress_user_quest"),
     )
-    op.create_index(op.f("ix_quest_progress_id"), "quest_progress", ["id"], unique=False)
     op.create_index(op.f("ix_quest_progress_quest_id"), "quest_progress", ["quest_id"], unique=False)
     op.create_index(op.f("ix_quest_progress_user_id"), "quest_progress", ["user_id"], unique=False)
 
@@ -39,5 +38,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index(op.f("ix_quest_progress_user_id"), table_name="quest_progress")
     op.drop_index(op.f("ix_quest_progress_quest_id"), table_name="quest_progress")
-    op.drop_index(op.f("ix_quest_progress_id"), table_name="quest_progress")
     op.drop_table("quest_progress")
