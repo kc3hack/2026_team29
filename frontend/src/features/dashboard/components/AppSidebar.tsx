@@ -22,7 +22,7 @@ export function AppSidebar() {
           return "ml-3 text-lg text-[#D16B36] font-bold";
       }
       return "ml-3 text-lg";
-  }
+  };
 
   return (
     <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 -translate-x-full transition-transform sm:translate-x-0 bg-[#559C71] text-white">
