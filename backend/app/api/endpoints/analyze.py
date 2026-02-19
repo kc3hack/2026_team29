@@ -1,12 +1,25 @@
 """
 ランク判定APIエンドポイント
 
-POST /api/v1/analyze/rank - ユーザーランクの判定
+Issue #35: AI実装Phase 2 - モックAPIエンドポイント
+Issue #36: AI実装Phase 3 - ランク判定AI（LLM実装）
+
+POST /api/v1/analyze/rank - ユーザーランクの判定（LLM実装、issue #36）
+POST /api/v1/analyze/skill-tree - スキルツリー生成（モック実装、issue #35）
+POST /api/v1/analyze/quest - 演習生成（モック実装、issue #35）
 """
 
 from fastapi import APIRouter, HTTPException
-from app.schemas.analyze import RankAnalysisRequest, RankAnalysisResponse
+from app.schemas.analyze import (
+    RankAnalysisRequest,
+    RankAnalysisResponse,
+    SkillTreeRequest,
+    SkillTreeResponse,
+    QuestGenerationRequest,
+    QuestGenerationResponse,
+)
 from app.services.rank_service import analyze_user_rank
+from app.services.mock_ai_service import generate_skill_tree_mock, generate_quest_mock
 
 router = APIRouter()
 
@@ -52,3 +65,105 @@ async def analyze_rank(request: RankAnalysisRequest) -> RankAnalysisResponse:
         return RankAnalysisResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rank analysis failed: {str(e)}")
+
+
+@router.post("/skill-tree", response_model=SkillTreeResponse)
+async def generate_skill_tree(request: SkillTreeRequest) -> SkillTreeResponse:
+    """
+    スキルツリー生成（モック実装 - Issue #35）
+
+    Args:
+        request: スキルツリー生成リクエスト（user_id, category）
+
+    Returns:
+        SkillTreeResponse: スキルツリーデータ（固定レスポンス）
+
+    Note:
+        Phase 3移行時:
+        - user_id から Profile と SkillTree テーブルを参照
+        - LLMでパーソナライズされたロードマップを生成
+        - 学習履歴に基づいて completed フラグを動的に設定
+
+    Example:
+        Request:
+            {
+                "user_id": 1,
+                "category": "web"
+            }
+
+        Response:
+            {
+                "category": "web",
+                "tree_data": {
+                    "nodes": [...],
+                    "edges": [...],
+                    "metadata": {...}
+                },
+                "generated_at": "2026-02-20T12:00:00+09:00"
+            }
+    """
+    try:
+        result = generate_skill_tree_mock(
+            user_id=request.user_id,
+            category=request.category,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Skill tree generation failed: {str(e)}"
+        )
+
+
+@router.post("/quest", response_model=QuestGenerationResponse)
+async def generate_quest(request: QuestGenerationRequest) -> QuestGenerationResponse:
+    """
+    演習生成（モック実装 - Issue #35）
+
+    Args:
+        request: 演習生成リクエスト（user_id, category, difficulty, document_text）
+
+    Returns:
+        QuestGenerationResponse: 演習データ（固定レスポンス）
+
+    Note:
+        Phase 3移行時:
+        - document_text を RAG（Retrieval-Augmented Generation）で使用
+        - user_id から学習履歴を取得し、適切な難易度に調整
+        - LLMで動的に演習内容を生成
+
+    Example:
+        Request:
+            {
+                "user_id": 1,
+                "category": "web",
+                "difficulty": 4,
+                "document_text": "FastAPIのドキュメント..."
+            }
+
+        Response:
+            {
+                "id": 101,
+                "title": "FastAPIで認証付きTodo API構築",
+                "description": "JWT認証を実装した...",
+                "difficulty": 4,
+                "category": "web",
+                "is_generated": true,
+                "steps": [...],
+                "estimated_time_minutes": 120,
+                "resources": [...],
+                "created_at": "2026-02-20T12:00:00+09:00"
+            }
+    """
+    try:
+        result = generate_quest_mock(
+            user_id=request.user_id,
+            category=request.category,
+            difficulty=request.difficulty,
+            document_text=request.document_text,
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Quest generation failed: {str(e)}"
+        )
+
