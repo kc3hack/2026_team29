@@ -1,5 +1,7 @@
 """Pydanticスキーマバリデーションテスト（統合版）"""
 
+from datetime import datetime, timezone
+
 import pytest
 from pydantic import ValidationError
 
@@ -8,6 +10,7 @@ from app.schemas.badge import BadgeCreate
 from app.schemas.oauth_account import OAuthAccountCreate
 from app.schemas.profile import ProfileCreate
 from app.schemas.quest import QuestCreate
+from app.schemas.user import User
 
 
 def test_badge_tier_validation():
@@ -51,3 +54,45 @@ def test_profile_url_validation():
 
     with pytest.raises(ValidationError):
         ProfileCreate(user_id=1, portfolio_url="not-a-url")
+
+
+def test_user_rank_consistency_validation():
+    """User.rank: 経験値と整合性のあるランクのみ許可"""
+    now = datetime.now(timezone.utc)
+
+    # 正常系: exp=0 → rank=0
+    User(
+        id=1,
+        username="test",
+        level=1,
+        exp=0,
+        rank=0,
+        skills=[],
+        created_at=now,
+        updated_at=now,
+    )
+
+    # 正常系: exp=150 → rank=1
+    User(
+        id=2,
+        username="test2",
+        level=2,
+        exp=150,
+        rank=1,
+        skills=[],
+        created_at=now,
+        updated_at=now,
+    )
+
+    # 異常系: exp=0 だが rank=1 は不整合
+    with pytest.raises(ValidationError, match="Rank inconsistency"):
+        User(
+            id=3,
+            username="test3",
+            level=1,
+            exp=0,
+            rank=1,
+            skills=[],
+            created_at=now,
+            updated_at=now,
+        )

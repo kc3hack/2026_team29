@@ -1,6 +1,5 @@
 from app.crud.skill_tree import (
     get_skill_tree_by_user_category,
-    initialize_skill_trees_for_user,
     update_skill_tree,
 )
 from app.crud.user import create_user
@@ -9,32 +8,25 @@ from app.schemas.user import UserCreate
 
 
 def test_initialize_skill_trees_for_user(db):
-    """ユーザー作成時に6カテゴリ全てのSkillTreeが生成される"""
+    """ユーザー作成時に6カテゴリ全てのSkillTreeが自動生成される"""
     user = create_user(db, UserCreate(username="skill_tree_user"))
-    trees = initialize_skill_trees_for_user(db, user.id)
 
-    assert len(trees) == 6
-    categories = {t.category for t in trees}
-    assert categories == {
-        SkillCategory.WEB,
-        SkillCategory.AI,
-        SkillCategory.SECURITY,
-        SkillCategory.INFRASTRUCTURE,
-        SkillCategory.DESIGN,
-        SkillCategory.GAME,
-    }
-    for tree in trees:
+    # create_user()が自動的に6カテゴリを初期化していることを確認
+    for category in SkillCategory:
+        tree = get_skill_tree_by_user_category(db, user.id, category)
+        assert tree is not None
+        assert tree.category == category.value
         assert tree.tree_data == {}
         assert tree.generated_at is None
 
 
 def test_get_skill_tree_by_user_category(db):
     user = create_user(db, UserCreate(username="get_tree_user"))
-    initialize_skill_trees_for_user(db, user.id)
+    # create_user()が自動的にSkillTreeを初期化済み
 
     tree = get_skill_tree_by_user_category(db, user.id, SkillCategory.WEB)
     assert tree is not None
-    assert tree.category == SkillCategory.WEB
+    assert tree.category == SkillCategory.WEB.value
 
 
 def test_get_skill_tree_not_found(db):
@@ -44,7 +36,7 @@ def test_get_skill_tree_not_found(db):
 
 def test_update_skill_tree(db):
     user = create_user(db, UserCreate(username="update_tree_user"))
-    initialize_skill_trees_for_user(db, user.id)
+    # create_user()が自動的にSkillTreeを初期化済み
 
     tree_data = {
         "nodes": [

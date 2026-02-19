@@ -2,6 +2,10 @@
 
 from fastapi import APIRouter
 
+from app.api import admin
+
+from app.api.admin import admin_app
+
 api_router = APIRouter()
 
 # 将来的にエンドポイントを追加する際はここでインクルード

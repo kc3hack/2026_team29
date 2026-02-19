@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
 
+    # Admin API Access Control
+    ADMIN_API_KEY: str = "test"  # 本番では必ず.envで設定すること
+
 
 settings = Settings()
 

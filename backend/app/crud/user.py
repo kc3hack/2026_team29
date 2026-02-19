@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from app.crud.skill_tree import initialize_skill_trees_for_user
 from app.models.user import User
 from app.schemas.user import UserCreate
 
@@ -17,8 +18,10 @@ def create_user(db: Session, user: UserCreate) -> User:
     db.add(db_user)
     try:
         db.commit()
+        db.refresh(db_user)
+        # ユーザー作成時に6カテゴリのSkillTreeを自動初期化
+        initialize_skill_trees_for_user(db, db_user.id)
     except Exception:
         db.rollback()
         raise
-    db.refresh(db_user)
     return db_user
