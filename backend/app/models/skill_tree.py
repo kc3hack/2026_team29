@@ -16,7 +16,7 @@ class SkillTree(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     category = Column(String, nullable=False)
-    tree_data = Column(JSON, default=lambda: {})
+    tree_data = Column(JSON, nullable=False)
     generated_at = Column(DateTime(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="skill_trees")

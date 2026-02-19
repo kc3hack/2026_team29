@@ -31,11 +31,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "provider", name="uq_oauth_user_provider"),
     )
-    op.create_index(op.f("ix_oauth_accounts_id"), "oauth_accounts", ["id"], unique=False)
     op.create_index(op.f("ix_oauth_accounts_user_id"), "oauth_accounts", ["user_id"], unique=False)
 
 
 def downgrade() -> None:
     op.drop_index(op.f("ix_oauth_accounts_user_id"), table_name="oauth_accounts")
-    op.drop_index(op.f("ix_oauth_accounts_id"), table_name="oauth_accounts")
     op.drop_table("oauth_accounts")

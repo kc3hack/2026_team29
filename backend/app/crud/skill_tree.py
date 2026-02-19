@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.models.enums import SkillCategory
 from app.models.skill_tree import SkillTree
@@ -32,6 +33,9 @@ def initialize_skill_trees_for_user(db: Session, user_id: int) -> list[SkillTree
         trees.append(tree)
     try:
         db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise ValueError(f"SkillTree for user_id={user_id} already exists") from e
     except Exception:
         db.rollback()
         raise
