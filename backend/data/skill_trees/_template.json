@@ -1,0 +1,974 @@
+{
+  "WEB": [
+    {
+      "id": "web_html_css",
+      "name": "HTML/CSS基礎",
+      "description": "セマンティックなマークアップと基本的なスタイリング",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "web_http_basics",
+      "name": "HTTPプロトコル基礎",
+      "description": "リクエスト/レスポンス、メソッド、ステータスコードの理解",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "web_js_basics",
+      "name": "JavaScript基礎",
+      "description": "変数、制御構文、基本的なDOM操作",
+      "tier": 2,
+      "required_nodes": ["web_html_css"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_css_fw",
+      "name": "CSSフレームワーク",
+      "description": "Tailwind CSSやBootstrap等を用いた効率的なスタイリング",
+      "tier": 2,
+      "required_nodes": ["web_html_css"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_js_advanced",
+      "name": "モダンJavaScript",
+      "description": "ES6+構文、非同期処理（Promise/async-await）",
+      "tier": 3,
+      "required_nodes": ["web_js_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_a11y_basics",
+      "name": "Webアクセシビリティ基礎",
+      "description": "WAI-ARIAやコントラスト比など、基本的なアクセシビリティ対応",
+      "tier": 3,
+      "required_nodes": ["web_html_css"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_typescript",
+      "name": "TypeScript",
+      "description": "静的型付けによる堅牢なフロントエンド開発",
+      "tier": 4,
+      "required_nodes": ["web_js_advanced"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_build_tools",
+      "name": "ビルドツール・バンドラー",
+      "description": "ViteやWebpackを用いたフロントエンド開発環境の構築",
+      "tier": 4,
+      "required_nodes": ["web_js_advanced"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_spa_fw",
+      "name": "SPAフレームワーク",
+      "description": "ReactやVueを用いたコンポーネント指向UI開発",
+      "tier": 5,
+      "required_nodes": ["web_typescript", "web_build_tools"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_backend_api",
+      "name": "バックエンドAPI開発基礎",
+      "description": "ExpressやFastAPIを用いた基本的なREST APIの構築",
+      "tier": 5,
+      "required_nodes": ["web_http_basics", "web_js_advanced"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_state_management",
+      "name": "状態管理",
+      "description": "ReduxやZustandを用いたグローバルステートの管理",
+      "tier": 6,
+      "required_nodes": ["web_spa_fw"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_db_orm",
+      "name": "DB連携・ORM",
+      "description": "PrismaやSQLAlchemyを用いたデータベース操作",
+      "tier": 6,
+      "required_nodes": ["web_backend_api"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_ssr_ssg",
+      "name": "SSR/SSG (Next.js/Nuxt)",
+      "description": "サーバーサイドレンダリングや静的サイト生成の導入",
+      "tier": 7,
+      "required_nodes": ["web_spa_fw"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_auth",
+      "name": "認証・認可",
+      "description": "OAuth 2.0やJWTを用いたセキュアな認証フローの実装",
+      "tier": 7,
+      "required_nodes": ["web_backend_api"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_graphql_bff",
+      "name": "GraphQL / BFF",
+      "description": "複雑なデータ要件を満たすためのAPI設計とBFFアーキテクチャ",
+      "tier": 8,
+      "required_nodes": ["web_ssr_ssg", "web_auth"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_perf_tuning",
+      "name": "パフォーマンスチューニング",
+      "description": "Core Web Vitalsの改善、レンダリングやバンドルサイズの最適化",
+      "tier": 8,
+      "required_nodes": ["web_ssr_ssg"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_micro_frontends",
+      "name": "マイクロフロントエンド",
+      "description": "大規模チーム向けにフロントエンドを分割・統合するアーキテクチャ",
+      "tier": 9,
+      "required_nodes": ["web_perf_tuning", "web_graphql_bff"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_secure_design",
+      "name": "セキュアフロントエンド設計",
+      "description": "XSSやCSRF対策をアーキテクチャレベルで組み込む設計",
+      "tier": 9,
+      "required_nodes": ["web_auth"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_wasm",
+      "name": "WebAssembly",
+      "description": "Rust等を用いた、ブラウザ上でのネイティブに近い高速演算処理",
+      "tier": 10,
+      "required_nodes": ["web_perf_tuning"],
+      "is_cleared": false
+    },
+    {
+      "id": "web_custom_fw",
+      "name": "独自フレームワーク開発",
+      "description": "仮想DOMやリアクティビティシステムを自作し、コアを設計する",
+      "tier": 10,
+      "required_nodes": ["web_micro_frontends"],
+      "is_cleared": false
+    }
+  ],
+  "SECURITY": [
+    {
+      "id": "sec_net_os_basics",
+      "name": "ネットワーク・OS基礎",
+      "description": "TCP/IP、主要ポート、Linux/Windowsの基本操作と権限管理",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_web_vuln_basics",
+      "name": "Webセキュリティ基礎",
+      "description": "OWASP Top 10（XSS、SQLi等）の原理と基本的な仕組みの理解",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_crypto_basics",
+      "name": "暗号技術基礎",
+      "description": "共通鍵/公開鍵暗号、ハッシュ関数、証明書の仕組み",
+      "tier": 2,
+      "required_nodes": ["sec_net_os_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_reversing_basics",
+      "name": "リバースエンジニアリング基礎",
+      "description": "アセンブリ言語の基礎読解と、簡単なバイナリ解析",
+      "tier": 2,
+      "required_nodes": ["sec_net_os_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_pentest_basics",
+      "name": "ペネトレーションテスト基礎",
+      "description": "診断手法の基礎、スキャンツールの利用とポート探索",
+      "tier": 3,
+      "required_nodes": ["sec_web_vuln_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_log_analysis",
+      "name": "ログ分析・検知基礎",
+      "description": "アクセスログやイベントログからの不審な挙動の特定",
+      "tier": 3,
+      "required_nodes": ["sec_net_os_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_malware_basics",
+      "name": "マルウェア解析基礎",
+      "description": "サンドボックスを用いた動的解析と基礎的な静的解析",
+      "tier": 4,
+      "required_nodes": ["sec_reversing_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_sec_tools",
+      "name": "セキュリティツール運用",
+      "description": "Burp Suite、Nmap、Wireshark等の実践的な操作手法",
+      "tier": 4,
+      "required_nodes": ["sec_net_os_basics", "sec_web_vuln_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_secure_coding",
+      "name": "セキュアコーディング",
+      "description": "脆弱性を生みにくいアーキテクチャ設計とコード実装",
+      "tier": 5,
+      "required_nodes": ["sec_web_vuln_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_net_defense",
+      "name": "ネットワーク防御",
+      "description": "ファイアウォール、IDS/IPS、WAFの導入と運用ルールの設計",
+      "tier": 5,
+      "required_nodes": ["sec_net_os_basics", "sec_log_analysis"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_ctf_wargames",
+      "name": "CTF・実践演習",
+      "description": "実践的な環境での複合的な脆弱性探索とフラグ獲得",
+      "tier": 6,
+      "required_nodes": ["sec_sec_tools", "sec_pentest_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_cloud_sec",
+      "name": "クラウドセキュリティ基礎",
+      "description": "IAMの権限最小化、クラウドリソースの堅牢化",
+      "tier": 6,
+      "required_nodes": ["sec_net_defense"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_bug_bounty",
+      "name": "バグバウンティ基礎",
+      "description": "報奨金プログラムにおける未知の脆弱性探索と適切なレポート作成",
+      "tier": 7,
+      "required_nodes": ["sec_pentest_basics", "sec_ctf_wargames"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_forensics",
+      "name": "デジタルフォレンジック",
+      "description": "インシデント発生時の証拠保全、メモリダンプやディスクの解析",
+      "tier": 7,
+      "required_nodes": ["sec_log_analysis", "sec_malware_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_advanced_pentest",
+      "name": "高度なペネトレーションテスト",
+      "description": "Active Directoryの攻略や、複数システムを跨ぐ水平展開",
+      "tier": 8,
+      "required_nodes": ["sec_bug_bounty", "sec_sec_tools"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_ir",
+      "name": "インシデントレスポンス",
+      "description": "侵害発生時の封じ込め、根絶、復旧プロセスの主導",
+      "tier": 8,
+      "required_nodes": ["sec_forensics", "sec_net_defense"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_psirt",
+      "name": "PSIRT / 脅威モデリング",
+      "description": "製品開発ライフサイクルへのセキュリティ組み込みと脆弱性管理プロセスの運用",
+      "tier": 9,
+      "required_nodes": ["sec_secure_coding", "sec_ir"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_exploit_dev",
+      "name": "エクスプロイト開発",
+      "description": "メモリ破壊脆弱性の突入、ROPチェーン構築、ゼロデイ攻撃の検証",
+      "tier": 9,
+      "required_nodes": ["sec_reversing_basics", "sec_ctf_wargames"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_zero_trust",
+      "name": "ゼロトラストアーキテクチャ",
+      "description": "境界防御に依存しない、エンタープライズ規模の動的認証・認可基盤の設計",
+      "tier": 10,
+      "required_nodes": ["sec_cloud_sec", "sec_psirt"],
+      "is_cleared": false
+    },
+    {
+      "id": "sec_kernel_hw",
+      "name": "カーネル・ハードウェア解析",
+      "description": "OSカーネル層の脆弱性探索や、IoT・ファームウェアの高度なリバースエンジニアリング",
+      "tier": 10,
+      "required_nodes": ["sec_exploit_dev"],
+      "is_cleared": false
+    }
+  ],
+  "INFRASTRUCTURE": [
+    {
+      "id": "infra_linux_admin",
+      "name": "Linuxシステム管理",
+      "description": "ユーザー権限、パッケージ管理、プロセスとファイルシステム",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_net_routing",
+      "name": "ネットワークルーティング基礎",
+      "description": "IPアドレス、サブネット、DNSの基本",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_shell_scripting",
+      "name": "シェルスクリプト",
+      "description": "bashを用いた定型業務の自動化スクリプト作成",
+      "tier": 2,
+      "required_nodes": ["infra_linux_admin"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_virt_basics",
+      "name": "仮想化技術基礎",
+      "description": "ハイパーバイザを用いたVMの構築と管理",
+      "tier": 2,
+      "required_nodes": ["infra_linux_admin", "infra_net_routing"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_docker",
+      "name": "Dockerコンテナ",
+      "description": "Dockerfileの記述とコンテナを用いた環境分離",
+      "tier": 3,
+      "required_nodes": ["infra_linux_admin"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_web_server",
+      "name": "Webサーバー構築",
+      "description": "NginxやApacheを用いたリバースプロキシ設定",
+      "tier": 3,
+      "required_nodes": ["infra_net_routing"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_cicd_basics",
+      "name": "CI/CD基礎",
+      "description": "GitHub Actionsを用いた自動テスト・ビルドの構築",
+      "tier": 4,
+      "required_nodes": ["infra_docker", "infra_shell_scripting"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_db_admin",
+      "name": "データベース運用管理",
+      "description": "PostgreSQL/MySQLのバックアップ、レプリケーション設定",
+      "tier": 4,
+      "required_nodes": ["infra_linux_admin"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_cloud_basics",
+      "name": "パブリッククラウド基礎",
+      "description": "AWS/GCPの主要サービスの活用とネットワーキング",
+      "tier": 5,
+      "required_nodes": ["infra_net_routing", "infra_virt_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_serverless",
+      "name": "サーバーレスアーキテクチャ",
+      "description": "AWS Lambda等を用いたイベント駆動型インフラの構築",
+      "tier": 5,
+      "required_nodes": ["infra_cloud_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_iac",
+      "name": "IaC (Terraform)",
+      "description": "インフラ構成のコード化とバージョン管理の自動化",
+      "tier": 6,
+      "required_nodes": ["infra_cloud_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_config_mgmt",
+      "name": "コンフィグレーション管理",
+      "description": "Ansibleを用いた複数サーバーの設定自動化",
+      "tier": 6,
+      "required_nodes": ["infra_shell_scripting", "infra_web_server"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_observability",
+      "name": "オブザーバビリティ",
+      "description": "Datadog/Prometheusを用いた監視、ログ基盤の構築",
+      "tier": 7,
+      "required_nodes": ["infra_cloud_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_perf_tuning",
+      "name": "OS/DB パフォーマンスチューニング",
+      "description": "カーネルパラメータの調整やスロークエリの改善",
+      "tier": 7,
+      "required_nodes": ["infra_db_admin", "infra_linux_admin"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_k8s_basics",
+      "name": "コンテナオーケストレーション",
+      "description": "Kubernetesの基本概念とクラスタ上へのデプロイ",
+      "tier": 8,
+      "required_nodes": ["infra_docker", "infra_iac"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_service_mesh",
+      "name": "サービスメッシュ",
+      "description": "Istio等を用いたマイクロサービス間の通信制御",
+      "tier": 8,
+      "required_nodes": ["infra_cloud_basics", "infra_net_routing"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_k8s_advanced",
+      "name": "高度なKubernetes運用",
+      "description": "カスタムコントローラの作成、Helm等のパッケージ運用",
+      "tier": 9,
+      "required_nodes": ["infra_k8s_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_sec_compliance",
+      "name": "セキュリティ自動化",
+      "description": "CSPMを用いたクラスタ設定の継続的監査と統制",
+      "tier": 9,
+      "required_nodes": ["infra_iac", "infra_observability"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_sre",
+      "name": "SRE & 大規模分散システム",
+      "description": "SLI/SLO運用とグローバルスケールの高可用性設計",
+      "tier": 10,
+      "required_nodes": ["infra_k8s_advanced", "infra_observability"],
+      "is_cleared": false
+    },
+    {
+      "id": "infra_chaos_eng",
+      "name": "カオスエンジニアリング",
+      "description": "意図的な障害注入によるシステムのレジリエンス検証",
+      "tier": 10,
+      "required_nodes": ["infra_sre", "infra_perf_tuning"],
+      "is_cleared": false
+    }
+  ],
+  "AI": [
+    {
+      "id": "ai_python_basics",
+      "name": "Pythonプログラミング基礎",
+      "description": "基本構文とリスト内包表記などのPython的記述",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_data_processing",
+      "name": "データ処理基礎",
+      "description": "Numpy, Pandasを用いた行列演算とデータフレーム操作",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_math_basics",
+      "name": "AI数学基礎",
+      "description": "線形代数と微分積分の基礎知識",
+      "tier": 2,
+      "required_nodes": ["ai_data_processing"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_statistics",
+      "name": "統計学基礎",
+      "description": "確率分布、仮説検定、ベイズ統計の入門",
+      "tier": 2,
+      "required_nodes": ["ai_data_processing"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_ml_basics",
+      "name": "機械学習基礎",
+      "description": "Scikit-learnを用いた回帰・分類・クラスタリングの構築",
+      "tier": 3,
+      "required_nodes": ["ai_math_basics", "ai_python_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_data_viz",
+      "name": "データ可視化",
+      "description": "MatplotlibやSeabornによる探索的データ分析(EDA)",
+      "tier": 3,
+      "required_nodes": ["ai_data_processing"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_dl_basics",
+      "name": "深層学習基礎",
+      "description": "多層パーセプトロン、活性化関数、バックプロパゲーションの理解",
+      "tier": 4,
+      "required_nodes": ["ai_ml_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_feature_eng",
+      "name": "特徴量エンジニアリング",
+      "description": "ドメイン知識を活かしたデータ変換と次元削減",
+      "tier": 4,
+      "required_nodes": ["ai_ml_basics", "ai_statistics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_dl_fw",
+      "name": "DLフレームワーク",
+      "description": "PyTorch / TensorFlowを用いたモデルの記述と学習",
+      "tier": 5,
+      "required_nodes": ["ai_dl_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_cv_basics",
+      "name": "画像処理基礎 (CV)",
+      "description": "CNN構造の理解と画像分類モデルの構築",
+      "tier": 5,
+      "required_nodes": ["ai_dl_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_nlp_basics",
+      "name": "自然言語処理基礎 (NLP)",
+      "description": "形態素解析、RNN、Word2Vecなどの基礎手法",
+      "tier": 6,
+      "required_nodes": ["ai_dl_fw"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_rl_basics",
+      "name": "強化学習基礎",
+      "description": "Q学習やマルコフ決定過程(MDP)の理解",
+      "tier": 6,
+      "required_nodes": ["ai_dl_fw"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_transformer",
+      "name": "Transformerアーキテクチャ",
+      "description": "Attentionメカニズムと事前学習モデルの活用",
+      "tier": 7,
+      "required_nodes": ["ai_nlp_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_mlops_basics",
+      "name": "MLOps基礎",
+      "description": "MLflow等を用いたモデルのバージョン管理と自動再学習パイプライン",
+      "tier": 7,
+      "required_nodes": ["ai_dl_fw"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_llm_app",
+      "name": "LLMアプリケーション開発",
+      "description": "LangChainやRAGを用いたプロンプトエンジニアリングとエージェント実装",
+      "tier": 8,
+      "required_nodes": ["ai_transformer"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_generative_models",
+      "name": "生成モデル",
+      "description": "GANやDiffusionモデルを用いた画像・音声生成の仕組み",
+      "tier": 8,
+      "required_nodes": ["ai_cv_basics", "ai_dl_fw"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_fine_tuning",
+      "name": "モデルファインチューニング",
+      "description": "LoRAやQLoRAを用いた巨大モデルの効率的な微調整",
+      "tier": 9,
+      "required_nodes": ["ai_llm_app"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_inference_opt",
+      "name": "推論最適化",
+      "description": "ONNX変換、量子化、TensorRTを用いた高速なモデル推論基盤の構築",
+      "tier": 9,
+      "required_nodes": ["ai_mlops_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_research",
+      "name": "新規アーキテクチャ研究",
+      "description": "最新の論文の実装と、ドメイン特化型のAIモデル設計",
+      "tier": 10,
+      "required_nodes": ["ai_fine_tuning"],
+      "is_cleared": false
+    },
+    {
+      "id": "ai_dist_training",
+      "name": "大規模分散学習",
+      "description": "Megatron-LMやDeepSpeedを用いた複数GPUでの基盤モデル学習",
+      "tier": 10,
+      "required_nodes": ["ai_inference_opt"],
+      "is_cleared": false
+    }
+  ],
+  "DESIGN": [
+    {
+      "id": "design_visual",
+      "name": "ビジュアルデザイン基礎",
+      "description": "構図、余白(ホワイトスペース)、プロポーションの理解",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "design_color_typo",
+      "name": "色彩とタイポグラフィ",
+      "description": "カラーセオリーと、可読性を高めるフォント選定",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "design_ui_patterns",
+      "name": "UIコンポーネントとパターン",
+      "description": "ボタンやフォーム等、標準的なUI要素の役割と配置",
+      "tier": 2,
+      "required_nodes": ["design_visual"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_tools_basics",
+      "name": "デザインツール基礎",
+      "description": "Figma等のツールを用いたベクター描画と基本操作",
+      "tier": 2,
+      "required_nodes": ["design_visual", "design_color_typo"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_wireframe_ia",
+      "name": "ワイヤーフレームとIA",
+      "description": "情報アーキテクチャに基づく画面構成のラフ設計",
+      "tier": 3,
+      "required_nodes": ["design_ui_patterns"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_usability",
+      "name": "ユーザビリティ原則",
+      "description": "ヤコブの法則など、使いやすさに関するヒューリスティクスの理解",
+      "tier": 3,
+      "required_nodes": ["design_ui_patterns"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_prototyping",
+      "name": "プロトタイピング",
+      "description": "画面遷移の設定と検証可能なモックアップの作成",
+      "tier": 4,
+      "required_nodes": ["design_wireframe_ia", "design_tools_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_interaction",
+      "name": "インタラクションデザイン",
+      "description": "マイクロインタラクションによるフィードバックの視覚化",
+      "tier": 4,
+      "required_nodes": ["design_ui_patterns"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_research",
+      "name": "ユーザーリサーチ",
+      "description": "ユーザーインタビューやアンケートを用いた課題抽出",
+      "tier": 5,
+      "required_nodes": ["design_wireframe_ia"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_persona",
+      "name": "ペルソナとジャーニーマップ",
+      "description": "ターゲットユーザーの可視化と体験シナリオの設計",
+      "tier": 5,
+      "required_nodes": ["design_research"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_testing",
+      "name": "ユーザビリティテスト",
+      "description": "プロトタイプを用いた検証、ABテストの実施",
+      "tier": 6,
+      "required_nodes": ["design_prototyping", "design_research"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_data_ux",
+      "name": "データドリブンUX",
+      "description": "アクセス解析等の定量データに基づいたUI改善",
+      "tier": 6,
+      "required_nodes": ["design_usability"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_system",
+      "name": "デザインシステム構築",
+      "description": "デザイントークンとコンポーネントライブラリの設計・保守",
+      "tier": 7,
+      "required_nodes": ["design_prototyping", "design_tools_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_ux_writing",
+      "name": "UXライティング",
+      "description": "ユーザーを迷わせないマイクロコピーやエラー文言の設計",
+      "tier": 7,
+      "required_nodes": ["design_persona"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_a11y",
+      "name": "アクセシビリティ (a11y)",
+      "description": "WCAG基準に準拠し、多様な環境に対応した設計",
+      "tier": 8,
+      "required_nodes": ["design_system", "design_color_typo"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_cross_platform",
+      "name": "クロスプラットフォームUX",
+      "description": "Web/モバイル/タブレット全体で一貫した体験設計",
+      "tier": 8,
+      "required_nodes": ["design_system"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_inclusive",
+      "name": "インクルーシブデザイン",
+      "description": "様々な障壁を持つユーザーを開発初期から巻き込む手法",
+      "tier": 9,
+      "required_nodes": ["design_a11y", "design_research"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_service",
+      "name": "サービスデザイン",
+      "description": "デジタル領域を超え、顧客接点全体の体験を設計する",
+      "tier": 9,
+      "required_nodes": ["design_persona"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_ux_strategy",
+      "name": "UX戦略と組織導入",
+      "description": "ビジネス目標とUXを合致させ、デザイン文化を牽引する",
+      "tier": 10,
+      "required_nodes": ["design_testing", "design_service"],
+      "is_cleared": false
+    },
+    {
+      "id": "design_ethics",
+      "name": "デザイン倫理とスペキュラティヴ",
+      "description": "ダークパターンを排除し、社会への影響を考察する未来志向の設計",
+      "tier": 10,
+      "required_nodes": ["design_inclusive"],
+      "is_cleared": false
+    }
+  ],
+  "GAME": [
+    {
+      "id": "game_math_basics",
+      "name": "ゲーム数学基礎",
+      "description": "ベクトルや行列を用いた座標計算",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "game_physics_basics",
+      "name": "物理演算基礎",
+      "description": "衝突判定、重力、剛体の基本的なシミュレーション",
+      "tier": 1,
+      "required_nodes": [],
+      "is_cleared": false
+    },
+    {
+      "id": "game_engine_basics",
+      "name": "ゲームエンジン基礎",
+      "description": "UnityやUnreal Engineの基本操作とコンポーネント",
+      "tier": 2,
+      "required_nodes": ["game_math_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_2d_basics",
+      "name": "2Dゲーム開発基礎",
+      "description": "スプライト操作や2D特有のレイヤー・コリジョン制御",
+      "tier": 2,
+      "required_nodes": ["game_engine_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_scripting",
+      "name": "C#/C++ スクリプティング",
+      "description": "ゲームロジックの実装とオブジェクト指向設計",
+      "tier": 3,
+      "required_nodes": ["game_engine_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_3d_basics",
+      "name": "3Dゲーム開発基礎",
+      "description": "クォータニオンを用いた回転制御や3D空間のレイキャスト",
+      "tier": 3,
+      "required_nodes": ["game_math_basics", "game_engine_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_animation",
+      "name": "アニメーション制御",
+      "description": "ステートマシンを利用したモーションブレンディングとIK",
+      "tier": 4,
+      "required_nodes": ["game_scripting", "game_3d_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_input_camera",
+      "name": "入力・カメラ制御",
+      "description": "クロスプラットフォームな入力管理と追従カメラの挙動",
+      "tier": 4,
+      "required_nodes": ["game_scripting"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_ui_ux",
+      "name": "ゲームUI/UX構築",
+      "description": "uGUI等を用いたHUDの構築やトランジション演出",
+      "tier": 5,
+      "required_nodes": ["game_scripting"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_audio",
+      "name": "オーディオプログラミング",
+      "description": "3Dサウンドの空間制御、BGM/SEの動的切り替え",
+      "tier": 5,
+      "required_nodes": ["game_engine_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_ai_basics",
+      "name": "ゲームAI基礎",
+      "description": "ステートマシン(FSM)やNavMeshを用いたNPCの経路探索",
+      "tier": 6,
+      "required_nodes": ["game_scripting", "game_math_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_level_design",
+      "name": "レベルデザイン基礎",
+      "description": "ゲームエンジンのツール群を用いたステージ構築とライティング",
+      "tier": 6,
+      "required_nodes": ["game_3d_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_net_basics",
+      "name": "マルチプレイヤー通信基礎",
+      "description": "RPC、マッチメイキング、クライアント・サーバーの基本",
+      "tier": 7,
+      "required_nodes": ["game_scripting"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_asset_mgmt",
+      "name": "アセット・データ管理",
+      "description": "Addressables等を用いたアセットロード最適化とセーブデータ管理",
+      "tier": 7,
+      "required_nodes": ["game_scripting"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_perf_opt",
+      "name": "パフォーマンス最適化",
+      "description": "GCアロケーション回避、メモリ管理、プロファイリング",
+      "tier": 8,
+      "required_nodes": ["game_scripting"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_render_opt",
+      "name": "描画最適化",
+      "description": "ドローコール削減、LOD、オクルージョンカリング等の負荷軽減",
+      "tier": 8,
+      "required_nodes": ["game_3d_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_shader_dev",
+      "name": "カスタムシェーダー開発",
+      "description": "HLSLやシェーダーグラフを用いた独自の視覚効果作成",
+      "tier": 9,
+      "required_nodes": ["game_math_basics", "game_render_opt"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_net_advanced",
+      "name": "高度なネットワーク同期",
+      "description": "クライアント予測、ラグ補償、ロールバック処理の実装",
+      "tier": 9,
+      "required_nodes": ["game_net_basics", "game_math_basics"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_render_pipeline",
+      "name": "カスタムレンダリングパイプライン",
+      "description": "SRP等を用いた独自の描画パイプライン構築とポストプロセス拡張",
+      "tier": 10,
+      "required_nodes": ["game_shader_dev"],
+      "is_cleared": false
+    },
+    {
+      "id": "game_engine_dev",
+      "name": "独自エンジン・アーキテクチャ",
+      "description": "DOTS(ECS)等のデータ指向設計による究極のパフォーマンス最適化",
+      "tier": 10,
+      "required_nodes": ["game_perf_opt", "game_scripting"],
+      "is_cleared": false
+    }
+  ]
+}

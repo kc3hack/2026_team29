@@ -1,0 +1,313 @@
+{
+  "nodes": [
+    {
+      "id": "game_math_basics",
+      "name": "ゲーム数学基礎",
+      "completed": false,
+      "description": "ベクトルや行列を用いた座標計算",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "game_physics_basics",
+      "name": "物理演算基礎",
+      "completed": false,
+      "description": "衝突判定、重力、剛体の基本的なシミュレーション",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "game_engine_basics",
+      "name": "ゲームエンジン基礎",
+      "completed": false,
+      "description": "UnityやUnreal Engineの基本操作とコンポーネント",
+      "prerequisites": [
+        "game_math_basics"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "game_2d_basics",
+      "name": "2Dゲーム開発基礎",
+      "completed": false,
+      "description": "スプライト操作や2D特有のレイヤー・コリジョン制御",
+      "prerequisites": [
+        "game_engine_basics"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "game_scripting",
+      "name": "C#/C++ スクリプティング",
+      "completed": false,
+      "description": "ゲームロジックの実装とオブジェクト指向設計",
+      "prerequisites": [
+        "game_engine_basics"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "game_3d_basics",
+      "name": "3Dゲーム開発基礎",
+      "completed": false,
+      "description": "クォータニオンを用いた回転制御や3D空間のレイキャスト",
+      "prerequisites": [
+        "game_math_basics",
+        "game_engine_basics"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "game_animation",
+      "name": "アニメーション制御",
+      "completed": false,
+      "description": "ステートマシンを利用したモーションブレンディングとIK",
+      "prerequisites": [
+        "game_scripting",
+        "game_3d_basics"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "game_input_camera",
+      "name": "入力・カメラ制御",
+      "completed": false,
+      "description": "クロスプラットフォームな入力管理と追従カメラの挙動",
+      "prerequisites": [
+        "game_scripting"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "game_ui_ux",
+      "name": "ゲームUI/UX構築",
+      "completed": false,
+      "description": "uGUI等を用いたHUDの構築やトランジション演出",
+      "prerequisites": [
+        "game_scripting"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "game_audio",
+      "name": "オーディオプログラミング",
+      "completed": false,
+      "description": "3Dサウンドの空間制御、BGM/SEの動的切り替え",
+      "prerequisites": [
+        "game_engine_basics"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "game_ai_basics",
+      "name": "ゲームAI基礎",
+      "completed": false,
+      "description": "ステートマシン(FSM)やNavMeshを用いたNPCの経路探索",
+      "prerequisites": [
+        "game_scripting",
+        "game_math_basics"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "game_level_design",
+      "name": "レベルデザイン基礎",
+      "completed": false,
+      "description": "ゲームエンジンのツール群を用いたステージ構築とライティング",
+      "prerequisites": [
+        "game_3d_basics"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "game_net_basics",
+      "name": "マルチプレイヤー通信基礎",
+      "completed": false,
+      "description": "RPC、マッチメイキング、クライアント・サーバーの基本",
+      "prerequisites": [
+        "game_scripting"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "game_asset_mgmt",
+      "name": "アセット・データ管理",
+      "completed": false,
+      "description": "Addressables等を用いたアセットロード最適化とセーブデータ管理",
+      "prerequisites": [
+        "game_scripting"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "game_perf_opt",
+      "name": "パフォーマンス最適化",
+      "completed": false,
+      "description": "GCアロケーション回避、メモリ管理、プロファイリング",
+      "prerequisites": [
+        "game_scripting"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "game_render_opt",
+      "name": "描画最適化",
+      "completed": false,
+      "description": "ドローコール削減、LOD、オクルージョンカリング等の負荷軽減",
+      "prerequisites": [
+        "game_3d_basics"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "game_shader_dev",
+      "name": "カスタムシェーダー開発",
+      "completed": false,
+      "description": "HLSLやシェーダーグラフを用いた独自の視覚効果作成",
+      "prerequisites": [
+        "game_math_basics",
+        "game_render_opt"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "game_net_advanced",
+      "name": "高度なネットワーク同期",
+      "completed": false,
+      "description": "クライアント予測、ラグ補償、ロールバック処理の実装",
+      "prerequisites": [
+        "game_net_basics",
+        "game_math_basics"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "game_render_pipeline",
+      "name": "カスタムレンダリングパイプライン",
+      "completed": false,
+      "description": "SRP等を用いた独自の描画パイプライン構築とポストプロセス拡張",
+      "prerequisites": [
+        "game_shader_dev"
+      ],
+      "estimated_hours": 100
+    },
+    {
+      "id": "game_engine_dev",
+      "name": "独自エンジン・アーキテクチャ",
+      "completed": false,
+      "description": "DOTS(ECS)等のデータ指向設計による究極のパフォーマンス最適化",
+      "prerequisites": [
+        "game_perf_opt",
+        "game_scripting"
+      ],
+      "estimated_hours": 100
+    }
+  ],
+  "edges": [
+    {
+      "from": "game_math_basics",
+      "to": "game_engine_basics"
+    },
+    {
+      "from": "game_engine_basics",
+      "to": "game_2d_basics"
+    },
+    {
+      "from": "game_engine_basics",
+      "to": "game_scripting"
+    },
+    {
+      "from": "game_math_basics",
+      "to": "game_3d_basics"
+    },
+    {
+      "from": "game_engine_basics",
+      "to": "game_3d_basics"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_animation"
+    },
+    {
+      "from": "game_3d_basics",
+      "to": "game_animation"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_input_camera"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_ui_ux"
+    },
+    {
+      "from": "game_engine_basics",
+      "to": "game_audio"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_ai_basics"
+    },
+    {
+      "from": "game_math_basics",
+      "to": "game_ai_basics"
+    },
+    {
+      "from": "game_3d_basics",
+      "to": "game_level_design"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_net_basics"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_asset_mgmt"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_perf_opt"
+    },
+    {
+      "from": "game_3d_basics",
+      "to": "game_render_opt"
+    },
+    {
+      "from": "game_math_basics",
+      "to": "game_shader_dev"
+    },
+    {
+      "from": "game_render_opt",
+      "to": "game_shader_dev"
+    },
+    {
+      "from": "game_net_basics",
+      "to": "game_net_advanced"
+    },
+    {
+      "from": "game_math_basics",
+      "to": "game_net_advanced"
+    },
+    {
+      "from": "game_shader_dev",
+      "to": "game_render_pipeline"
+    },
+    {
+      "from": "game_perf_opt",
+      "to": "game_engine_dev"
+    },
+    {
+      "from": "game_scripting",
+      "to": "game_engine_dev"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 20,
+    "completed_nodes": 0,
+    "progress_percentage": 0.0,
+    "next_recommended": [
+      "game_math_basics",
+      "game_physics_basics"
+    ]
+  }
+}

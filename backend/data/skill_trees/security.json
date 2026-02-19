@@ -1,0 +1,333 @@
+{
+  "nodes": [
+    {
+      "id": "sec_net_os_basics",
+      "name": "ネットワーク・OS基礎",
+      "completed": false,
+      "description": "TCP/IP、主要ポート、Linux/Windowsの基本操作と権限管理",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "sec_web_vuln_basics",
+      "name": "Webセキュリティ基礎",
+      "completed": false,
+      "description": "OWASP Top 10（XSS、SQLi等）の原理と基本的な仕組みの理解",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "sec_crypto_basics",
+      "name": "暗号技術基礎",
+      "completed": false,
+      "description": "共通鍵/公開鍵暗号、ハッシュ関数、証明書の仕組み",
+      "prerequisites": [
+        "sec_net_os_basics"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "sec_reversing_basics",
+      "name": "リバースエンジニアリング基礎",
+      "completed": false,
+      "description": "アセンブリ言語の基礎読解と、簡単なバイナリ解析",
+      "prerequisites": [
+        "sec_net_os_basics"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "sec_pentest_basics",
+      "name": "ペネトレーションテスト基礎",
+      "completed": false,
+      "description": "診断手法の基礎、スキャンツールの利用とポート探索",
+      "prerequisites": [
+        "sec_web_vuln_basics"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "sec_log_analysis",
+      "name": "ログ分析・検知基礎",
+      "completed": false,
+      "description": "アクセスログやイベントログからの不審な挙動の特定",
+      "prerequisites": [
+        "sec_net_os_basics"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "sec_malware_basics",
+      "name": "マルウェア解析基礎",
+      "completed": false,
+      "description": "サンドボックスを用いた動的解析と基礎的な静的解析",
+      "prerequisites": [
+        "sec_reversing_basics"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "sec_sec_tools",
+      "name": "セキュリティツール運用",
+      "completed": false,
+      "description": "Burp Suite、Nmap、Wireshark等の実践的な操作手法",
+      "prerequisites": [
+        "sec_net_os_basics",
+        "sec_web_vuln_basics"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "sec_secure_coding",
+      "name": "セキュアコーディング",
+      "completed": false,
+      "description": "脆弱性を生みにくいアーキテクチャ設計とコード実装",
+      "prerequisites": [
+        "sec_web_vuln_basics"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "sec_net_defense",
+      "name": "ネットワーク防御",
+      "completed": false,
+      "description": "ファイアウォール、IDS/IPS、WAFの導入と運用ルールの設計",
+      "prerequisites": [
+        "sec_net_os_basics",
+        "sec_log_analysis"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "sec_ctf_wargames",
+      "name": "CTF・実践演習",
+      "completed": false,
+      "description": "実践的な環境での複合的な脆弱性探索とフラグ獲得",
+      "prerequisites": [
+        "sec_sec_tools",
+        "sec_pentest_basics"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "sec_cloud_sec",
+      "name": "クラウドセキュリティ基礎",
+      "completed": false,
+      "description": "IAMの権限最小化、クラウドリソースの堅牢化",
+      "prerequisites": [
+        "sec_net_defense"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "sec_bug_bounty",
+      "name": "バグバウンティ基礎",
+      "completed": false,
+      "description": "報奨金プログラムにおける未知の脆弱性探索と適切なレポート作成",
+      "prerequisites": [
+        "sec_pentest_basics",
+        "sec_ctf_wargames"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "sec_forensics",
+      "name": "デジタルフォレンジック",
+      "completed": false,
+      "description": "インシデント発生時の証拠保全、メモリダンプやディスクの解析",
+      "prerequisites": [
+        "sec_log_analysis",
+        "sec_malware_basics"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "sec_advanced_pentest",
+      "name": "高度なペネトレーションテスト",
+      "completed": false,
+      "description": "Active Directoryの攻略や、複数システムを跨ぐ水平展開",
+      "prerequisites": [
+        "sec_bug_bounty",
+        "sec_sec_tools"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "sec_ir",
+      "name": "インシデントレスポンス",
+      "completed": false,
+      "description": "侵害発生時の封じ込め、根絶、復旧プロセスの主導",
+      "prerequisites": [
+        "sec_forensics",
+        "sec_net_defense"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "sec_psirt",
+      "name": "PSIRT / 脅威モデリング",
+      "completed": false,
+      "description": "製品開発ライフサイクルへのセキュリティ組み込みと脆弱性管理プロセスの運用",
+      "prerequisites": [
+        "sec_secure_coding",
+        "sec_ir"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "sec_exploit_dev",
+      "name": "エクスプロイト開発",
+      "completed": false,
+      "description": "メモリ破壊脆弱性の突入、ROPチェーン構築、ゼロデイ攻撃の検証",
+      "prerequisites": [
+        "sec_reversing_basics",
+        "sec_ctf_wargames"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "sec_zero_trust",
+      "name": "ゼロトラストアーキテクチャ",
+      "completed": false,
+      "description": "境界防御に依存しない、エンタープライズ規模の動的認証・認可基盤の設計",
+      "prerequisites": [
+        "sec_cloud_sec",
+        "sec_psirt"
+      ],
+      "estimated_hours": 100
+    },
+    {
+      "id": "sec_kernel_hw",
+      "name": "カーネル・ハードウェア解析",
+      "completed": false,
+      "description": "OSカーネル層の脆弱性探索や、IoT・ファームウェアの高度なリバースエンジニアリング",
+      "prerequisites": [
+        "sec_exploit_dev"
+      ],
+      "estimated_hours": 100
+    }
+  ],
+  "edges": [
+    {
+      "from": "sec_net_os_basics",
+      "to": "sec_crypto_basics"
+    },
+    {
+      "from": "sec_net_os_basics",
+      "to": "sec_reversing_basics"
+    },
+    {
+      "from": "sec_web_vuln_basics",
+      "to": "sec_pentest_basics"
+    },
+    {
+      "from": "sec_net_os_basics",
+      "to": "sec_log_analysis"
+    },
+    {
+      "from": "sec_reversing_basics",
+      "to": "sec_malware_basics"
+    },
+    {
+      "from": "sec_net_os_basics",
+      "to": "sec_sec_tools"
+    },
+    {
+      "from": "sec_web_vuln_basics",
+      "to": "sec_sec_tools"
+    },
+    {
+      "from": "sec_web_vuln_basics",
+      "to": "sec_secure_coding"
+    },
+    {
+      "from": "sec_net_os_basics",
+      "to": "sec_net_defense"
+    },
+    {
+      "from": "sec_log_analysis",
+      "to": "sec_net_defense"
+    },
+    {
+      "from": "sec_sec_tools",
+      "to": "sec_ctf_wargames"
+    },
+    {
+      "from": "sec_pentest_basics",
+      "to": "sec_ctf_wargames"
+    },
+    {
+      "from": "sec_net_defense",
+      "to": "sec_cloud_sec"
+    },
+    {
+      "from": "sec_pentest_basics",
+      "to": "sec_bug_bounty"
+    },
+    {
+      "from": "sec_ctf_wargames",
+      "to": "sec_bug_bounty"
+    },
+    {
+      "from": "sec_log_analysis",
+      "to": "sec_forensics"
+    },
+    {
+      "from": "sec_malware_basics",
+      "to": "sec_forensics"
+    },
+    {
+      "from": "sec_bug_bounty",
+      "to": "sec_advanced_pentest"
+    },
+    {
+      "from": "sec_sec_tools",
+      "to": "sec_advanced_pentest"
+    },
+    {
+      "from": "sec_forensics",
+      "to": "sec_ir"
+    },
+    {
+      "from": "sec_net_defense",
+      "to": "sec_ir"
+    },
+    {
+      "from": "sec_secure_coding",
+      "to": "sec_psirt"
+    },
+    {
+      "from": "sec_ir",
+      "to": "sec_psirt"
+    },
+    {
+      "from": "sec_reversing_basics",
+      "to": "sec_exploit_dev"
+    },
+    {
+      "from": "sec_ctf_wargames",
+      "to": "sec_exploit_dev"
+    },
+    {
+      "from": "sec_cloud_sec",
+      "to": "sec_zero_trust"
+    },
+    {
+      "from": "sec_psirt",
+      "to": "sec_zero_trust"
+    },
+    {
+      "from": "sec_exploit_dev",
+      "to": "sec_kernel_hw"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 20,
+    "completed_nodes": 0,
+    "progress_percentage": 0.0,
+    "next_recommended": [
+      "sec_net_os_basics",
+      "sec_web_vuln_basics"
+    ]
+  }
+}
