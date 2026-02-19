@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("category", sa.String(), nullable=False),
-        sa.Column("tree_data", sa.JSON(), nullable=True),
+        sa.Column("tree_data", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
         sa.Column("generated_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),

@@ -4,6 +4,8 @@
 Swagger UI: /admin/docs（認証必須）
 """
 
+import secrets
+
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse
@@ -24,18 +26,18 @@ admin_app = FastAPI(
 )
 
 
-def verify_admin_key(x_admin_key: str = Header(...)) -> None:
+def verify_admin_key(x_admin_key: str | None = Header(None)) -> None:
     """管理APIキーを検証する
 
     リクエストヘッダー `X-Admin-Key` と環境変数 `ADMIN_API_KEY` を照合。
-    一致しない場合は401 Unauthorizedを返す。
+    未指定または不一致の場合は401 Unauthorizedを返す。
     """
     if not settings.ADMIN_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="ADMIN_API_KEY is not configured on server",
         )
-    if x_admin_key != settings.ADMIN_API_KEY:
+    if x_admin_key is None or not secrets.compare_digest(x_admin_key, settings.ADMIN_API_KEY):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid admin API key",

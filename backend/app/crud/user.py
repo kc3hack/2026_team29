@@ -17,10 +17,13 @@ def create_user(db: Session, user: UserCreate) -> User:
     db_user = User(username=user.username)
     db.add(db_user)
     try:
-        db.commit()
-        db.refresh(db_user)
+        # user.id を確定させるが、まだトランザクションはコミットしない
+        db.flush()
         # ユーザー作成時に6カテゴリのSkillTreeを自動初期化
         initialize_skill_trees_for_user(db, db_user.id)
+        # ユーザーと SkillTree 初期化をまとめて 1 回の commit で確定させる
+        db.commit()
+        db.refresh(db_user)
     except Exception:
         db.rollback()
         raise

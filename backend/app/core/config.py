@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
 
     # Admin API Access Control
-    ADMIN_API_KEY: str = "test"  # 本番では必ず.envで設定すること
+    ADMIN_API_KEY: str = ""  # 本番では必ず.envで設定すること
 
 
 settings = Settings()
@@ -60,13 +60,24 @@ settings = Settings()
 
 # ENCRYPTION_KEYの検証（アプリ起動時にチェック）
 def validate_encryption_key() -> None:
-    """ENCRYPTION_KEYが設定されているかを検証する。
+    """ENCRYPTION_KEYが設定されており、かつ形式が正しいかを検証する。
 
-    未設定の場合はValueErrorを送出する。
+    未設定または形式不正の場合はValueErrorを送出する。
     テスト環境ではダミーキーが自動設定されるため、本番環境のみチェック。
     """
+    from cryptography.fernet import Fernet
+
     if not settings.ENCRYPTION_KEY:
         raise ValueError(
             "ENCRYPTION_KEY is not set. "
             "Generate one with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
         )
+
+    # キー形式の検証（Fernet互換の32バイトbase64キーかチェック）
+    try:
+        Fernet(settings.ENCRYPTION_KEY.encode())
+    except Exception as e:
+        raise ValueError(
+            f"ENCRYPTION_KEY format is invalid: {e}. "
+            "Generate a valid key with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+        ) from e
