@@ -30,9 +30,13 @@ def test_quest_difficulty_validation():
     QuestCreate(title="T", description="d", difficulty=9, category=QuestCategory.WEB)
 
     with pytest.raises(ValidationError):
-        QuestCreate(title="T", description="d", difficulty=-1, category=QuestCategory.WEB)
+        QuestCreate(
+            title="T", description="d", difficulty=-1, category=QuestCategory.WEB
+        )
     with pytest.raises(ValidationError):
-        QuestCreate(title="T", description="d", difficulty=10, category=QuestCategory.WEB)
+        QuestCreate(
+            title="T", description="d", difficulty=10, category=QuestCategory.WEB
+        )
 
 
 def test_oauth_provider_validation():

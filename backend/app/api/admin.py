@@ -37,7 +37,9 @@ def verify_admin_key(x_admin_key: str | None = Header(None)) -> None:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="ADMIN_API_KEY is not configured on server",
         )
-    if x_admin_key is None or not secrets.compare_digest(x_admin_key, settings.ADMIN_API_KEY):
+    if x_admin_key is None or not secrets.compare_digest(
+        x_admin_key, settings.ADMIN_API_KEY
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid admin API key",

@@ -22,7 +22,9 @@ def create_profile(db: Session, profile_in: ProfileCreate) -> Profile:
         db.commit()
     except IntegrityError as e:
         db.rollback()
-        raise ValueError(f"Profile for user_id={profile_in.user_id} already exists") from e
+        raise ValueError(
+            f"Profile for user_id={profile_in.user_id} already exists"
+        ) from e
     except Exception:
         db.rollback()
         raise

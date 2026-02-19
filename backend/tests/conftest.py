@@ -6,11 +6,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 # テスト専用キー（本番環境では絶対に使用しないこと）
-#（Fernet互換のbase64エンコード済み32バイトキー）
+# （Fernet互換のbase64エンコード済み32バイトキー）
 TEST_ENCRYPTION_KEY = "0nZ2rQFEYhYpMTP4Uo3tmtDfQ19eKdwK10KWz5Iccm4="
 # この設定はapp.core.configが読み込まれる前に行う必要がある
 os.environ.setdefault(
-    "ENCRYPTION_KEY", TEST_ENCRYPTION_KEY,
+    "ENCRYPTION_KEY",
+    TEST_ENCRYPTION_KEY,
 )
 
 from app.core.encryption import reset_fernet  # noqa: E402

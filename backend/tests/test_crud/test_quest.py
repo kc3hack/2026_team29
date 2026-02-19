@@ -45,15 +45,33 @@ def test_get_quest_not_found(db):
 def test_list_quests_by_category(db):
     create_quest(
         db,
-        QuestCreate(title="Web1", description="d", difficulty=1, category=QuestCategory.WEB, is_generated=False),
+        QuestCreate(
+            title="Web1",
+            description="d",
+            difficulty=1,
+            category=QuestCategory.WEB,
+            is_generated=False,
+        ),
     )
     create_quest(
         db,
-        QuestCreate(title="Web2", description="d", difficulty=2, category=QuestCategory.WEB, is_generated=False),
+        QuestCreate(
+            title="Web2",
+            description="d",
+            difficulty=2,
+            category=QuestCategory.WEB,
+            is_generated=False,
+        ),
     )
     create_quest(
         db,
-        QuestCreate(title="AI1", description="d", difficulty=3, category=QuestCategory.AI, is_generated=False),
+        QuestCreate(
+            title="AI1",
+            description="d",
+            difficulty=3,
+            category=QuestCategory.AI,
+            is_generated=False,
+        ),
     )
 
     web_quests = list_quests_by_category(db, QuestCategory.WEB)

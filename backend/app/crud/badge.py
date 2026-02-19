@@ -22,7 +22,9 @@ def award_badge(db: Session, badge_in: BadgeCreate) -> Badge:
         db.commit()
     except IntegrityError as e:
         db.rollback()
-        raise ValueError(f"Badge for user_id={badge_in.user_id}, category={badge_in.category}, tier={badge_in.tier} already exists") from e
+        raise ValueError(
+            f"Badge for user_id={badge_in.user_id}, category={badge_in.category}, tier={badge_in.tier} already exists"
+        ) from e
     except Exception:
         db.rollback()
         raise

@@ -17,6 +17,8 @@ class Quest(Base):
     difficulty = Column(Integer, nullable=False)  # 0-9: 対象ランク（種子〜世界樹）
     category = Column(String, nullable=False)
     is_generated = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     quest_progress = relationship("QuestProgress", back_populates="quest")

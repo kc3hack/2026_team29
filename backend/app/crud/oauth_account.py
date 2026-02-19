@@ -24,7 +24,9 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
         provider=oauth_in.provider,
         provider_user_id=oauth_in.provider_user_id,
         encrypted_access_token=encrypt_token(oauth_in.access_token),
-        encrypted_refresh_token=encrypt_token(oauth_in.refresh_token) if oauth_in.refresh_token else None,
+        encrypted_refresh_token=encrypt_token(oauth_in.refresh_token)
+        if oauth_in.refresh_token
+        else None,
         expires_at=oauth_in.expires_at,
     )
     db.add(db_account)
@@ -32,7 +34,9 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
         db.commit()
     except IntegrityError as e:
         db.rollback()
-        raise ValueError(f"OAuthAccount for user_id={oauth_in.user_id} and provider={oauth_in.provider} already exists") from e
+        raise ValueError(
+            f"OAuthAccount for user_id={oauth_in.user_id} and provider={oauth_in.provider} already exists"
+        ) from e
     except Exception:
         db.rollback()
         raise

@@ -49,7 +49,9 @@ def update_skill_tree(
 ) -> SkillTree:
     db_tree = get_skill_tree_by_user_category(db, user_id, category)
     if db_tree is None:
-        raise ValueError(f"SkillTree for user_id={user_id}, category={category.value} not found")
+        raise ValueError(
+            f"SkillTree for user_id={user_id}, category={category.value} not found"
+        )
     db_tree.tree_data = tree_data
     db_tree.generated_at = datetime.now(timezone.utc)
     try:

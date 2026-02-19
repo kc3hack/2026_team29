@@ -9,7 +9,9 @@ from app.models.enums import QuestStatus
 from app.models.quest_progress import QuestProgress
 
 
-def get_quest_progress(db: Session, user_id: int, quest_id: int) -> QuestProgress | None:
+def get_quest_progress(
+    db: Session, user_id: int, quest_id: int
+) -> QuestProgress | None:
     return (
         db.query(QuestProgress)
         .filter(QuestProgress.user_id == user_id, QuestProgress.quest_id == quest_id)
@@ -29,7 +31,9 @@ def start_quest(db: Session, user_id: int, quest_id: int) -> QuestProgress:
         db.commit()
     except IntegrityError as e:
         db.rollback()
-        raise ValueError(f"QuestProgress for user_id={user_id} and quest_id={quest_id} already exists") from e
+        raise ValueError(
+            f"QuestProgress for user_id={user_id} and quest_id={quest_id} already exists"
+        ) from e
     except Exception:
         db.rollback()
         raise
@@ -40,7 +44,9 @@ def start_quest(db: Session, user_id: int, quest_id: int) -> QuestProgress:
 def complete_quest(db: Session, user_id: int, quest_id: int) -> QuestProgress:
     db_progress = get_quest_progress(db, user_id, quest_id)
     if db_progress is None:
-        raise ValueError(f"QuestProgress for user_id={user_id}, quest_id={quest_id} not found")
+        raise ValueError(
+            f"QuestProgress for user_id={user_id}, quest_id={quest_id} not found"
+        )
     db_progress.status = QuestStatus.COMPLETED.value
     db_progress.completed_at = datetime.now(timezone.utc)
     try:

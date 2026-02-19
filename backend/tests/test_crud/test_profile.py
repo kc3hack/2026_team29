@@ -8,6 +8,7 @@ from app.crud.skill_tree import update_skill_tree
 from app.crud.quest_progress import complete_quest
 from app.models.enums import SkillCategory
 
+
 def test_create_profile(db):
     user = create_user(db, UserCreate(username="profile_user"))
     profile_in = ProfileCreate(
@@ -46,24 +47,26 @@ def test_update_profile(db):
     updated = update_profile(
         db,
         profile.id,
-        ProfileUpdate(github_username="new_gh", portfolio_url="https://example.com/portfolio"),
+        ProfileUpdate(
+            github_username="new_gh", portfolio_url="https://example.com/portfolio"
+        ),
     )
     assert updated.github_username == "new_gh"
     assert updated.portfolio_url == "https://example.com/portfolio"
+
 
 def test_update_profile_not_found(db):
     with pytest.raises(ValueError, match="Profile with id=999 not found"):
         update_profile(db, 999, ProfileUpdate(github_username="test"))
 
+
 def test_update_skill_tree_not_found(db):
     with pytest.raises(ValueError, match="SkillTree for user_id=999.*not found"):
-        update_skill_tree(
-            db, 
-            user_id=999, 
-            category=SkillCategory.WEB, 
-            tree_data={}
-    )
+        update_skill_tree(db, user_id=999, category=SkillCategory.WEB, tree_data={})
+
 
 def test_complete_quest_not_found(db):
-    with pytest.raises(ValueError, match="QuestProgress for user_id=999, quest_id=888 not found"):
+    with pytest.raises(
+        ValueError, match="QuestProgress for user_id=999, quest_id=888 not found"
+    ):
         complete_quest(db, user_id=999, quest_id=888)

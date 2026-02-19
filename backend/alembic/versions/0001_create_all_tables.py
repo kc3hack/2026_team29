@@ -80,7 +80,9 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", "provider", name="uq_oauth_account_user_provider"),
+        sa.UniqueConstraint(
+            "user_id", "provider", name="uq_oauth_account_user_provider"
+        ),
     )
     op.create_index(
         op.f("ix_oauth_accounts_user_id"), "oauth_accounts", ["user_id"], unique=False
@@ -101,7 +103,9 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", "category", "tier", name="uq_badge_user_category_tier"),
+        sa.UniqueConstraint(
+            "user_id", "category", "tier", name="uq_badge_user_category_tier"
+        ),
     )
     op.create_index(op.f("ix_badges_user_id"), "badges", ["user_id"], unique=False)
 
@@ -129,13 +133,17 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("category", sa.String(), nullable=False),
-        sa.Column("tree_data", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
+        sa.Column(
+            "tree_data", sa.JSON(), nullable=False, server_default=sa.text("'{}'")
+        ),
         sa.Column("generated_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "category", name="uq_skill_tree_user_category"),
     )
-    op.create_index(op.f("ix_skill_trees_user_id"), "skill_trees", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_skill_trees_user_id"), "skill_trees", ["user_id"], unique=False
+    )
 
     # 7. quest_progressテーブル（issue #31、usersとquestsに依存）
     op.create_table(
