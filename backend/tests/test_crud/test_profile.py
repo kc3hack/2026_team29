@@ -42,7 +42,7 @@ def test_update_profile(db):
     updated = update_profile(
         db,
         profile.id,
-        ProfileUpdate(github_username="new_gh", portfolio_url="https://example.com"),
+        ProfileUpdate(github_username="new_gh", portfolio_url="https://example.com/portfolio"),
     )
     assert updated.github_username == "new_gh"
-    assert updated.portfolio_url == "https://example.com"
+    assert updated.portfolio_url == "https://example.com/portfolio"

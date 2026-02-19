@@ -11,7 +11,11 @@ def get_profile_by_user_id(db: Session, user_id: int) -> Profile | None:
 
 
 def create_profile(db: Session, profile_in: ProfileCreate) -> Profile:
-    db_profile = Profile(**profile_in.model_dump())
+    data = profile_in.model_dump()
+    # HttpUrlをstrに変換
+    if data.get("portfolio_url"):
+        data["portfolio_url"] = str(data["portfolio_url"])
+    db_profile = Profile(**data)
     db.add(db_profile)
     try:
         db.commit()
@@ -25,6 +29,9 @@ def create_profile(db: Session, profile_in: ProfileCreate) -> Profile:
 def update_profile(db: Session, profile_id: int, profile_in: ProfileUpdate) -> Profile:
     db_profile = db.query(Profile).filter(Profile.id == profile_id).first()
     update_data = profile_in.model_dump(exclude_unset=True)
+    # HttpUrlをstrに変換
+    if "portfolio_url" in update_data and update_data["portfolio_url"]:
+        update_data["portfolio_url"] = str(update_data["portfolio_url"])
     for field, value in update_data.items():
         setattr(db_profile, field, value)
     try:

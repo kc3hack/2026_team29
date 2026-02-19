@@ -12,7 +12,7 @@ os.environ.setdefault(
 )
 
 from app.core.encryption import reset_fernet  # noqa: E402
-from app.db.base_class import Base  # noqa: E402
+from app.db.base import Base  # noqa: E402, F401  # 全モデル登録のためbase経由でimport
 
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
 

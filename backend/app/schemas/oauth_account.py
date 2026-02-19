@@ -2,7 +2,10 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+
+# MVP段階で対応するOAuthプロバイダ（将来拡張可能）
+ALLOWED_PROVIDERS = {"github"}
 
 
 class OAuthAccountCreate(BaseModel):
@@ -12,6 +15,13 @@ class OAuthAccountCreate(BaseModel):
     access_token: str  # 平文で受け取り、CRUD層で暗号化
     refresh_token: str | None = None
     expires_at: datetime | None = None
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, v: str) -> str:
+        if v not in ALLOWED_PROVIDERS:
+            raise ValueError(f"provider must be one of {ALLOWED_PROVIDERS}")
+        return v
 
 
 class OAuthTokenUpdate(BaseModel):
