@@ -8,7 +8,7 @@ Issue #35: AI実装Phase 2 - モックAPIエンドポイント
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
