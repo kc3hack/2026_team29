@@ -6,7 +6,6 @@ Issue #54: AI実装Phase 3 - スキルツリー生成（LLMパーソナライゼ
 
 import json
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

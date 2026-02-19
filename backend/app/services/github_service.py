@@ -4,7 +4,6 @@ GitHub API統合サービス
 ユーザーのGitHubプロフィールを分析し、技術スタックと習得済みスキルを推定する。
 """
 
-import json
 import logging
 from typing import Any
 
