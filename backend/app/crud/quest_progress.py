@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.models.enums import QuestStatus
 from app.models.quest_progress import QuestProgress
@@ -26,6 +27,9 @@ def start_quest(db: Session, user_id: int, quest_id: int) -> QuestProgress:
     db.add(db_progress)
     try:
         db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise ValueError(f"QuestProgress for user_id={user_id} and quest_id={quest_id} already exists") from e
     except Exception:
         db.rollback()
         raise

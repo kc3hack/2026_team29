@@ -1,6 +1,7 @@
 """OAuthAccount CRUD操作"""
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.core.encryption import encrypt_token
 from app.models.oauth_account import OAuthAccount
@@ -29,6 +30,9 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
     db.add(db_account)
     try:
         db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise ValueError(f"OAuthAccount for user_id={oauth_in.user_id} and provider={oauth_in.provider} already exists") from e
     except Exception:
         db.rollback()
         raise

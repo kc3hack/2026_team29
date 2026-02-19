@@ -1,6 +1,7 @@
 """Profile CRUD操作"""
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.models.profile import Profile
 from app.schemas.profile import ProfileCreate, ProfileUpdate
@@ -19,6 +20,9 @@ def create_profile(db: Session, profile_in: ProfileCreate) -> Profile:
     db.add(db_profile)
     try:
         db.commit()
+    except IntegrityError as e:
+        db.rollback()
+        raise ValueError(f"Profile for user_id={profile_in.user_id} already exists") from e
     except Exception:
         db.rollback()
         raise
