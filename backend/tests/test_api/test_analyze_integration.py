@@ -161,10 +161,10 @@ def test_analyze_rank_endpoint_custom():
     response = client.post(
         "/api/v1/analyze/rank",
         json={
-            "github_username": "Inlet-back",
-            "portfolio_text": "https://www.wantedly.com/id/masachika_ura",
-            "qiita_id": "Inlet-back",
-            "other_info": "現在はFlatt Securityにてエンジニアインターンとして活動中。主な実績・経験；インターンシップ: サイボウズ（PSIRTサマーインターン）、One Career（セキュリティ）など。技術活動: ハッカソンでのPaaS開発（JPHACKS 2025等）、CTFへの参加、バグバウンティ活動。自己研鑽: TryHackMeやHack The Boxを活用したペネトレーションテストやマルウェア解析の学習。",
+            "github_username": "",
+            "portfolio_text": "",
+            "qiita_id": "",
+            "other_info": "",
         },
     )
 
