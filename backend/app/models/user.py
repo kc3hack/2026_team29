@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, Integer, JSON, String
+from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -18,7 +18,6 @@ class User(Base):
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)
     rank = Column(Integer, default=0)  # 0-9: 種子〜世界樹
-    skills = Column(JSON, default=lambda: [])  # 習得済みスキルのキャッシュ
 
     # タイムスタンプ
     created_at = Column(DateTime(timezone=True), server_default=func.now())

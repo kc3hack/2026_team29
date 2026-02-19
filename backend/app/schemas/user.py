@@ -16,7 +16,6 @@ class User(UserBase):
     level: int
     exp: int
     rank: int
-    skills: list[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

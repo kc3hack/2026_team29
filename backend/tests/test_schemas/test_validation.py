@@ -67,7 +67,6 @@ def test_user_rank_consistency_validation():
         level=1,
         exp=0,
         rank=0,
-        skills=[],
         created_at=now,
         updated_at=now,
     )
@@ -79,7 +78,6 @@ def test_user_rank_consistency_validation():
         level=2,
         exp=150,
         rank=1,
-        skills=[],
         created_at=now,
         updated_at=now,
     )
@@ -92,7 +90,6 @@ def test_user_rank_consistency_validation():
             level=1,
             exp=0,
             rank=1,
-            skills=[],
             created_at=now,
             updated_at=now,
         )
