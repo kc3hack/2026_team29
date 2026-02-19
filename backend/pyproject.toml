@@ -32,6 +32,9 @@ pytest-asyncio = "^0.25.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+markers = [
+    "integration: marks tests as integration tests (require real API keys)",
+]
 
 [build-system]
 requires = ["poetry-core"]
