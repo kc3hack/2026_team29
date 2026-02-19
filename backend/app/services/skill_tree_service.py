@@ -17,7 +17,7 @@ from app.core.llm import invoke_llm
 from app.core.prompts import SKILL_TREE_ANALYSIS_TEMPLATE
 from app.crud.profile import get_profile_by_user_id
 from app.crud.skill_tree import get_skill_tree_by_user_category, update_skill_tree
-from app.models.enums import SkillCategory
+from app.models.enums import SkillCategory, QuestStatus
 from app.models.quest_progress import QuestProgress
 from app.schemas.analyze import SkillTreeResponse
 from app.services.github_service import analyze_github_profile
@@ -94,7 +94,10 @@ async def generate_skill_tree_ai(
     # 完了済みQuest取得
     quest_progress_list = (
         db.query(QuestProgress)
-        .filter(QuestProgress.user_id == user_id, QuestProgress.completed == True)
+        .filter(
+            QuestProgress.user_id == user_id,
+            QuestProgress.status == QuestStatus.COMPLETED.value,
+        )
         .all()
     )
     completed_quests = [qp.quest.title for qp in quest_progress_list if qp.quest]
@@ -130,6 +133,32 @@ async def generate_skill_tree_ai(
         logger.error(f"Failed to parse LLM response: {e}")
         # フォールバック: ベースラインJSONを返却
         return _fallback_to_baseline(category, baseline_data)
+
+    # Step 6.5: GitHub分析結果でcompletedフラグを強制的に更新（最優先）
+    completion_signals = github_analysis.get("completion_signals", {})
+    if completion_signals:
+        for node in tree_data.get("nodes", []):
+            node_id = node.get("id", "")
+            if node_id in completion_signals:
+                node["completed"] = completion_signals[node_id]
+                logger.debug(
+                    f"Updated node {node_id} completed status to {completion_signals[node_id]} based on GitHub analysis"
+                )
+
+        # metadataも再計算
+        total_nodes = len(tree_data.get("nodes", []))
+        completed_nodes = sum(
+            1 for node in tree_data.get("nodes", []) if node.get("completed", False)
+        )
+        if total_nodes > 0:
+            progress_percentage = (completed_nodes / total_nodes) * 100
+        else:
+            progress_percentage = 0.0
+
+        if "metadata" not in tree_data:
+            tree_data["metadata"] = {}
+        tree_data["metadata"]["completed_nodes"] = completed_nodes
+        tree_data["metadata"]["progress_percentage"] = round(progress_percentage, 1)
 
     # Step 7: DB更新
     try:
@@ -246,12 +275,13 @@ def _build_skill_tree_prompt(
         if completed
     ]
 
-    # ランク名取得
-    rank_name = RANK_NAMES.get(profile.rank, "不明")
+    # ランク名取得（ProfileからUserのrankを参照）
+    user_rank = profile.user.rank if profile.user else 0
+    rank_name = RANK_NAMES.get(user_rank, "不明")
 
     # プロンプトテンプレートに埋め込み
     prompt = SKILL_TREE_ANALYSIS_TEMPLATE.format(
-        rank=profile.rank,
+        rank=user_rank,
         rank_name=rank_name,
         github_username=profile.github_username or "未設定",
         languages=", ".join(github_analysis.get("languages", [])) or "なし",

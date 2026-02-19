@@ -76,22 +76,23 @@ class TestSkillTreeService:
     async def test_generate_skill_tree_ai_regenerate(self, db: Session):
         """キャッシュが古い場合はLLM呼び出し"""
         # Arrange: キャッシュが古いSkillTreeを準備
-        user_id = 1
         category = SkillCategory.AI
 
-        # Profileを作成
+        # User→Profileを作成
+        user = User(username="test_user", rank=5)
+        db.add(user)
+        db.flush()
+
         profile = Profile(
-            user_id=user_id,
-            display_name="Test User",
+            user_id=user.id,
             github_username="testuser",
-            rank=5,
         )
         db.add(profile)
 
         # SkillTreeを作成（10日前に生成 → キャッシュ期限切れ）
         old_tree_data = {"nodes": [], "edges": [], "metadata": {}}
         skill_tree = SkillTree(
-            user_id=user_id,
+            user_id=user.id,
             category=category.value,
             tree_data=old_tree_data,
             generated_at=datetime.now(UTC) - timedelta(days=10),
@@ -136,7 +137,7 @@ class TestSkillTreeService:
             },
         ):
             # Act: generate_skill_tree_ai を呼び出し
-            result = await generate_skill_tree_ai(user_id, category, db)
+            result = await generate_skill_tree_ai(user.id, category, db)
 
         # Assert: 新しいデータが返却されることを確認
         assert result.category == category.value
@@ -147,15 +148,16 @@ class TestSkillTreeService:
     async def test_generate_skill_tree_ai_with_github_data(self, db: Session):
         """GitHub分析結果がcompleted判定に反映される"""
         # Arrange
-        user_id = 1
         category = SkillCategory.WEB
 
-        # Profileを作成
+        # User→Profileを作成
+        user = User(username="test_user", rank=6)
+        db.add(user)
+        db.flush()
+
         profile = Profile(
-            user_id=user_id,
-            display_name="Test User",
+            user_id=user.id,
             github_username="octocat",
-            rank=6,
         )
         db.add(profile)
         db.commit()
@@ -211,11 +213,95 @@ class TestSkillTreeService:
             return_value=json.dumps(llm_response),
         ):
             # Act
-            result = await generate_skill_tree_ai(user_id, category, db)
+            result = await generate_skill_tree_ai(user.id, category, db)
 
         # Assert: completed=True が反映されている
         assert result.tree_data["nodes"][0]["completed"] is True
         assert result.tree_data["nodes"][1]["completed"] is True
+
+    @pytest.mark.asyncio
+    async def test_generate_skill_tree_ai_github_overrides_llm(self, db: Session):
+        """LLMがcompletedをfalseで返してもGitHub分析結果が優先される"""
+        # Arrange
+        user_id = 1
+        category = SkillCategory.WEB
+
+        # Profileを作成
+        user = User(username="test_user", rank=5)
+        db.add(user)
+        db.flush()
+
+        profile = Profile(
+            user_id=user.id,
+            github_username="testuser",
+        )
+        db.add(profile)
+        db.commit()
+
+        # Mock: GitHub APIで「web_html_css」を習得済みと判定
+        github_analysis = {
+            "languages": ["HTML", "CSS", "JavaScript"],
+            "repo_count": 10,
+            "tech_stack": [],
+            "recent_activity": "過去30日で5コミット",
+            "completion_signals": {
+                "web_html_css": True,  # ← GitHub分析で習得済み
+            },
+        }
+
+        # LLMはcompletedをfalseで返す（間違った判定）
+        llm_response = {
+            "nodes": [
+                {
+                    "id": "web_html_css",
+                    "name": "HTML/CSS基礎",
+                    "completed": False,  # ← LLMは未習得と判定（誤り）
+                    "description": "HTML/CSS基礎",
+                    "prerequisites": [],
+                    "estimated_hours": 15,
+                },
+                {
+                    "id": "web_js_basics",
+                    "name": "JavaScript基礎",
+                    "completed": False,
+                    "description": "JavaScript基礎",
+                    "prerequisites": ["web_html_css"],
+                    "estimated_hours": 20,
+                },
+            ],
+            "edges": [{"from": "web_html_css", "to": "web_js_basics"}],
+            "metadata": {
+                "total_nodes": 2,
+                "completed_nodes": 0,
+                "progress_percentage": 0.0,
+                "next_recommended": ["web_html_css"],
+            },
+        }
+
+        with patch(
+            "app.services.skill_tree_service.analyze_github_profile",
+            new_callable=AsyncMock,
+            return_value=github_analysis,
+        ), patch(
+            "app.services.skill_tree_service.invoke_llm",
+            new_callable=AsyncMock,
+            return_value=json.dumps(llm_response),
+        ):
+            # Act
+            result = await generate_skill_tree_ai(user.id, category, db)
+
+        # Assert: GitHub分析結果が優先されてcompletedがtrueに上書きされる
+        web_html_css_node = next(
+            (n for n in result.tree_data["nodes"] if n["id"] == "web_html_css"), None
+        )
+        assert web_html_css_node is not None
+        assert (
+            web_html_css_node["completed"] is True
+        )  # ← LLMのfalseがtrueに上書きされる
+
+        # metadataも再計算されている
+        assert result.tree_data["metadata"]["completed_nodes"] == 1
+        assert result.tree_data["metadata"]["progress_percentage"] == 50.0
 
     @pytest.mark.asyncio
     async def test_generate_skill_tree_ai_user_not_found(self, db: Session):
@@ -236,15 +322,16 @@ class TestSkillTreeService:
     async def test_generate_skill_tree_ai_llm_failure_fallback(self, db: Session):
         """LLM呼び出し失敗時はベースラインJSONを返却"""
         # Arrange
-        user_id = 1
         category = SkillCategory.INFRASTRUCTURE
 
-        # Profileを作成
+        # User→Profileを作成
+        user = User(username="test_user", rank=3)
+        db.add(user)
+        db.flush()
+
         profile = Profile(
-            user_id=user_id,
-            display_name="Test User",
+            user_id=user.id,
             github_username="testuser",
-            rank=3,
         )
         db.add(profile)
         db.commit()
@@ -266,7 +353,7 @@ class TestSkillTreeService:
             side_effect=Exception("LLM error"),
         ):
             # Act
-            result = await generate_skill_tree_ai(user_id, category, db)
+            result = await generate_skill_tree_ai(user.id, category, db)
 
         # Assert: ベースラインJSONが返却される
         assert result.category == category.value
@@ -309,7 +396,8 @@ class TestSkillTreeService:
         """LLMプロンプト生成のテスト"""
         # Arrange
         profile = MagicMock()
-        profile.rank = 4
+        profile.user = MagicMock()
+        profile.user.rank = 4
         profile.github_username = "testuser"
 
         github_analysis = {
