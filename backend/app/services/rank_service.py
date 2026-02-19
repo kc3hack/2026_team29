@@ -51,7 +51,9 @@ async def analyze_user_rank(
     try:
         result = json.loads(response)
         # 必須フィールドの存在確認
-        if not all(k in result for k in ["percentile", "rank", "rank_name", "reasoning"]):
+        if not all(
+            k in result for k in ["percentile", "rank", "rank_name", "reasoning"]
+        ):
             raise ValueError("Missing required fields in LLM response")
         return result
     except (json.JSONDecodeError, ValueError) as e:

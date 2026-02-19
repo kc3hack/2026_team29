@@ -22,7 +22,9 @@ def test_analyze_rank_success():
         "reasoning": "複数の技術での実装経験が確認されました。",
     }
 
-    with patch("app.services.rank_service.invoke_llm", new_callable=AsyncMock) as mock_invoke:
+    with patch(
+        "app.services.rank_service.invoke_llm", new_callable=AsyncMock
+    ) as mock_invoke:
         mock_invoke.return_value = json.dumps(mock_response)
 
         response = client.post(
@@ -51,7 +53,9 @@ def test_analyze_rank_minimal():
         "reasoning": "基本スキルは確認されました。",
     }
 
-    with patch("app.services.rank_service.invoke_llm", new_callable=AsyncMock) as mock_invoke:
+    with patch(
+        "app.services.rank_service.invoke_llm", new_callable=AsyncMock
+    ) as mock_invoke:
         mock_invoke.return_value = json.dumps(mock_response)
 
         response = client.post(
