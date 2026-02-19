@@ -222,7 +222,6 @@ class TestSkillTreeService:
     async def test_generate_skill_tree_ai_github_overrides_llm(self, db: Session):
         """LLMがcompletedをfalseで返してもGitHub分析結果が優先される"""
         # Arrange
-        user_id = 1
         category = SkillCategory.WEB
 
         # Profileを作成
