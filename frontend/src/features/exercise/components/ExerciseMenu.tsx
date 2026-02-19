@@ -65,8 +65,9 @@ export function ExerciseMenu() {
       <div className="flex-1 bg-[#FDFEF0] p-8">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
           {items.map((item) => (
-            <div
+            <button
               key={item.id}
+              onClick={() => console.log(`Clicked ${item.title}`)}
               className="flex aspect-square w-full flex-col items-center justify-center rounded-3xl border-2 border-[#3A7E56] bg-white p-4 shadow-sm transition-transform hover:scale-105 hover:shadow-md cursor-pointer overflow-hidden"
             >
               <div className="relative -mt-4 flex h-4/5 w-full items-center justify-center">
@@ -92,7 +93,7 @@ export function ExerciseMenu() {
               <h3 className="text-2xl font-bold text-[#1a4023] text-center w-full break-words">
                   {item.title}
               </h3>
-            </div>
+            </button>
           ))}
         </div>
       </div>
