@@ -337,7 +337,9 @@ MOCK_SKILL_TREES = {
 }
 
 
-def generate_skill_tree_mock(user_id: int, category: SkillCategory) -> SkillTreeResponse:
+def generate_skill_tree_mock(
+    user_id: int, category: SkillCategory
+) -> SkillTreeResponse:
     """
     スキルツリー生成（モック実装）
 

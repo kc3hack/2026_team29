@@ -195,9 +195,7 @@ class QuestGenerationResponse(BaseModel):
     is_generated: bool = Field(..., description="AI生成フラグ")
 
     # モック実装専用フィールド（DB設計には含まれない）
-    steps: list[str] = Field(
-        ..., description="実装手順リスト（モック実装でのみ使用）"
-    )
+    steps: list[str] = Field(..., description="実装手順リスト（モック実装でのみ使用）")
     estimated_time_minutes: int = Field(
         ..., gt=0, description="推定所要時間（分、モック実装でのみ使用）"
     )
@@ -206,4 +204,3 @@ class QuestGenerationResponse(BaseModel):
     )
 
     created_at: datetime = Field(..., description="作成日時")
-

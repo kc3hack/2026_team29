@@ -166,4 +166,3 @@ async def generate_quest(request: QuestGenerationRequest) -> QuestGenerationResp
         raise HTTPException(
             status_code=500, detail=f"Quest generation failed: {str(e)}"
         )
-
