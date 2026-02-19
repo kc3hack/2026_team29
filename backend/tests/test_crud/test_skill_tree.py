@@ -49,3 +49,44 @@ def test_update_skill_tree(db):
 
     assert updated.tree_data == tree_data
     assert updated.generated_at is not None
+
+
+def test_skill_tree_jsonb_data_persistence(db):
+    """JSONB型（PostgreSQL）/BLOB型（SQLite）でのデータ保存・取得テスト (issue #45)"""
+    user = create_user(db, UserCreate(username="jsonb_test_user"))
+
+    # 複雑なJSONデータを挿入
+    complex_tree_data = {
+        "nodes": [
+            {
+                "id": "react",
+                "name": "React",
+                "level": 5,
+                "skills": ["hooks", "context", "redux"],
+                "metadata": {"experience_years": 3, "certified": True},
+            },
+            {
+                "id": "typescript",
+                "name": "TypeScript",
+                "level": 4,
+                "skills": ["generics", "decorators"],
+                "metadata": {"experience_years": 2, "certified": False},
+            },
+        ],
+        "edges": [{"from": "typescript", "to": "react", "weight": 0.8}],
+        "statistics": {"total_nodes": 2, "max_level": 5, "avg_level": 4.5},
+    }
+
+    # データを挿入
+    updated = update_skill_tree(db, user.id, SkillCategory.WEB, complex_tree_data)
+    assert updated.tree_data == complex_tree_data
+
+    # データベースから再取得して確認（JSONB/BLOBの読み書きが正しく動作するか）
+    retrieved = get_skill_tree_by_user_category(db, user.id, SkillCategory.WEB)
+    assert retrieved is not None
+    assert retrieved.tree_data == complex_tree_data
+
+    # ネストされたデータの検証
+    assert retrieved.tree_data["nodes"][0]["metadata"]["experience_years"] == 3
+    assert retrieved.tree_data["nodes"][1]["skills"] == ["generics", "decorators"]
+    assert retrieved.tree_data["statistics"]["avg_level"] == 4.5
