@@ -2,9 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api import admin
 
-from app.api.admin import admin_app
 
 api_router = APIRouter()
 
