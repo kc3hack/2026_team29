@@ -8,9 +8,7 @@
 import { useEffect, useState } from 'react';
 import type { UserStatus } from '../types';
 import { fetchUserDashboard } from '../api/mock';
-import { StatusCard } from './StatusCard';
-import { BadgeList } from './BadgeList';
-import { SkillRoadmap } from './SkillRoadmap';
+import { AcquiredBadges } from './AcquiredBadges';
 
 interface DashboardContainerProps {
   userId?: string;
@@ -42,11 +40,11 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
         <div className="text-center">
-          <div className="mb-4 inline-flex h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400" />
-          <p className="text-gray-600 dark:text-gray-400">
-            ダッシュボードを読み込み中...
+          <div className="mb-4 inline-flex h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-[#559C71]" />
+          <p className="text-[#559C71]">
+            Loading...
           </p>
         </div>
       </div>
@@ -55,10 +53,10 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
   if (error || !userStatus) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="rounded-lg bg-white p-8 text-center shadow-lg dark:bg-gray-800">
-          <p className="text-red-600 dark:text-red-400">
-            {error || 'ダッシュボードの読み込みに失敗しました'}
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
+        <div className="rounded-lg bg-white p-8 text-center shadow-lg">
+          <p className="text-red-600">
+            {error || 'Error loading dashboard'}
           </p>
         </div>
       </div>
@@ -66,16 +64,35 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 dark:bg-gray-900">
-      <div className="mx-auto max-w-6xl space-y-8">
-        {/* ステータスカード */}
-        <StatusCard userStatus={userStatus} />
+    <main className="min-h-screen bg-[#FDFEF0] px-4 py-8">
+      <div className="mx-auto max-w-5xl space-y-12">
+        {/* Header Section */}
+        <div className="flex flex-col gap-4">
+            <h1 className="text-4xl font-bold tracking-tight text-[#2C5F2D]">こんにちは</h1>
+            
+            {/* Continue Button aligned right */}
+            <div className="flex flex-col items-end self-end w-full max-w-xs">
+                 <span className="mb-2 text-sm font-bold text-[#2C5F2D]">前回の続きから</span>
+                 <button className="group flex w-full items-center justify-between rounded-full border-2 border-[#2C5F2D] bg-white px-6 py-3 text-lg font-bold text-[#2C5F2D] shadow-sm transition-colors hover:bg-gray-50">
+                    <span>演習タイトル</span>
+                    <span className="text-2xl">→</span>
+                 </button>
+            </div>
+        </div>
 
-        {/* バッジ一覧 */}
-        <BadgeList badges={userStatus.badges} />
+        {/* Tree Image Section */}
+        <div className="flex justify-center py-8">
+            {/* Using a placeholder for the tree image based on the mockup description */}
+            <div className="relative h-64 w-64">
+                {/* Fallback to a large tree emoji if no image provided */}
+                <div className="flex h-full w-full items-center justify-center text-[10rem]">
+                    🌳
+                </div>
+            </div>
+        </div>
 
-        {/* スキルロードマップ */}
-        <SkillRoadmap skills={userStatus.skillRoadmap} />
+        {/* Acquired Badges Section */}
+        <AcquiredBadges />
       </div>
     </main>
   );
