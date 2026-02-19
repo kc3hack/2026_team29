@@ -10,7 +10,7 @@ from app.db.base_class import Base
 class Quest(Base):
     __tablename__ = "quests"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
 
     title = Column(String, nullable=False)
     description = Column(Text, nullable=False)

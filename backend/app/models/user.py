@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     username = Column(String, unique=True, index=True, nullable=False)
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)

@@ -28,6 +28,8 @@ def create_profile(db: Session, profile_in: ProfileCreate) -> Profile:
 
 def update_profile(db: Session, profile_id: int, profile_in: ProfileUpdate) -> Profile:
     db_profile = db.query(Profile).filter(Profile.id == profile_id).first()
+    if db_profile is None:
+        raise ValueError(f"Profile with id={profile_id} not found")
     update_data = profile_in.model_dump(exclude_unset=True)
     # HttpUrlをstrに変換
     if "portfolio_url" in update_data and update_data["portfolio_url"]:

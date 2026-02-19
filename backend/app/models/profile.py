@@ -9,7 +9,7 @@ from app.db.base_class import Base
 class Profile(Base):
     __tablename__ = "profiles"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False, index=True)
 
     github_username = Column(String, nullable=True)

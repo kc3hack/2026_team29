@@ -12,7 +12,7 @@ class QuestProgress(Base):
         UniqueConstraint("user_id", "quest_id", name="uq_progress_user_quest"),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     quest_id = Column(Integer, ForeignKey("quests.id"), nullable=False, index=True)
 

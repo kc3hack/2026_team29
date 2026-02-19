@@ -40,6 +40,8 @@ def update_oauth_tokens(
     db: Session, account_id: int, token_in: OAuthTokenUpdate
 ) -> OAuthAccount:
     db_account = db.query(OAuthAccount).filter(OAuthAccount.id == account_id).first()
+    if db_account is None:
+        raise ValueError(f"OAuthAccount with id={account_id} not found")
     if token_in.access_token is not None:
         db_account.encrypted_access_token = encrypt_token(token_in.access_token)
     if token_in.refresh_token is not None:

@@ -25,5 +25,34 @@ class Settings(BaseSettings):
     # 暗号化（OAuthトークン保護用）
     ENCRYPTION_KEY: str = ""  # 本番では必ず.envで設定すること
 
+    # ランク計算（product-spec 4.1 準拠）
+    # ランクn に到達するために必要な累積経験値（仕様確定後に調整）
+    RANK_THRESHOLDS: list[int] = [
+        0,      # 0: 種子
+        100,    # 1: 苗木
+        300,    # 2: 若木
+        600,    # 3: 巨木
+        1000,   # 4: 母樹
+        1500,   # 5: 林
+        2500,   # 6: 森
+        4000,   # 7: 霊樹
+        6000,   # 8: 古樹
+        9000,   # 9: 世界樹
+    ]
+
 
 settings = Settings()
+
+
+# ENCRYPTION_KEYの検証（アプリ起動時にチェック）
+def validate_encryption_key() -> None:
+    """ENCRYPTION_KEYが設定されているかを検証する。
+
+    未設定の場合はValueErrorを送出する。
+    テスト環境ではダミーキーが自動設定されるため、本番環境のみチェック。
+    """
+    if not settings.ENCRYPTION_KEY:
+        raise ValueError(
+            "ENCRYPTION_KEY is not set. "
+            "Generate one with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+        )

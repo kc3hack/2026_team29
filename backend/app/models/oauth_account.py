@@ -12,7 +12,7 @@ class OAuthAccount(Base):
         UniqueConstraint("user_id", "provider", name="uq_oauth_user_provider"),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     provider = Column(String, nullable=False)
