@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+
 api_router = APIRouter()
 
 # 将来的にエンドポイントを追加する際はここでインクルード

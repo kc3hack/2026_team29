@@ -22,6 +22,24 @@ class Settings(BaseSettings):
     # データベース
     DATABASE_URL: str = "sqlite:///./test.db"
 
+    # 暗号化（OAuthトークン保護用）
+    ENCRYPTION_KEY: str = ""  # 本番では必ず.envで設定すること
+
+    # ランク計算（product-spec 4.1 準拠）
+    # ランクn に到達するために必要な累積経験値（仕様確定後に調整）
+    RANK_THRESHOLDS: list[int] = [
+        0,  # 0: 種子
+        100,  # 1: 苗木
+        300,  # 2: 若木
+        600,  # 3: 巨木
+        1000,  # 4: 母樹
+        1500,  # 5: 林
+        2500,  # 6: 森
+        4000,  # 7: 霊樹
+        6000,  # 8: 古樹
+        9000,  # 9: 世界樹
+    ]
+
     # LLM設定
     LLM_PROVIDER: str = "openai"  # "openai" or "anthropic"
 
@@ -33,5 +51,33 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
 
+    # Admin API Access Control
+    ADMIN_API_KEY: str = ""  # 本番では必ず.envで設定すること
+
 
 settings = Settings()
+
+
+# ENCRYPTION_KEYの検証（アプリ起動時にチェック）
+def validate_encryption_key() -> None:
+    """ENCRYPTION_KEYが設定されており、かつ形式が正しいかを検証する。
+
+    未設定または形式不正の場合はValueErrorを送出する。
+    テスト環境ではダミーキーが自動設定されるため、本番環境のみチェック。
+    """
+    from cryptography.fernet import Fernet
+
+    if not settings.ENCRYPTION_KEY:
+        raise ValueError(
+            "ENCRYPTION_KEY is not set. "
+            'Generate one with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"'
+        )
+
+    # キー形式の検証（Fernet互換の32バイトbase64キーかチェック）
+    try:
+        Fernet(settings.ENCRYPTION_KEY.encode())
+    except Exception as e:
+        raise ValueError(
+            f"ENCRYPTION_KEY format is invalid: {e}. "
+            'Generate a valid key with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"'
+        ) from e
