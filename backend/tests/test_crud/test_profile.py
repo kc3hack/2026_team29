@@ -4,6 +4,10 @@ from app.schemas.profile import ProfileCreate, ProfileUpdate
 from app.schemas.user import UserCreate
 import pytest
 
+from app.crud.skill_tree import update_skill_tree
+from app.crud.quest_progress import complete_quest
+from app.models.enums import SkillCategory
+
 def test_create_profile(db):
     user = create_user(db, UserCreate(username="profile_user"))
     profile_in = ProfileCreate(
@@ -52,15 +56,14 @@ def test_update_profile_not_found(db):
         update_profile(db, 999, ProfileUpdate(github_username="test"))
 
 def test_update_skill_tree_not_found(db):
-    # 存在しないユーザーIDを指定
-    with pytest.raises(ValueError, match="SkillTree not found"):
+    with pytest.raises(ValueError, match="SkillTree for user_id=999.*not found"):
         update_skill_tree(
             db, 
             user_id=999, 
-            category=SkillCategory.BACKEND, 
-            tree_in=SkillTreeUpdate(tree_data={})
-        )
+            category=SkillCategory.WEB, 
+            tree_data={}
+    )
 
 def test_complete_quest_not_found(db):
-    with pytest.raises(ValueError, match="Quest with id=999 not found"):
-        complete_quest(db, 999)
+    with pytest.raises(ValueError, match="QuestProgress for user_id=999, quest_id=888 not found"):
+        complete_quest(db, user_id=999, quest_id=888)
