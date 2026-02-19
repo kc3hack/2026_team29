@@ -21,7 +21,7 @@ export function ExerciseMenu() {
   // Dummy data for the cards (9 placeholders for 3x3 grid)
   const items = Array.from({ length: 9 }).map((_, i) => ({
     id: i,
-    title: i === 0 ? 'Web' : i === 1 ? 'Mobile' : i === 2 ? 'Network' : i === 3 ? 'Game' : i === 4 ? 'Design' : i === 5 ? 'Infrastructure' : i === 6 ? 'AI' : i === 7 ? 'Security' : i === 8 ? 'Comming Soon...':`Exercise ${i + 1}`,
+    title: i === 0 ? 'Web' : i === 1 ? 'Mobile' : i === 2 ? 'Network' : i === 3 ? 'Game' : i === 4 ? 'Design' : i === 5 ? 'Infrastructure' : i === 6 ? 'AI' : i === 7 ? 'Security' : i === 8 ? 'Coming Soon...':`Exercise ${i + 1}`,
     image: i === 0 ? '/images/exercises/Web.png' : i === 1 ? '/images/exercises/Mobile.png' : i === 2 ? '/images/exercises/Network.png' : i === 3 ? '/images/exercises/game.png' : i === 4 ? '/images/exercises/Design.png' : i === 5 ? '/images/exercises/Infr.png' : i === 6 ? '/images/exercises/ai.png' : i === 7 ? '/images/exercises/Security.png' : null,
   }));
 
