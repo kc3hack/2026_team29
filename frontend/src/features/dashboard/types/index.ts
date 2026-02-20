@@ -32,6 +32,7 @@ export interface UserStatus {
   userId: string;
   displayName: string;
   avatar?: string;
+  githubUsername?: string;
   totalExp: number;
   currentRank: Rank;
   badges: Badge[];
