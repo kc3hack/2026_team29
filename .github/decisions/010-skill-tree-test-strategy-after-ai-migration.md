@@ -439,8 +439,8 @@ curl -X POST http://localhost:8000/api/v1/analyze/skill-tree \
 - ✅ `test_generate_skill_tree_ai_github_overrides_llm` - GitHub優先上書き（Step 6.5）
 - ✅ `test_generate_skill_tree_ai_user_not_found` - User不在で404
 - ✅ `test_generate_skill_tree_ai_llm_failure_fallback` - LLM失敗でベースライン返却
-- ✅ `test_is_cache_valid_within_7_days` - キャッシュ期間判定（10分以内）
-- ✅ `test_is_cache_valid_over_7_days` - キャッシュ期間判定（10分経過）
+- ✅ `test_is_cache_valid_within_10_minutes` - キャッシュ期間判定（10分以内）
+- ✅ `test_is_cache_valid_over_10_minutes` - キャッシュ期間判定（10分経過）
 - ✅ `test_load_baseline_json_success` - ベースラインJSON読み込み
 - ✅ `test_load_baseline_json_all_categories` - 全6カテゴリ読み込み
 - ✅ `test_build_skill_tree_prompt` - LLMプロンプト生成

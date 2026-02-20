@@ -43,7 +43,7 @@ class TestSkillTreeService:
         )
         db.add(profile)
 
-        # SkillTreeを作成（5日前に生成）
+        # SkillTreeを作成（5分前に生成）
         tree_data = {
             "nodes": [{"id": "test-node", "name": "Test", "completed": False}],
             "edges": [],
@@ -58,7 +58,7 @@ class TestSkillTreeService:
             user_id=user.id,
             category=category.value,
             tree_data=tree_data,
-            generated_at=datetime.now(UTC) - timedelta(days=5),
+            generated_at=datetime.now(UTC) - timedelta(minutes=5),
         )
         db.add(skill_tree)
         db.commit()
@@ -88,13 +88,13 @@ class TestSkillTreeService:
         )
         db.add(profile)
 
-        # SkillTreeを作成（10日前に生成 → キャッシュ期限切れ）
+        # SkillTreeを作成（15分前に生成 → キャッシュ期限切れ）
         old_tree_data = {"nodes": [], "edges": [], "metadata": {}}
         skill_tree = SkillTree(
             user_id=user.id,
             category=category.value,
             tree_data=old_tree_data,
-            generated_at=datetime.now(UTC) - timedelta(days=10),
+            generated_at=datetime.now(UTC) - timedelta(minutes=15),
         )
         db.add(skill_tree)
         db.commit()
@@ -358,14 +358,14 @@ class TestSkillTreeService:
         assert "nodes" in result.tree_data
         assert len(result.tree_data["nodes"]) > 0  # ベースラインデータが存在
 
-    def test_is_cache_valid_within_7_days(self):
-        """7日以内のキャッシュは有効"""
-        generated_at = datetime.now(UTC) - timedelta(days=5)
+    def test_is_cache_valid_within_10_minutes(self):
+        """10分以内のキャッシュは有効"""
+        generated_at = datetime.now(UTC) - timedelta(minutes=5)
         assert _is_cache_valid(generated_at) is True
 
-    def test_is_cache_valid_over_7_days(self):
-        """7日以上前のキャッシュは無効"""
-        generated_at = datetime.now(UTC) - timedelta(days=10)
+    def test_is_cache_valid_over_10_minutes(self):
+        """10分以上前のキャッシュは無効"""
+        generated_at = datetime.now(UTC) - timedelta(minutes=15)
         assert _is_cache_valid(generated_at) is False
 
     def test_is_cache_valid_none(self):
