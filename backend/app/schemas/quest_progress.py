@@ -9,7 +9,6 @@ from app.models.enums import QuestStatus
 
 class QuestProgress(BaseModel):
     id: int
-    user_id: int
     quest_id: int
     status: QuestStatus
     started_at: datetime | None
