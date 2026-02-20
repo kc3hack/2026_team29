@@ -5,11 +5,16 @@
  * ダッシュボードの全コンポーネントを統合し、データフェッチを担当
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { UserStatus } from '../types';
 import { fetchUserDashboard } from '../api/mock';
 import { AcquiredBadges } from './AcquiredBadges';
-import { SkillRoadmap } from './SkillRoadmap';
+import { SkillTreeCanvas } from '../../skill-tree/components/SkillTreeCanvas';
+import { SkillNodePanel } from '../../skill-tree/components/SkillNodePanel';
+import { RankBar } from '../../skill-tree/components/RankBar';
+import { SkillLegend } from '../../skill-tree/components/SkillLegend';
+import { ZoomControls } from '../../skill-tree/components/ZoomControls';
+import type { SkillNode as TreeSkillNode } from '../../skill-tree/types/data';
 
 interface DashboardContainerProps {
   userId?: string;
@@ -19,6 +24,19 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Skill Tree States
+  const [selectedNode, setSelectedNode] = useState<TreeSkillNode | null>(null);
+  const [zoomAction, setZoomAction] = useState<{ type: string; ts: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSelectNode = useCallback((node: TreeSkillNode | null) => {
+    setSelectedNode(node);
+  }, []);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -68,7 +86,7 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
     <main className="min-h-screen bg-[#FDFEF0] px-4 py-8">
       <div className="mx-auto max-w-5xl space-y-12">
         {/* Header Section */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 relative z-10">
             <h1 className="text-4xl font-bold tracking-tight text-[#2C5F2D]">こんにちは</h1>
             
             {/* Continue Button aligned right */}
@@ -82,12 +100,49 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
         </div>
 
         {/* Skill Tree Section */}
-        <div className="flex justify-center py-8">
-            <SkillRoadmap skills={userStatus.skillRoadmap} />
-        </div>
+        <section className="relative z-0">
+          <div className="relative w-full h-[600px] overflow-hidden rounded-xl border-4 border-[#2C5F2D] bg-[#0a0f08] shadow-lg">
+            <SkillTreeCanvas
+              onSelectNode={handleSelectNode}
+              selectedNode={selectedNode}
+              zoomAction={zoomAction}
+            />
+            <RankBar />
+            <SkillLegend />
+            <ZoomControls
+              onZoomIn={() => setZoomAction({ type: "in", ts: Date.now() })}
+              onZoomOut={() => setZoomAction({ type: "out", ts: Date.now() })}
+              onReset={() => setZoomAction({ type: "reset", ts: Date.now() })}
+            />
+            
+            {/* Title Overlay */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none font-sans">
+              <h3
+                className="text-base font-bold tracking-widest"
+                style={{
+                  color: "#e8b849",
+                  textShadow: "2px 2px 0 #7a5a10, -1px -1px 0 #0a0a0a",
+                }}
+              >
+                SKILL TREE
+              </h3>
+              {mounted && (
+                <p className="text-[10px] mt-1" style={{ color: "#666680" }} suppressHydrationWarning>
+                  ドラッグで移動 / スクロールでズーム / クリックで詳細
+                </p>
+              )}
+            </div>
+
+            {selectedNode && (
+              <SkillNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+            )}
+          </div>
+        </section>
 
         {/* Acquired Badges Section */}
-        <AcquiredBadges />
+        <section className="relative z-10 w-full">
+          <AcquiredBadges />
+        </section>
       </div>
     </main>
   );
