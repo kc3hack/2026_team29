@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import type { UserStatus } from '../types';
 import { fetchUserDashboard } from '../api/mock';
+import { StatusCard } from './StatusCard';
 import { AcquiredBadges } from './AcquiredBadges';
 import { SkillRoadmap } from './SkillRoadmap';
 
@@ -80,6 +81,9 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
                  </button>
             </div>
         </div>
+
+        {/* Status Card Section */}
+        <StatusCard userStatus={userStatus} />
 
         {/* Skill Tree Section */}
         <div className="flex justify-center py-8">
