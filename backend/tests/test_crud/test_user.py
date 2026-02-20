@@ -1,7 +1,14 @@
 from app.crud.skill_tree import get_skill_tree_by_user_category
-from app.crud.user import create_user, get_user, get_user_by_username
+from app.crud.user import (
+    create_user,
+    delete_user,
+    get_user,
+    get_user_by_username,
+    update_user,
+    update_user_rank,
+)
 from app.models.enums import SkillCategory
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 
 
 def test_create_user(db):
@@ -53,4 +60,64 @@ def test_get_user_by_username(db):
 
 def test_get_user_by_username_not_found(db):
     result = get_user_by_username(db, "nonexistent")
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# update_user
+# ---------------------------------------------------------------------------
+
+
+def test_update_user_username(db):
+    user = create_user(db, UserCreate(username="BEFORE"))
+    updated = update_user(db, user.id, UserUpdate(username="AFTER"))
+    assert updated is not None
+    assert updated.username == "AFTER"
+
+
+def test_update_user_partial(db):
+    """未指定フィールドは変更されない。"""
+    user = create_user(db, UserCreate(username="PARTIAL"))
+    updated = update_user(db, user.id, UserUpdate())
+    assert updated is not None
+    assert updated.username == "PARTIAL"
+
+
+def test_update_user_not_found(db):
+    result = update_user(db, 9999, UserUpdate(username="NOBODY"))
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# delete_user
+# ---------------------------------------------------------------------------
+
+
+def test_delete_user_success(db):
+    user = create_user(db, UserCreate(username="TODELETE"))
+    result = delete_user(db, user.id)
+    assert result is True
+    assert get_user(db, user.id) is None
+
+
+def test_delete_user_not_found(db):
+    result = delete_user(db, 9999)
+    assert result is False
+
+
+# ---------------------------------------------------------------------------
+# update_user_rank (AI専用)
+# ---------------------------------------------------------------------------
+
+
+def test_update_user_rank(db):
+    user = create_user(db, UserCreate(username="RANKUP"))
+    assert user.rank == 0
+    updated = update_user_rank(db, user.id, 4)
+    assert updated is not None
+    assert updated.rank == 4
+
+
+def test_update_user_rank_not_found(db):
+    result = update_user_rank(db, 9999, 4)
     assert result is None
