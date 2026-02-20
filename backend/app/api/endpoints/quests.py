@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.crud import quest as crud_quest
 from app.crud import quest_progress as crud_quest_progress
+from app.crud import user as crud_user
 from app.db.session import get_db
 from app.models.enums import QuestCategory, QuestStatus
 from app.schemas.quest import Quest as QuestSchema
@@ -57,15 +58,26 @@ def start_quest(
     progress_in: QuestProgressStart,
     db: Session = Depends(get_db),
 ) -> QuestProgressSchema:
-    """クエスト開始。既に開始済みの場合は 409。"""
+    """クエスト開始。既に開始済み/完了済みの場合は 409。"""
     if crud_quest.get_quest(db, quest_id) is None:
         raise HTTPException(status_code=404, detail="Quest not found")
+    # ③ user_id の存在確認（IntegrityError が 409 に化けるのを防ぐ）
+    if crud_user.get_user(db, progress_in.user_id) is None:
+        raise HTTPException(status_code=404, detail="User not found")
     try:
         return crud_quest_progress.start_quest(
             db, user_id=progress_in.user_id, quest_id=quest_id
         )
     except ValueError:
-        raise HTTPException(status_code=409, detail="Quest already started")
+        # ② status を確認してメッセージを出し分ける
+        progress = crud_quest_progress.get_quest_progress(
+            db, user_id=progress_in.user_id, quest_id=quest_id
+        )
+        if progress is not None and progress.status == QuestStatus.COMPLETED:
+            detail = "Quest already completed"
+        else:
+            detail = "Quest already started"
+        raise HTTPException(status_code=409, detail=detail)
 
 
 @router.post("/{quest_id}/complete", response_model=QuestProgressSchema)

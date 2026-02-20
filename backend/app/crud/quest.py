@@ -23,6 +23,8 @@ def list_quests(
         query = query.filter(Quest.category == category.value)
     if difficulty is not None:
         query = query.filter(Quest.difficulty == difficulty)
+    # ページネーション結果を安定させるため主キーで明示的にソート
+    query = query.order_by(Quest.id.asc())
     return query.offset(skip).limit(limit).all()
 
 
