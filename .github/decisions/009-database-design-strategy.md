@@ -3,6 +3,7 @@
 ## ステータス
 
 - [x] **決定**
+- [x] **更新** (2026-02-19): JSON型 → JSONB型に変更（issue #45）
 
 ## コンテキスト (課題と背景)
 
@@ -28,12 +29,18 @@ issue #31で6テーブル（Profile, OAuthAccount, Badge, Quest, QuestProgress, 
 ### 2. 型選択基準
 
 #### JSON型 vs JSONB型（PostgreSQL）
-- **基本方針**: JSON型を使用（JSONB型は不要）
-- **理由**:
-  - **SkillTree.tree_data**: AI生成のツリー構造を全体として保存・取得するだけ
-  - **JSON内部の検索が不要**: 全体を読むだけ、個別ノード検索はしない
-  - **SQLiteとPostgreSQLで互換性が高い**: JSON型はどちらでも使える
-- **JSONB型を検討すべきケース**: JSON内部の特定フィールドを検索する必要が出てきたら移行
+- **基本方針**: ~~JSON型を使用（JSONB型は不要）~~ **→ JSONB型に変更（2026-02-19、issue #45）**
+- **変更理由**:
+  - **Langchain/フロントエンドとの統一的な操作**: JSONB型（バイナリ形式）で一貫した扱いが必要
+  - **テスト環境の統一**: SQLite（BLOB型）/PostgreSQL（JSONB型）両対応
+  - **将来の拡張性**: JSON内部検索の可能性を考慮
+- **実装方針**:
+  - PostgreSQL: JSONB型として保存
+  - SQLite: BLOB型として保存（JSONBのバイナリ表現）
+  - SQLAlchemyの`JSON().with_variant(JSONB, "postgresql")`で両DB対応
+- **旧方針（参考）**:
+  - ~~JSON型を使用（JSONB型は不要）~~
+  - ~~理由: AI生成のツリー構造を全体として保存・取得するだけ、JSON内部の検索が不要~~
 
 #### Enum vs 整数
 - **基本方針**: Enumは文字列型、整数は数値演算が必要な場合
@@ -102,11 +109,14 @@ issue #31で6テーブル（Profile, OAuthAccount, Badge, Quest, QuestProgress, 
 ### 2. JSONB型を優先（PostgreSQL）
 
 - **Good**: JSON内部の検索が高速、GINインデックスで最適化可能
-- **Bad**:
-  - **MVP段階ではJSON内部検索が不要**（全体を読むだけ）
-  - SQLiteとの互換性が低い（SQLiteはJSONB型をサポートしない）
+- **Bad（旧判断、2026-02-19に方針転換）**:
+  - ~~MVP段階ではJSON内部検索が不要（全体を読むだけ）~~
+  - ~~SQLiteとの互換性が低い（SQLiteはJSONB型をサポートしない）~~
   - 書き込みパフォーマンスが若干劣る
-  - **却下理由**: 現時点では過剰な最適化、互換性優先
+  - ~~**却下理由**: 現時点では過剰な最適化、互換性優先~~
+- **方針転換（2026-02-19、issue #45）**:
+  - Langchain/フロントエンドとの統一的な操作のため、JSONB型（BLOB型）を採用
+  - SQLiteではBLOB型として保存することで互換性を確保
 
 ### 3. NoSQL（MongoDB等）
 
