@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.db.session import get_db
 from app.main import app
-from tests.conftest import auth_headers
+from tests.conftest import auth_headers, make_expired_token, make_tampered_token, make_test_token
 
 
 @pytest.fixture()
@@ -263,3 +263,34 @@ def test_get_quest_progress_empty(client):
 def test_get_quest_progress_user_not_found(client):
     res = client.get("/api/v1/users/9999/quest-progress")
     assert res.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# JWT 後保証テスト（ADR 014: トークン検証の堅牢性）
+# ---------------------------------------------------------------------------
+
+
+def test_get_me_expired_token_is_rejected(client):
+    """期限切れ JWT は 401 を返すこと（Token Expiry 後保証）"""
+    user = create_user(client, "expired_user")
+    headers = {"Authorization": f"Bearer {make_expired_token(user['id'])}"}
+    res = client.get("/api/v1/users/me", headers=headers)
+    assert res.status_code == 401
+
+
+def test_get_me_tampered_token_is_rejected(client):
+    """署名改ざん JWT は 401 を返すこと（Signature Validation 後保証）"""
+    user = create_user(client, "tampered_user")
+    headers = {"Authorization": f"Bearer {make_tampered_token(user['id'])}"}
+    res = client.get("/api/v1/users/me", headers=headers)
+    assert res.status_code == 401
+
+
+def test_get_me_with_cookie_auth(client):
+    """httpOnly Cookie 経由の JWT 認証で /users/me にアクセスできること（Cookie 認証後保証）"""
+    user = create_user(client, "cookie_user")
+    token = make_test_token(user["id"])
+    client.cookies.set("access_token", token)
+    res = client.get("/api/v1/users/me")
+    assert res.status_code == 200
+    assert res.json()["username"] == "cookie_user"

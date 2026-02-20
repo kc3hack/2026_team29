@@ -71,3 +71,29 @@ def make_test_token(user_id: int) -> str:
 def auth_headers(user_id: int) -> dict:
     """Authorization: Bearer ヘッダー辞書を返す。"""
     return {"Authorization": f"Bearer {make_test_token(user_id)}"}
+
+
+def make_expired_token(user_id: int) -> str:
+    """期限切れ JWT を発行する（exp = 1時間前）。後保証テスト用。"""
+    from datetime import datetime, timedelta, timezone
+
+    import jwt
+
+    from app.core.config import settings
+
+    payload = {
+        "sub": str(user_id),
+        "user_id": user_id,
+        "exp": datetime.now(timezone.utc) - timedelta(hours=1),
+        "iat": datetime.now(timezone.utc) - timedelta(hours=2),
+    }
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def make_tampered_token(user_id: int) -> str:
+    """署名部を改ざんした JWT を返す。後保証テスト用。"""
+    token = make_test_token(user_id)
+    # JWT は header.payload.signature の形式。末尾1文字を変えて署名を壊す
+    last_char = token[-1]
+    replacement = "B" if last_char == "A" else "A"
+    return token[:-1] + replacement
