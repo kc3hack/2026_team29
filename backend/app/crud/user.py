@@ -69,6 +69,8 @@ def update_user_rank(db: Session, user_id: int, rank: int) -> User | None:
     rank は analyze/rank エンドポイント経由でのみ更新される。
     詳細は ADR 010 参照。
     """
+    if not 0 <= rank <= 9:
+        raise ValueError("rank must be between 0 and 9")
     db_user = get_user(db, user_id)
     if db_user is None:
         return None
