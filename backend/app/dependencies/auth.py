@@ -1,8 +1,10 @@
 """認証依存関数 (Issue #61, ADR 014)
 
 FastAPI の Depends() で使う get_current_user を提供する。
-JWT (Bearer Token) を Authorization ヘッダーから取得・検証し、
-DB から User を返す。
+
+トークン取得優先順位:
+  1. Cookie `access_token` (httpOnly) — ブラウザ経由の通常フロー (ADR 014)
+  2. Authorization: Bearer <token> ヘッダー — テスト / API クライアント互換
 
 Usage:
     from app.dependencies.auth import get_current_user
@@ -13,7 +15,7 @@ Usage:
 """
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -22,23 +24,12 @@ from app.crud import user as crud_user
 from app.db.session import get_db
 from app.models.user import User
 
-# Authorization: Bearer <token> ヘッダーを自動的に解析する
-_bearer_scheme = HTTPBearer(auto_error=True)
+# Authorization: Bearer <token> ヘッダー（auto_error=False: Cookie フォールバックのため）
+_bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
-    db: Session = Depends(get_db),
-) -> User:
-    """JWT を検証して認証済み User を返す依存関数。
-
-    - 401: トークンなし / 署名不正 / 期限切れ
-    - 404: トークンは正常だが DB に User が存在しない（削除済み等）
-
-    Raises:
-        HTTPException 401: 認証失敗
-        HTTPException 404: ユーザー不在
-    """
+def _decode_token(token: str) -> int:
+    """JWT を検証して user_id を返す。失敗時は HTTPException 401。"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="認証トークンが無効または期限切れです",
@@ -46,13 +37,14 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(
-            credentials.credentials,
+            token,
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
         user_id: int | None = payload.get("user_id")
         if user_id is None:
             raise credentials_exception
+        return user_id
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -62,6 +54,35 @@ def get_current_user(
     except jwt.PyJWTError:
         raise credentials_exception
 
+
+def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    """JWT を検証して認証済み User を返す依存関数。
+
+    Cookie（httpOnly）→ Authorization ヘッダーの順で検索する。
+    どちらもない場合は 401 を返す。
+
+    - 401: トークンなし / 署名不正 / 期限切れ
+    - 404: トークンは正常だが DB に User が存在しない（削除済み等）
+    """
+    # 1. httpOnly Cookie から取得（ブラウザ通常フロー）
+    token: str | None = request.cookies.get("access_token")
+
+    # 2. Authorization: Bearer ヘッダーにフォールバック（テスト / API クライアント）
+    if not token and credentials is not None:
+        token = credentials.credentials
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="認証が必要です",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = _decode_token(token)
     db_user = crud_user.get_user(db, user_id)
     if db_user is None:
         raise HTTPException(
@@ -69,3 +90,4 @@ def get_current_user(
             detail="ユーザーが見つかりません",
         )
     return db_user
+

@@ -2,11 +2,15 @@
 
 フロー:
   GET /auth/github/login      → GitHub 認可ページへリダイレクト
-  GET /auth/github/callback   → code 交換 → User 作成/取得 → JWT 発行
+  GET /auth/github/callback   → code 交換 → User 作成/取得
+                                → JWT を httpOnly Cookie にセット → フロントへリダイレクト
+  GET /auth/logout             → Cookie をクリアして返す
 
-セッション管理方針 (ADR 014):
-  ステートレス JWT (HS256, 有効期限 24h) を Bearer トークンとして返す。
-  フロントは Authorization: Bearer <token> ヘッダーを付与してAPIを呼ぶ。
+セッション管理方針 (ADR 014 更新):
+  JWT (HS256, 有効期限 24h) を httpOnly; Secure; SameSite=Lax Cookie で発行する。
+  httpOnly により JavaScript から Cookie へのアクセスを禁止し、XSS によるトークン盗取を防ぐ。
+  フロントは Cookie を自動送信するため Authorization ヘッダー不要。
+  ただし get_current_user は Authorization: Bearer <token> ヘッダーも受け付ける（テスト互換）。
 """
 
 import hashlib
@@ -17,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -33,6 +37,9 @@ router = APIRouter()
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_USER_URL = "https://api.github.com/user"
+
+# Cookie 名（フロントと共有する必要はない: httpOnly のため JS から読めない）
+AUTH_COOKIE_NAME = "access_token"
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +59,25 @@ def create_access_token(user_id: int) -> str:
         "iat": datetime.now(timezone.utc),
     }
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def set_auth_cookie(response: Response, token: str) -> None:
+    """JWT を httpOnly Cookie としてセットする。
+
+    - httpOnly: JS からアクセス不可 → XSS によるトークン盗取を防止
+    - Secure: HTTPS 経由のみ送信（開発環境では localhost のため False でも可）
+    - SameSite=Lax: CSRF 対策（外部サイトからの POST リクエストでは送信しない）
+    """
+    is_https = not settings.FRONTEND_URL.startswith("http://localhost")
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        secure=is_https,
+        samesite="lax",
+        max_age=settings.JWT_EXPIRE_HOURS * 3600,
+        path="/",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -121,17 +147,16 @@ def github_callback(
     code: str = Query(..., description="GitHub から返される認可コード"),
     state: str = Query(..., description="CSRF 対策 state パラメータ"),
     db: Session = Depends(get_db),
-) -> dict:
+) -> RedirectResponse:
     """GitHub OAuth コールバック処理。
 
     1. state 検証（CSRF 対策）
     2. code → GitHub アクセストークン交換
     3. GitHub ユーザー情報取得
     4. 既存ユーザー照合 or 新規 User + OAuthAccount 作成
-    5. JWT 発行して返す
+    5. JWT を httpOnly Cookie にセットしてフロントエンドへリダイレクト
 
-    Returns:
-        { "access_token": "<jwt>", "token_type": "bearer" }
+    JWT は URL パラメータに含めない（ブラウザ履歴・Referer ヘッダーへの漏洩防止）。
     """
     # --- 1. state 検証 ---
     if not _verify_state(state):
@@ -217,6 +242,25 @@ def github_callback(
     if db_user is None:
         raise HTTPException(status_code=500, detail="User lookup failed after OAuth flow")
 
-    # --- 5. JWT 発行 ---
-    token = create_access_token(db_user.id)
-    return {"access_token": token, "token_type": "bearer"}
+    # --- 5. JWT を httpOnly Cookie にセットしてフロントへリダイレクト ---
+    # JWT を URL パラメータに含めない（ブラウザ履歴・Referer への漏洩防止）
+    jwt_token = create_access_token(db_user.id)
+    redirect = RedirectResponse(url=settings.FRONTEND_URL, status_code=302)
+    set_auth_cookie(redirect, jwt_token)
+    return redirect
+
+
+@router.get("/logout", summary="ログアウト（Cookie クリア）")
+def logout(response: Response) -> dict:
+    """httpOnly Cookie を削除してログアウトする。
+
+    フロント側のストレージ操作は不要。
+    """
+    response.delete_cookie(
+        key=AUTH_COOKIE_NAME,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    return {"message": "ログアウトしました"}
+

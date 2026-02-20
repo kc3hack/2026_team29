@@ -55,6 +55,44 @@ docker-compose up -d backend
 curl http://localhost:8000/health
 ```
 
+### 認証フロー (Issue #59, ADR 014)
+
+```bash
+# 1. ブラウザで GitHub ログイン開始
+open http://localhost:8000/api/v1/auth/github/login
+# → GitHub 認可ページへリダイレクト
+# → 認可後 /api/v1/auth/github/callback が呼ばれる
+# → JWT が httpOnly Cookie にセットされ http://localhost:3000 へリダイレクト
+
+# 2. 認証確認（Cookie が自動送信される）
+curl -b cookies.txt http://localhost:8000/api/v1/users/me | jq
+
+# 3. ログアウト
+curl -c cookies.txt http://localhost:8000/api/v1/auth/logout
+```
+
+**テスト・API クライアントから呼ぶ場合（Bearer トークン）:**
+```bash
+# JWT を直接取得する方法（テスト用: conftest.py の fixture を参照）
+curl -H "Authorization: Bearer <jwt>" http://localhost:8000/api/v1/users/me | jq
+```
+
+> **Note**: フロントエンドから fetch する場合は `credentials: 'include'` が必要。
+> Cookie を使うため `BACKEND_CORS_ORIGINS` に `FRONTEND_URL` を含めること。
+
+### ユーザー情報取得 (ADR 015)
+
+```bash
+# 自分の情報
+curl -b cookies.txt http://localhost:8000/api/v1/users/me | jq
+
+# 自分のスキルツリー
+curl -b cookies.txt http://localhost:8000/api/v1/users/me/skill-trees | jq
+
+# 自分のクエスト進捗
+curl -b cookies.txt http://localhost:8000/api/v1/users/me/quest-progress | jq
+```
+
 ### スキルツリー生成 (Issue #54)
 
 ```bash
