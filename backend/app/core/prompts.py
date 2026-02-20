@@ -66,28 +66,71 @@ JSON以外の形式や追加の説明は含めず、JSONのみを出力してく
 
 
 # ============================================================
-# スキルツリー生成用プロンプト（Phase 3で詳細実装）
+# スキルツリー生成用プロンプト（Phase 3 - LLMパーソナライゼーション）
 # ============================================================
+
+SKILL_TREE_ANALYSIS_TEMPLATE = """あなたは優秀なキャリアアドバイザーです。
+このエンジニアの現在のスキルレベルと目標に基づいて、
+パーソナライズされたスキルツリー（学習ロードマップ）を生成してください。
+
+## エンジニア情報
+- 現在のランク: {rank} ({rank_name})
+- GitHub: {github_username}
+  - 主な使用言語: {languages}
+  - リポジトリ数: {repo_count}
+  - 技術スタック: {tech_stack}
+  - 最近の活動: {recent_activity}
+- 習得済みスキル（GitHub分析結果）: {acquired_skills}
+- 完了したQuest: {completed_quests}
+
+## 選択されたカテゴリ: {category}
+
+## ベースラインスキルツリー
+{baseline_json}
+
+## 生成要件
+1. **未習得スキルの特定**: ベースラインから、ユーザーが次に学ぶべきスキル5-10個を選定
+2. **completed判定（最重要）**: 
+   - 「習得済みスキル」リストに含まれるスキルIDは必ず `completed: true` に設定
+   - 含まれないスキルは `completed: false` に設定
+   - GitHub分析結果を最優先で反映すること
+3. **前提条件の定義**: スキル間の依存関係（prerequisites）を技術的に正確に
+4. **難易度調整**: ユーザーのランクに応じた学習時間を推定
+   - rank 0-2（初心者）: 基礎スキルを手厚く、長めの学習時間
+   - rank 3-5（中級者）: 実践的スキル中心、標準的な学習時間
+   - rank 6-9（上級者）: 先端技術・アーキテクチャスキル、短めの学習時間
+5. **優先順位付け**: 次に取り組むべきスキル（next_recommended）を3つ提示
+
+## 出力形式（JSON）
+{{
+  "nodes": [
+    {{
+      "id": "unique-skill-id",
+      "name": "スキル名",
+      "completed": true/false,
+      "description": "スキルの説明",
+      "prerequisites": ["前提スキルID"],
+      "estimated_hours": 30
+    }}
+  ],
+  "edges": [
+    {{"from": "skill-a", "to": "skill-b"}}
+  ],
+  "metadata": {{
+    "total_nodes": 8,
+    "completed_nodes": 3,
+    "progress_percentage": 37.5,
+    "next_recommended": ["skill-x", "skill-y", "skill-z"]
+  }}
+}}
+
+JSON以外の形式や追加の説明は含めず、JSONのみを出力してください。"""
+
 
 SKILL_TREE_TEMPLATE = ChatPromptTemplate.from_messages(
     [
         ("system", SYSTEM_PROMPT_BASE),
-        (
-            "user",
-            """# スキルツリー生成
-
-ユーザー情報:
-- 現在のランク: {current_rank}
-- カテゴリ: {category}
-- 習得済みスキル: {acquired_skills}
-
-このユーザーが次のランクに進むために必要なマイルストーンを
-JSON形式で生成してください。
-
-出力形式:
-{{"nodes": [{{"id": 1, "skill": "スキル名", "acquired": true/false}}]}}
-""",
-        ),
+        ("user", SKILL_TREE_ANALYSIS_TEMPLATE),
     ]
 )
 

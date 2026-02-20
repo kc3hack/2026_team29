@@ -9,6 +9,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -24,7 +25,8 @@ class SkillTree(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     category = Column(String, nullable=False)
-    tree_data = Column(JSON, nullable=False)
+    # SQLiteではBLOB型、PostgreSQLではJSONB型として保存（SQLAlchemyが自動変換）
+    tree_data = Column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
     generated_at = Column(DateTime(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="skill_trees")

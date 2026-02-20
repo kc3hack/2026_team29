@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import type { UserStatus } from '../types';
 import { fetchUserDashboard } from '../api/mock';
 import { AcquiredBadges } from './AcquiredBadges';
+import { SkillRoadmap } from './SkillRoadmap';
 
 interface DashboardContainerProps {
   userId?: string;
@@ -80,15 +81,9 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
             </div>
         </div>
 
-        {/* Tree Image Section */}
+        {/* Skill Tree Section */}
         <div className="flex justify-center py-8">
-            {/* Using a placeholder for the tree image based on the mockup description */}
-            <div className="relative h-64 w-64">
-                {/* Fallback to a large tree emoji if no image provided */}
-                <div className="flex h-full w-full items-center justify-center text-[10rem]">
-                    🌳
-                </div>
-            </div>
+            <SkillRoadmap skills={userStatus.skillRoadmap} />
         </div>
 
         {/* Acquired Badges Section */}
