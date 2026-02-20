@@ -146,6 +146,7 @@ def test_analyze_rank_endpoint_minimal_input():
 
 
 @pytest.mark.integration
+@pytest.mark.skip(reason="Customizable test - fill in your data to run manually")
 def test_analyze_rank_endpoint_custom():
     """
     カスタムユーザー情報でテスト（自分の情報でカスタマイズ可能）
@@ -161,10 +162,10 @@ def test_analyze_rank_endpoint_custom():
     response = client.post(
         "/api/v1/analyze/rank",
         json={
-            "github_username": "",
-            "portfolio_text": "",
-            "qiita_id": "",
-            "other_info": "",
+            "github_username": "",  # GitHubユーザー名を入力
+            "portfolio_text": "",  # ポートフォリオテキストを入力
+            "qiita_id": "",  # Qiita IDを入力
+            "other_info": "",  # その他の情報を入力
         },
     )
 
