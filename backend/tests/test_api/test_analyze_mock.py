@@ -1,11 +1,12 @@
 """
-モックAPIエンドポイントのテスト - Issue #35
+モックAPIエンドポイントのテスト - Issue #35, #54
 
 Test Coverage:
 1. スキルツリー生成エンドポイント（/analyze/skill-tree）
    - 全6カテゴリのデータ存在確認
    - tree_data JSON構造の検証（nodes, edges, metadata）
    - バリデーションエラー処理
+   - Note: Issue #54でAI実装に移行、モック化してテスト
 
 2. 演習生成エンドポイント（/analyze/quest）
    - カテゴリ別レスポンス確認
@@ -14,10 +15,13 @@ Test Coverage:
 """
 
 import pytest
+from datetime import datetime, UTC
+from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.enums import QuestCategory, SkillCategory
+from app.schemas.analyze import SkillTreeResponse
 
 client = TestClient(app)
 
@@ -42,14 +46,46 @@ class TestSkillTreeGeneration:
         ],
     )
     def test_generate_skill_tree_all_categories(self, category: SkillCategory):
-        """全6カテゴリでスキルツリーが正常に生成されることを確認"""
-        response = client.post(
-            "/api/v1/analyze/skill-tree",
-            json={
-                "user_id": 1,
-                "category": category.value,
+        """全6カテゴリでスキルツリーが正常に生成されることを確認（AI実装モック）"""
+        # Mock: AI実装をモック化
+        mock_tree_data = {
+            "nodes": [
+                {
+                    "id": f"{category.value}_test_node",
+                    "name": "Test Node",
+                    "completed": False,
+                    "description": "Test description",
+                    "prerequisites": [],
+                    "estimated_hours": 10,
+                }
+            ],
+            "edges": [],
+            "metadata": {
+                "total_nodes": 1,
+                "completed_nodes": 0,
+                "progress_percentage": 0.0,
+                "next_recommended": [],
             },
+        }
+
+        mock_response = SkillTreeResponse(
+            category=category.value,
+            tree_data=mock_tree_data,
+            generated_at=datetime.now(UTC),
         )
+
+        with patch(
+            "app.api.endpoints.analyze.generate_skill_tree_ai",
+            new_callable=AsyncMock,
+            return_value=mock_response,
+        ):
+            response = client.post(
+                "/api/v1/analyze/skill-tree",
+                json={
+                    "user_id": 1,
+                    "category": category.value,
+                },
+            )
 
         assert response.status_code == 200
         data = response.json()
