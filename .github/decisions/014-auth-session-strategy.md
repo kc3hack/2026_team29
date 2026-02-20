@@ -85,6 +85,7 @@ GET /auth/logout
   Write 操作（POST/PUT/DELETE）では Cookie が送信されない外部サイトからは実質無効。
 - ログアウト API（`GET /auth/logout`）は Cookie を削除するが、JWT 自体はサーバー側で無効化できない。
   有効期限内の悪用を防ぐには将来的にブラックリスト（Redis）対応が必要。
+  → **改善 Issue #69**: JWT をやめてセッション ID（Opaque Token + DB）方式に移行することで即時失効を実現予定。
 - `Secure` フラグ: `FRONTEND_URL` が `http://localhost` の場合は自動的に `false`（開発時のみ）。
   本番では必ず HTTPS を使用し `Secure=true` とすること。
 - GitHub OAuth の `access_token`（暗号化保存済み、Issue #31）とアプリ発行 JWT は別物として管理する。
@@ -101,10 +102,13 @@ GET /auth/logout
 
 - Issue #59: GitHub OAuth 認証フロー実装
 - Issue #61: 認証ミドルウェア実装
+- Issue #69: セッション ID 方式（Opaque Token + DB）への移行（将来改善）
 - ADR 005: OAuth トークン暗号化
+- ADR 016: GitHub OAuth 認証テスト戦略
 - IPA「安全なウェブサイトの作り方」: localStorage へのトークン保存を非推奨
 
 ## 変更履歴
 
 - 2026-02-20: 初版（JWT をレスポンスボディで返す Bearer Token 方式）
 - 2026-02-21: httpOnly Cookie 方式に変更（XSS 対策強化）
+- 2026-02-21: Issue #69（セッション ID 移行）・ADR 016 を参照に追記

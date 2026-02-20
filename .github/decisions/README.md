@@ -94,6 +94,7 @@ ADRは以下のステータスを持ちます：
 | 013   | [Quest API エンドポイント設計](013-quest-api-endpoint-design.md) | 決定       | 2026-02-21 |
 | 014   | [認証セッション管理方針（JWT + httpOnly Cookie）](014-auth-session-strategy.md) | 決定（httpOnly Cookie に更新）| 2026-02-21 |
 | 015   | [/users/me エンドポイント移行方針](015-users-me-endpoint-migration.md) | 決定       | 2026-02-21 |
+| 016   | [GitHub OAuth 認証テスト戦略（外部API モック方針）](016-auth-test-strategy.md) | 決定       | 2026-02-21 |
 
 ## 🎯 ADRの目的
 
