@@ -204,7 +204,7 @@ def _is_cache_valid(generated_at: datetime | None) -> bool:
         generated_at: 生成日時
 
     Returns:
-        7日以内ならTrue
+        CACHE_VALID_MINUTES以内ならTrue
     """
     if generated_at is None:
         return False
@@ -214,7 +214,7 @@ def _is_cache_valid(generated_at: datetime | None) -> bool:
     if generated_at.tzinfo is None:
         generated_at = generated_at.replace(tzinfo=UTC)
 
-    return (now - generated_at) < timedelta(days=CACHE_VALID_DAYS)
+    return (now - generated_at) < timedelta(minutes=CACHE_VALID_MINUTES)
 
 
 def _load_baseline_json(category: SkillCategory) -> dict[str, Any]:

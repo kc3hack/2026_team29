@@ -1,0 +1,164 @@
+# Backend API
+
+FastAPI + SQLAlchemy + PostgreSQL（開発時はSQLite）
+
+## セットアップ
+
+### 1. 環境変数の設定
+
+```bash
+cd backend
+cp .env.example .env
+# .envファイルを編集して必要なAPIキーを設定
+```
+
+### 2. マイグレーション実行
+
+```bash
+poetry install
+poetry run alembic upgrade head
+```
+
+### 3. テストデータの投入
+
+スキルツリー生成APIなど、ユーザーデータが必要なエンドポイントをテストするには、まずテストユーザーを作成する必要があります。
+
+```bash
+poetry run python scripts/seed_test_data.py
+```
+
+実行すると以下の3ユーザーが作成されます:
+
+- **test_beginner** (rank=2, github_username=beginner123)
+- **test_intermediate** (rank=5, github_username=Inlet-back)
+- **test_advanced** (rank=8, github_username=torvalds)
+
+### 4. サーバー起動
+
+```bash
+# 開発サーバー（ホットリロード有効）
+poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+または Docker Compose を使用:
+
+```bash
+cd ..  # プロジェクトルートに戻る
+docker-compose up -d backend
+```
+
+## API動作確認
+
+### ヘルスチェック
+
+```bash
+curl http://localhost:8000/health
+```
+
+### スキルツリー生成 (Issue #54)
+
+```bash
+# テストユーザー（user_id=1）でスキルツリー生成
+curl -X POST http://localhost:8000/api/v1/analyze/skill-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 1,
+    "category": "web"
+  }' | jq
+
+# クリア済みスキルのみ表示
+curl -X POST http://localhost:8000/api/v1/analyze/skill-tree \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": 1,
+    "category": "web"
+  }' | jq '.tree_data.nodes[] | select(.completed == true) | {id, name, completed}'
+```
+
+**カテゴリ一覧**:
+
+- `web`: Web開発
+- `ai`: AI/機械学習
+- `security`: セキュリティ
+- `infrastructure`: インフラ/DevOps
+- `design`: UI/UXデザイン
+- `game`: ゲーム開発
+
+### ランク判定 (Issue #36)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/analyze/rank \
+  -H "Content-Type: application/json" \
+  -d '{
+    "github_username": "torvalds",
+    "portfolio_text": "Linux kernel creator",
+    "qiita_id": "",
+    "other_info": "Created Linux and Git"
+  }' | jq
+```
+
+## テスト実行
+
+### 全テスト実行
+
+```bash
+poetry run pytest -v
+```
+
+### 特定のテストファイル実行
+
+```bash
+# スキルツリーサービスのテスト
+poetry run pytest tests/test_services/test_skill_tree_service.py -v
+
+# APIエンドポイントのテスト
+poetry run pytest tests/test_api/test_analyze_mock.py -v
+```
+
+### 統合テスト（実際のLLM API使用）
+
+```bash
+# .envにAPIキーが必要
+poetry run pytest tests/test_api/test_analyze_integration.py -v -s
+```
+
+## 開発ガイド
+
+### コードスタイル
+
+```bash
+# Ruffでリント・フォーマット
+poetry run ruff check .
+poetry run ruff format .
+```
+
+### 新しいマイグレーション作成
+
+```bash
+poetry run alembic revision --autogenerate -m "説明"
+poetry run alembic upgrade head
+```
+
+### デバッグ
+
+モデル定義や依存関係の問題で困ったときは:
+
+1. `app/db/base.py` で全モデルがインポートされているか確認
+2. `app/main.py` で `from app.db import base` がインポートされているか確認（SQLAlchemy model registration）
+
+## 主要な実装
+
+- **AI Phase 3 - スキルツリー生成**: `app/services/skill_tree_service.py` (Issue #54)
+  - LLM + GitHub API統合
+  - 10分間キャッシュ（ハッカソン用最適化）
+  - 6カテゴリ対応（web/ai/security/infrastructure/design/game）
+- **AI Phase 2 - ランク判定**: `app/services/rank_service.py` (Issue #36)
+  - LLM活用、GitHub/Qiita連携
+- **GitHub API統合**: `app/services/github_service.py` (Issue #54)
+  - リポジトリ分析、使用言語抽出、習得済みスキル推定
+
+## API仕様
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+- 管理API: http://localhost:8000/admin/docs (X-Admin-Key ヘッダー認証必須)

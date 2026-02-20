@@ -369,3 +369,94 @@ def _is_cache_valid(generated_at: datetime | None) -> bool:
 
 - ハッカソン期間中は固定値10分で運用
 - プロダクション環境では必ず環境変数化すること
+
+---
+
+## 機能要件チェックリスト - Issue #54
+
+### ✅ 実装完了項目
+
+| 機能                             | 実装状況 | 検証方法                                                         |
+| -------------------------------- | -------- | ---------------------------------------------------------------- |
+| **LLM統合**                      | ✅       | `test_generate_skill_tree_ai_regenerate` (line 71)               |
+| **GitHub API統合**               | ✅       | `test_generate_skill_tree_ai_with_github_data` (line 158)        |
+| **GitHub優先上書き（Step 6.5）** | ✅       | `test_generate_skill_tree_ai_github_overrides_llm` (line 231)    |
+| **10分間キャッシュ**             | ✅       | `test_generate_skill_tree_ai_with_cache` (line 28)               |
+| **6カテゴリ対応**                | ✅       | `test_load_baseline_json_all_categories` (line 398)              |
+| **User不在時404エラー**          | ✅       | `test_generate_skill_tree_ai_user_not_found` (line 345)          |
+| **LLM失敗時フォールバック**      | ✅       | `test_generate_skill_tree_ai_llm_failure_fallback` (line 358)    |
+| **HTTPエンドポイント**           | ✅       | `test_generate_skill_tree_all_categories` (test_analyze_mock.py) |
+
+### 📊 手動テスト実行手順
+
+```bash
+# 1. テストユーザー作成
+cd backend
+poetry run python scripts/seed_test_data.py
+
+# 2. スキルツリー生成（user_id=1, category=web）
+curl -X POST http://localhost:8000/api/v1/analyze/skill-tree \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": 1, "category": "web"}' | jq
+
+# 期待結果:
+# - HTTPステータス: 200 OK
+# - category: "web"
+# - tree_data.nodes: 20個のノード（id, name, completed, description, prerequisites, estimated_hours）
+# - tree_data.edges: 22個のエッジ（from, to）
+# - tree_data.metadata: total_nodes, completed_nodes, progress_percentage, next_recommended
+# - generated_at: ISO8601形式のタイムスタンプ
+```
+
+### 🎯 機能要件の動作確認ポイント
+
+1. **LLMパーソナライゼーション**:
+   - ユーザーのrank（2, 5, 8）によって説明文が変化
+   - GitHub分析結果（使用言語、技術スタック）がプロンプトに反映
+
+2. **GitHub分析優先**:
+   - `github_username` に実在するアカウント（例: Inlet-back）を指定
+   - `completed: true` となるノードがGitHub分析結果と一致
+   - LLMが `false` と判定してもGitHub分析が `true` なら上書き
+
+3. **キャッシュ動作**:
+   - 初回: LLM呼び出し（数秒かかる）
+   - 10分以内の再実行: キャッシュから即座に返却（< 100ms）
+   - 10分経過後: 自動再生成
+
+4. **エラーハンドリング**:
+   - 存在しないuser_id → `{"detail": "User X not found"}` (404)
+   - 無効なcategory → `422 Unprocessable Entity`
+   - LLM API失敗 → ベースラインJSONを返却（縮退運転）
+
+### 📝 自動テスト一覧
+
+**サービス層** (`test_skill_tree_service.py`):
+
+- ✅ `test_generate_skill_tree_ai_with_cache` - キャッシュ有効時はDB返却
+- ✅ `test_generate_skill_tree_ai_regenerate` - キャッシュ期限切れでLLM再生成
+- ✅ `test_generate_skill_tree_ai_with_github_data` - GitHub分析結果反映
+- ✅ `test_generate_skill_tree_ai_github_overrides_llm` - GitHub優先上書き（Step 6.5）
+- ✅ `test_generate_skill_tree_ai_user_not_found` - User不在で404
+- ✅ `test_generate_skill_tree_ai_llm_failure_fallback` - LLM失敗でベースライン返却
+- ✅ `test_is_cache_valid_within_7_days` - キャッシュ期間判定（10分以内）
+- ✅ `test_is_cache_valid_over_7_days` - キャッシュ期間判定（10分経過）
+- ✅ `test_load_baseline_json_success` - ベースラインJSON読み込み
+- ✅ `test_load_baseline_json_all_categories` - 全6カテゴリ読み込み
+- ✅ `test_build_skill_tree_prompt` - LLMプロンプト生成
+
+**API層** (`test_analyze_mock.py`):
+
+- ✅ `test_generate_skill_tree_all_categories` - 全6カテゴリHTTPエンドポイント
+- ✅ `test_generate_skill_tree_structure` - tree_data構造検証
+- ✅ `test_generate_skill_tree_validation_error` - バリデーションエラー処理
+
+**実行コマンド**:
+
+```bash
+# 全テスト実行（22テスト、実行時間: 2-3秒）
+poetry run pytest tests/test_services/test_skill_tree_service.py tests/test_api/test_analyze_mock.py -v
+
+# 簡潔な出力
+poetry run pytest tests/test_services/test_skill_tree_service.py tests/test_api/test_analyze_mock.py -q
+```
