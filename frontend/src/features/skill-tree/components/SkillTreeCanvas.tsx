@@ -329,7 +329,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
       // Label
       ctx.save()
       // Use fallback if DotGothic16 is not loaded.
-      ctx.font = "bold 13px 'DotGothic16', monospace"
+      ctx.font = "bold 17px 'DotGothic16', monospace"
       ctx.textAlign = "center"
       ctx.textBaseline = "top"
       // shadow

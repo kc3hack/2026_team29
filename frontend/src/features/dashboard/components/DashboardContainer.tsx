@@ -128,7 +128,7 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
               </h3>
               {mounted && (
                 <p className="text-[10px] mt-1" style={{ color: "#666680" }} suppressHydrationWarning>
-                  ドラッグで移動 / スクロールでズーム / クリックで詳細
+                  スクロールでズーム / クリックで詳細
                 </p>
               )}
             </div>
