@@ -60,40 +60,28 @@ def test_profile_url_validation():
         ProfileCreate(user_id=1, portfolio_url="not-a-url")
 
 
-def test_user_rank_consistency_validation():
-    """User.rank: 経験値と整合性のあるランクのみ許可"""
+def test_user_rank_is_ai_managed():
+    """User.rank: AIが自由に設定可能（exp との整合性チェックなし）。ADR 010 参照。"""
     now = datetime.now(timezone.utc)
 
-    # 正常系: exp=0 → rank=0
+    # exp=0 でも rank=1 はAI判定として有効
     User(
         id=1,
         username="test",
         level=1,
         exp=0,
-        rank=0,
-        created_at=now,
-        updated_at=now,
-    )
-
-    # 正常系: exp=150 → rank=1
-    User(
-        id=2,
-        username="test2",
-        level=2,
-        exp=150,
         rank=1,
         created_at=now,
         updated_at=now,
     )
 
-    # 異常系: exp=0 だが rank=1 は不整合
-    with pytest.raises(ValidationError, match="Rank inconsistency"):
-        User(
-            id=3,
-            username="test3",
-            level=1,
-            exp=0,
-            rank=1,
-            created_at=now,
-            updated_at=now,
-        )
+    # exp=0 で rank=9 (最高ランク) もAI判定として有効
+    User(
+        id=2,
+        username="test2",
+        level=1,
+        exp=0,
+        rank=9,
+        created_at=now,
+        updated_at=now,
+    )

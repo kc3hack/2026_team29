@@ -20,7 +20,9 @@ async def test_analyze_user_rank_success():
         "reasoning": "複数の技術での実装経験が確認されました。",
     }
 
-    with patch("app.services.rank_service.invoke_llm", new_callable=AsyncMock) as mock_invoke:
+    with patch(
+        "app.services.rank_service.invoke_llm", new_callable=AsyncMock
+    ) as mock_invoke:
         mock_invoke.return_value = json.dumps(mock_response)
 
         result = await analyze_user_rank(
@@ -37,7 +39,9 @@ async def test_analyze_user_rank_success():
 @pytest.mark.asyncio
 async def test_analyze_user_rank_fallback():
     """エラー系: JSONパースエラー時はデフォルト値を返す"""
-    with patch("app.services.rank_service.invoke_llm", new_callable=AsyncMock) as mock_invoke:
+    with patch(
+        "app.services.rank_service.invoke_llm", new_callable=AsyncMock
+    ) as mock_invoke:
         # 不正なJSON応答
         mock_invoke.return_value = "This is not JSON"
 
@@ -64,7 +68,9 @@ async def test_analyze_user_rank_minimal_input():
         "reasoning": "基本スキルは確認されました。",
     }
 
-    with patch("app.services.rank_service.invoke_llm", new_callable=AsyncMock) as mock_invoke:
+    with patch(
+        "app.services.rank_service.invoke_llm", new_callable=AsyncMock
+    ) as mock_invoke:
         mock_invoke.return_value = json.dumps(mock_response)
 
         result = await analyze_user_rank(github_username="test_user")
