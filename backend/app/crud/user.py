@@ -35,7 +35,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User | No
     db_user = get_user(db, user_id)
     if db_user is None:
         return None
-    update_data = user_update.model_dump(exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True, exclude_none=True)
     for field, value in update_data.items():
         setattr(db_user, field, value)
     try:
