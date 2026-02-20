@@ -51,7 +51,10 @@ def update_user(
     user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)
 ) -> UserSchema:
     """ユーザー情報更新（username のみ）。"""
-    user = crud_user.update_user(db, user_id, user_in)
+    try:
+        user = crud_user.update_user(db, user_id, user_in)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
