@@ -1,4 +1,4 @@
-"""Quest API エンドポイントテスト（Issue #53）
+﻿"""Quest API エンドポイントテスト（Issue #53）
 
 ユーザー作成は HTTP 経由でなく crud.user を直接使用する。
 （POST /users は Issue #51 でのみ実装、develop にはまだ未マージのため）
@@ -52,7 +52,7 @@ def _make_user(db, username="testuser"):
 
 
 def test_list_quests_empty(client):
-    res = client.get("/api/v1/quests")
+    res = client.get("/api/v1/quest")
     assert res.status_code == 200
     assert res.json() == []
 
@@ -60,7 +60,7 @@ def test_list_quests_empty(client):
 def test_list_quests_returns_all(client, db):
     _make_quest(db, title="Q1", category=QuestCategory.WEB)
     _make_quest(db, title="Q2", category=QuestCategory.AI)
-    res = client.get("/api/v1/quests")
+    res = client.get("/api/v1/quest")
     assert res.status_code == 200
     assert len(res.json()) == 2
 
@@ -69,7 +69,7 @@ def test_list_quests_filter_category(client, db):
     _make_quest(db, title="Web1", category=QuestCategory.WEB)
     _make_quest(db, title="Web2", category=QuestCategory.WEB)
     _make_quest(db, title="AI1", category=QuestCategory.AI)
-    res = client.get("/api/v1/quests?category=web")
+    res = client.get("/api/v1/quest?category=web")
     assert res.status_code == 200
     data = res.json()
     assert len(data) == 2
@@ -79,7 +79,7 @@ def test_list_quests_filter_category(client, db):
 def test_list_quests_filter_difficulty(client, db):
     _make_quest(db, title="Easy", difficulty=1)
     _make_quest(db, title="Hard", difficulty=5)
-    res = client.get("/api/v1/quests?difficulty=1")
+    res = client.get("/api/v1/quest?difficulty=1")
     assert res.status_code == 200
     data = res.json()
     assert len(data) == 1
@@ -89,14 +89,14 @@ def test_list_quests_filter_difficulty(client, db):
 def test_list_quests_pagination(client, db):
     for i in range(5):
         _make_quest(db, title=f"Quest{i}")
-    res = client.get("/api/v1/quests?skip=2&limit=2")
+    res = client.get("/api/v1/quest?skip=2&limit=2")
     assert res.status_code == 200
     assert len(res.json()) == 2
 
 
 def test_list_quests_response_schema(client, db):
     _make_quest(db, title="Schema Check")
-    data = client.get("/api/v1/quests").json()[0]
+    data = client.get("/api/v1/quest").json()[0]
     assert "id" in data
     assert "title" in data
     assert "description" in data
@@ -113,20 +113,20 @@ def test_list_quests_response_schema(client, db):
 
 def test_get_quest_success(client, db):
     quest = _make_quest(db, title="Detail Quest")
-    res = client.get(f"/api/v1/quests/{quest.id}")
+    res = client.get(f"/api/v1/quest/{quest.id}")
     assert res.status_code == 200
     assert res.json()["title"] == "Detail Quest"
 
 
 def test_get_quest_markdown_description(client, db):
     quest = _make_quest(db)
-    res = client.get(f"/api/v1/quests/{quest.id}")
+    res = client.get(f"/api/v1/quest/{quest.id}")
     assert res.status_code == 200
     assert "##" in res.json()["description"]
 
 
 def test_get_quest_not_found(client):
-    res = client.get("/api/v1/quests/9999")
+    res = client.get("/api/v1/quest/9999")
     assert res.status_code == 404
 
 
@@ -138,7 +138,7 @@ def test_get_quest_not_found(client):
 def test_start_quest_success(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    res = client.post(f"/api/v1/quests/{quest.id}/start", json={"user_id": user.id})
+    res = client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
     assert res.status_code == 201
     data = res.json()
     assert data["status"] == "in_progress"
@@ -148,15 +148,15 @@ def test_start_quest_success(client, db):
 
 def test_start_quest_not_found(client, db):
     user = _make_user(db)
-    res = client.post("/api/v1/quests/9999/start", json={"user_id": user.id})
+    res = client.post("/api/v1/quest/9999/start", json={"user_id": user.id})
     assert res.status_code == 404
 
 
 def test_start_quest_already_started(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    client.post(f"/api/v1/quests/{quest.id}/start", json={"user_id": user.id})
-    res = client.post(f"/api/v1/quests/{quest.id}/start", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
+    res = client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
     assert res.status_code == 409
 
 
@@ -168,8 +168,8 @@ def test_start_quest_already_started(client, db):
 def test_complete_quest_success(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    client.post(f"/api/v1/quests/{quest.id}/start", json={"user_id": user.id})
-    res = client.post(f"/api/v1/quests/{quest.id}/complete", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "completed"
@@ -178,21 +178,21 @@ def test_complete_quest_success(client, db):
 
 def test_complete_quest_not_found(client, db):
     user = _make_user(db)
-    res = client.post("/api/v1/quests/9999/complete", json={"user_id": user.id})
+    res = client.post("/api/v1/quest/9999/complete", json={"user_id": user.id})
     assert res.status_code == 404
 
 
 def test_complete_quest_not_started(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    res = client.post(f"/api/v1/quests/{quest.id}/complete", json={"user_id": user.id})
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
     assert res.status_code == 400
 
 
 def test_complete_quest_already_completed(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    client.post(f"/api/v1/quests/{quest.id}/start", json={"user_id": user.id})
-    client.post(f"/api/v1/quests/{quest.id}/complete", json={"user_id": user.id})
-    res = client.post(f"/api/v1/quests/{quest.id}/complete", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
     assert res.status_code == 400
