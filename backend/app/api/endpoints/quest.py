@@ -7,7 +7,7 @@ GET    /api/v1/quest                      - クエスト一覧
 GET    /api/v1/quest/{quest_id}           - クエスト詳細
 POST   /api/v1/quest/{quest_id}/start     - クエスト開始
 POST   /api/v1/quest/{quest_id}/complete  - クエスト完了
-POST   /api/v1/quest/generate             - LLMによる演習生成
+POST   /api/v1/quest/generate             - ドキュメントからハンズオン演習を生成
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -123,6 +123,24 @@ async def generate_quest(request: QuestGenerationRequest) -> QuestGenerationResp
 
     Raises:
         HTTPException 500: LLM呼び出し失敗時
+
+    Example:
+        Request:
+            {
+                "document_content": "Reactの基本: コンポーネント、State、Props...",
+                "user_rank": 2,
+                "user_skills": "JavaScript, HTML/CSS"
+            }
+
+        Response:
+            {
+                "title": "Reactでカウンターアプリを作ろう",
+                "difficulty": "beginner",
+                "estimated_time_minutes": 45,
+                "learning_objectives": ["Stateの理解", "イベントハンドリング"],
+                "steps": [...],
+                "resources": ["https://react.dev/"]
+            }
     """
     try:
         result = await generate_handson_quest(
