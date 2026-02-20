@@ -4,12 +4,14 @@
 Issue #35: AI実装Phase 2 - モックAPIエンドポイント
 Issue #36: AI実装Phase 3 - ランク判定AI（LLM実装）
 Issue #54: AI実装Phase 3 - スキルツリー生成（LLMパーソナライゼーション）
+Issue #57: AI実装Phase 3 - 演習生成（LLM実装）
 
 POST /api/v1/analyze/rank - ユーザーランクの判定（LLM実装、issue #36）
 POST /api/v1/analyze/skill-tree - スキルツリー生成（LLM実装、issue #54）
-POST /api/v1/analyze/quest - 演習生成（モック実装、issue #35）
+POST /api/v1/analyze/quest - 演習生成（LLM実装、issue #57）
 """
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
@@ -20,10 +22,12 @@ from app.schemas.analyze import (
     SkillTreeResponse,
     QuestGenerationRequest,
     QuestGenerationResponse,
+    QuestResource,
 )
 from app.services.rank_service import analyze_user_rank
 from app.services.skill_tree_service import generate_skill_tree_ai
-from app.services.mock_ai_service import generate_quest_mock
+from app.services.quest_service import generate_handson_quest
+from app.crud.user import get_user
 from app.db.session import get_db
 
 router = APIRouter()
@@ -125,21 +129,24 @@ async def generate_skill_tree(
 
 
 @router.post("/quest", response_model=QuestGenerationResponse)
-async def generate_quest(request: QuestGenerationRequest) -> QuestGenerationResponse:
+async def generate_quest(
+    request: QuestGenerationRequest, db: Session = Depends(get_db)
+) -> QuestGenerationResponse:
     """
-    演習生成（モック実装 - Issue #35）
+    演習生成（LLM実装 - Issue #57）
 
     Args:
         request: 演習生成リクエスト（user_id, category, difficulty, document_text）
+        db: DBセッション
 
     Returns:
-        QuestGenerationResponse: 演習データ（固定レスポンス）
+        QuestGenerationResponse: LLMで生成された演習データ
 
     Note:
-        Phase 3移行時:
-        - document_text を RAG（Retrieval-Augmented Generation）で使用
-        - user_id から学習履歴を取得し、適切な難易度に調整
-        - LLMで動的に演習内容を生成
+        実装内容:
+        - user_id からユーザーのrankを取得
+        - LLM（Claude/GPT/Gemini）でdocument_textから演習を生成
+        - temperature=0.7で創造的な演習を生成
 
     Example:
         Request:
@@ -153,25 +160,85 @@ async def generate_quest(request: QuestGenerationRequest) -> QuestGenerationResp
         Response:
             {
                 "id": 101,
-                "title": "FastAPIで認証付きTodo API構築",
-                "description": "JWT認証を実装した...",
+                "title": "FastAPI認証付きTodo API構築",
+                "description": "JWT認証を実装し...",
                 "difficulty": 4,
                 "category": "web",
                 "is_generated": true,
-                "steps": [...],
+                "steps": ["1. FastAPIプロジェクト初期化", ...],
                 "estimated_time_minutes": 120,
                 "resources": [...],
                 "created_at": "2026-02-20T12:00:00+09:00"
             }
     """
     try:
-        result = generate_quest_mock(
-            user_id=request.user_id,
-            category=request.category,
-            difficulty=request.difficulty,
-            document_text=request.document_text,
+        # ユーザーのrankを取得
+        user = get_user(db, request.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # LLMでクエスト生成
+        llm_result = await generate_handson_quest(
+            document_content=request.document_text or "基礎的な内容",
+            user_rank=user.rank,
+            user_skills="",  # 今後、skill_treeやbadgeから推測可能
         )
-        return result
+
+        # LLM出力をAPIレスポンスにマッピング
+        difficulty_map = {
+            "beginner": max(0, min(2, request.difficulty)),
+            "intermediate": max(3, min(5, request.difficulty)),
+            "advanced": max(6, min(9, request.difficulty)),
+        }
+        mapped_difficulty = difficulty_map.get(
+            llm_result.get("difficulty", "intermediate"), request.difficulty
+        )
+
+        # steps: list[dict] → list[str]
+        steps_list = []
+        for step in llm_result.get("steps", []):
+            if isinstance(step, dict):
+                step_text = f"{step.get('step_number', '')}. {step.get('title', '')} - {step.get('description', '')}"
+                steps_list.append(step_text)
+            else:
+                steps_list.append(str(step))
+
+        # resources: list[str] → list[QuestResource]
+        resources_list = []
+        for res in llm_result.get("resources", []):
+            if isinstance(res, str):
+                resources_list.append(QuestResource(title=res, url="#"))
+            elif isinstance(res, dict):
+                resources_list.append(
+                    QuestResource(
+                        title=res.get("title", "参考資料"), url=res.get("url", "#")
+                    )
+                )
+
+        # description: learning_objectives → 文字列
+        learning_objectives = llm_result.get("learning_objectives", [])
+        description = (
+            ", ".join(learning_objectives)
+            if learning_objectives
+            else "LLMで生成された演習"
+        )
+
+        return QuestGenerationResponse(
+            id=999,  # DBに保存しないため仮のID
+            title=llm_result.get("title", "演習"),
+            description=description,
+            difficulty=mapped_difficulty,
+            category=request.category,
+            is_generated=True,
+            steps=steps_list,
+            estimated_time_minutes=llm_result.get("estimated_time_minutes", 60),
+            resources=resources_list,
+            created_at=datetime.now(timezone.utc),
+        )
+
+    except HTTPException:
+        # HTTPExceptionはそのまま再送出
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Quest generation failed: {str(e)}"
