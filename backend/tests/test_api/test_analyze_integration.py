@@ -6,7 +6,7 @@
 
 実行方法:
     pytest tests/test_api/test_analyze_integration.py -v -s
-    
+
     # スキルツリー統合テストのみ実行:
     pytest tests/test_api/test_analyze_integration.py::test_generate_skill_tree_real_api -v -s
 
@@ -15,7 +15,7 @@
     - GITHUB_API_TOKEN (推奨)
       ※未設定の場合はPublicリポジトリのみ分析（Rate Limit: 60 req/hour）
       ※設定するとPrivateリポジトリも分析可能（Rate Limit: 5000 req/hour）
-      
+
 GitHub API Token の取得:
     1. https://github.com/settings/tokens
     2. "Generate new token (classic)"
@@ -30,7 +30,6 @@ from app.main import app
 from app.core.config import settings
 from app.models.user import User
 from app.models.profile import Profile
-from app.models.enums import SkillCategory
 from app.crud.skill_tree import initialize_skill_trees_for_user
 from app.db.session import get_db
 
@@ -303,8 +302,10 @@ def test_generate_skill_tree_real_api(db: Session):
         assert len(tree_data["nodes"]) > 0, "nodes must not be empty"
 
         # completedフラグが設定されているノードを確認
-        completed_nodes = [node for node in tree_data["nodes"] if node.get("completed", False)]
-        
+        completed_nodes = [
+            node for node in tree_data["nodes"] if node.get("completed", False)
+        ]
+
         print("\n=== Skill Tree Generation API Response ===")
         print(f"Status Code: {response.status_code}")
         print(f"Category: {data['category']}")
@@ -324,7 +325,6 @@ def test_generate_skill_tree_real_api(db: Session):
 
 
 @pytest.mark.integration
-@pytest.mark.skip(reason="Customizable test - fill in your GitHub username to run manually")
 def test_generate_skill_tree_custom_github(db: Session):
     """
     自分のGitHubアカウントでスキルツリー生成をテスト
@@ -359,7 +359,7 @@ def test_generate_skill_tree_custom_github(db: Session):
     print("=" * 50)
 
     # ここに自分のGitHubユーザー名を入力
-    github_username = ""  # 例: "octocat"
+    github_username = "Inlet-back"  # 認証済みユーザー
 
     if not github_username:
         pytest.skip("github_username not set. Please set it in the test code.")
@@ -392,18 +392,20 @@ def test_generate_skill_tree_custom_github(db: Session):
 
         # 全カテゴリでスキルツリー生成
         categories = ["web", "ai", "security", "infrastructure", "design", "game"]
-        
+
         for category in categories:
             print(f"\n{'='*50}")
             print(f"カテゴリ: {category.upper()}")
-            print('='*50)
-            
+            print("=" * 50)
+
             response = client.post(
                 "/api/v1/analyze/skill-tree",
                 json={"user_id": test_user.id, "category": category},
             )
 
-            assert response.status_code == 200, f"Failed for {category}: {response.text}"
+            assert (
+                response.status_code == 200
+            ), f"Failed for {category}: {response.text}"
 
             data = response.json()
             tree_data = data["tree_data"]
@@ -416,7 +418,7 @@ def test_generate_skill_tree_custom_github(db: Session):
             print(f"総ノード数: {len(tree_data['nodes'])}")
             print(f"完了ノード数: {len(completed_nodes)}")
             print(f"進捗率: {tree_data['metadata'].get('progress_percentage', 0):.1f}%")
-            
+
             if completed_nodes:
                 print("\n完了済みスキル:")
                 for node in completed_nodes[:5]:  # 最初の5個だけ表示
@@ -424,9 +426,9 @@ def test_generate_skill_tree_custom_github(db: Session):
                 if len(completed_nodes) > 5:
                     print(f"  ... 他 {len(completed_nodes) - 5} 個")
 
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("全カテゴリのスキルツリー生成が完了しました!")
-        print("="*50)
+        print("=" * 50)
 
         # クリーンアップ
         db.delete(test_user)

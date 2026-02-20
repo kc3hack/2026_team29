@@ -43,7 +43,9 @@ from app.core.config import settings
 
 # インメモリSQLiteを使用
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -58,18 +60,20 @@ def print_node_details(node: dict, indent: int = 2):
     print(f"{prefix}📌 {node.get('name', node.get('id'))}")
     print(f"{prefix}   ID: {node.get('id')}")
     print(f"{prefix}   完了: {'✅ 済' if node.get('completed', False) else '⬜️ 未'}")
-    if node.get('description'):
+    if node.get("description"):
         print(f"{prefix}   説明: {node.get('description')}")
-    if node.get('estimated_hours'):
+    if node.get("estimated_hours"):
         print(f"{prefix}   推定時間: {node.get('estimated_hours')}時間")
-    if node.get('prerequisites'):
+    if node.get("prerequisites"):
         print(f"{prefix}   前提条件: {', '.join(node.get('prerequisites', []))}")
 
 
-async def test_skill_tree_generation(github_username: str, categories: list[str] | None = None):
+async def test_skill_tree_generation(
+    github_username: str, categories: list[str] | None = None
+):
     """
     スキルツリー生成をテスト
-    
+
     Args:
         github_username: GitHubユーザー名
         categories: テストするカテゴリのリスト（Noneの場合は全カテゴリ）
@@ -77,12 +81,31 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
     # APIキーチェック
     if settings.LLM_PROVIDER.lower() == "openai":
         if not settings.OPENAI_API_KEY or "REPLACE" in settings.OPENAI_API_KEY:
-            print("❌ OPENAI_API_KEY が設定されていません。.envファイルを確認してください。")
+            print(
+                "❌ OPENAI_API_KEY が設定されていません。.envファイルを確認してください。"
+            )
             return
     elif settings.LLM_PROVIDER.lower() == "anthropic":
         if not settings.ANTHROPIC_API_KEY or "REPLACE" in settings.ANTHROPIC_API_KEY:
-            print("❌ ANTHROPIC_API_KEY が設定されていません。.envファイルを確認してください。")
+            print(
+                "❌ ANTHROPIC_API_KEY が設定されていません。.envファイルを確認してください。"
+            )
             return
+
+    # GitHub API Token チェック
+    if settings.GITHUB_API_TOKEN:
+        print(f"\n✅ GitHub API Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
+        print("   → Privateリポジトリも分析可能")
+        print("   → Rate Limit: 5000 requests/hour")
+    else:
+        print("\n⚠️  GitHub API Token: 未設定")
+        print("   → Publicリポジトリのみ分析可能")
+        print("   → Rate Limit: 60 requests/hour")
+        print("\n   Privateリポジトリを分析する場合:")
+        print("   1. https://github.com/settings/tokens でトークン作成")
+        print("   2. スコープ: repo, read:user, user:email を選択")
+        print("   3. export GITHUB_API_TOKEN=<your_token> で設定")
+        print()
 
     # DB初期化
     Base.metadata.create_all(bind=engine)
@@ -114,7 +137,7 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
         if categories is None:
             categories = [cat.value for cat in SkillCategory]
 
-        print(f"\n🌳 スキルツリー生成を開始します...")
+        print("\n🌳 スキルツリー生成を開始します...")
         print(f"対象カテゴリ: {', '.join(categories)}")
         print(f"LLMプロバイダー: {settings.LLM_PROVIDER}")
         print()
@@ -132,32 +155,41 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
             print_separator()
 
             # スキルツリー生成
-            print(f"\n🔄 生成中... (GitHub API + LLM API呼び出し)")
-            
+            print("\n🔄 生成中... (GitHub API + LLM API呼び出し)")
+
             # GitHub分析結果を確認
             from app.services.github_service import analyze_github_profile
+
             github_analysis = await analyze_github_profile(github_username)
-            print(f"\n📊 GitHub分析結果:")
-            print(f"   言語: {', '.join(github_analysis.get('languages', [])) or 'なし'}")
-            print(f"   技術スタック: {', '.join(github_analysis.get('tech_stack', [])) or 'なし'}")
+            print("\n📊 GitHub分析結果:")
+            print(
+                f"   言語: {', '.join(github_analysis.get('languages', [])) or 'なし'}"
+            )
+            print(
+                f"   技術スタック: {', '.join(github_analysis.get('tech_stack', [])) or 'なし'}"
+            )
             print(f"   リポジトリ数: {github_analysis.get('repo_count', 0)}")
-            completion_signals = github_analysis.get('completion_signals', {})
+            completion_signals = github_analysis.get("completion_signals", {})
             print(f"   完了シグナル: {len(completion_signals)}個")
             if completion_signals:
-                print(f"   完了スキルID: {', '.join(list(completion_signals.keys())[:10])}")
-            
+                print(
+                    f"   完了スキルID: {', '.join(list(completion_signals.keys())[:10])}"
+                )
+
             result = await generate_skill_tree_ai(test_user.id, category, db)
 
             tree_data = result.tree_data
 
             # 統計情報
             total_nodes = len(tree_data.get("nodes", []))
-            completed_nodes = [n for n in tree_data.get("nodes", []) if n.get("completed", False)]
+            completed_nodes = [
+                n for n in tree_data.get("nodes", []) if n.get("completed", False)
+            ]
             completed_count = len(completed_nodes)
             progress = tree_data.get("metadata", {}).get("progress_percentage", 0)
 
-            print(f"✅ 生成完了")
-            print(f"\n📊 統計:")
+            print("✅ 生成完了")
+            print("\n📊 統計:")
             print(f"   総ノード数: {total_nodes}")
             print(f"   完了ノード数: {completed_count}")
             print(f"   進捗率: {progress:.1f}%")
@@ -174,12 +206,19 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
             if next_recommended:
                 print(f"\n🎯 次におすすめのスキル ({len(next_recommended)}個):")
                 for node_id in next_recommended[:3]:  # 最初の3個だけ
-                    node = next((n for n in tree_data.get("nodes", []) if n.get("id") == node_id), None)
+                    node = next(
+                        (
+                            n
+                            for n in tree_data.get("nodes", [])
+                            if n.get("id") == node_id
+                        ),
+                        None,
+                    )
                     if node:
                         print_node_details(node, indent=2)
 
             # 全ノード表示（オプション）
-            print(f"\n📋 全ノード一覧:")
+            print("\n📋 全ノード一覧:")
             for i, node in enumerate(tree_data.get("nodes", []), 1):
                 status = "✅" if node.get("completed", False) else "⬜️"
                 print(f"   {i:2d}. {status} {node.get('name', node.get('id'))}")
@@ -194,7 +233,10 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
                     print(f"   ... 他 {len(edges) - 10} 個")
 
             # JSON保存（オプション）
-            output_file = Path(__file__).parent / f"skill_tree_{category_name}_{github_username}.json"
+            output_file = (
+                Path(__file__).parent
+                / f"skill_tree_{category_name}_{github_username}.json"
+            )
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(tree_data, f, ensure_ascii=False, indent=2)
             print(f"\n💾 JSONを保存: {output_file}")
@@ -208,22 +250,8 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
     except Exception as e:
         print(f"\n❌ エラー発生: {e}")
         import traceback
+
         traceback.print_exc()
-    
-    # GitHub API Token チェック
-    if settings.GITHUB_API_TOKEN:
-        print(f"\n✅ GitHub API Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
-        print("   → Privateリポジトリも分析可能")
-        print("   → Rate Limit: 5000 requests/hour")
-    else:
-        print("\n⚠️  GitHub API Token: 未設定")
-        print("   → Publicリポジトリのみ分析可能")
-        print("   → Rate Limit: 60 requests/hour")
-        print("\n   Privateリポジトリを分析する場合:")
-        print("   1. https://github.com/settings/tokens でトークン作成")
-        print("   2. スコープ: repo, read:user, user:email を選択")
-        print("   3. export GITHUB_API_TOKEN=<your_token> で設定")
-        print()
     finally:
         db.close()
 
