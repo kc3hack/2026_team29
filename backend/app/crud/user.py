@@ -36,6 +36,9 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User | No
     if db_user is None:
         return None
     update_data = user_update.model_dump(exclude_unset=True, exclude_none=True)
+    if "username" in update_data and update_data["username"] != db_user.username:
+        if get_user_by_username(db, update_data["username"]) is not None:
+            raise ValueError("Username already exists")
     for field, value in update_data.items():
         setattr(db_user, field, value)
     try:
