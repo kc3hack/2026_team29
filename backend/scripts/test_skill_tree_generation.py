@@ -124,6 +124,19 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
 
             # スキルツリー生成
             print(f"\n🔄 生成中... (GitHub API + LLM API呼び出し)")
+            
+            # GitHub分析結果を確認
+            from app.services.github_service import analyze_github_profile
+            github_analysis = await analyze_github_profile(github_username)
+            print(f"\n📊 GitHub分析結果:")
+            print(f"   言語: {', '.join(github_analysis.get('languages', [])) or 'なし'}")
+            print(f"   技術スタック: {', '.join(github_analysis.get('tech_stack', [])) or 'なし'}")
+            print(f"   リポジトリ数: {github_analysis.get('repo_count', 0)}")
+            completion_signals = github_analysis.get('completion_signals', {})
+            print(f"   完了シグナル: {len(completion_signals)}個")
+            if completion_signals:
+                print(f"   完了スキルID: {', '.join(list(completion_signals.keys())[:10])}")
+            
             result = await generate_skill_tree_ai(test_user.id, category, db)
 
             tree_data = result.tree_data
