@@ -47,13 +47,13 @@ Error:    400 username重複
 Note:     SkillTree 6カテゴリが自動初期化される（CRUD層実装済み）
 ```
 
-**GET /users/me** （要 Authorization: Bearer <token>）
+**GET /users/me** （要 Cookie `access_token` / または `Authorization: Bearer <token>`。ADR 014 参照）
 ```
 Response: { id, username, level, exp, rank, created_at, updated_at }
 Error:    401 (トークンなし/不正), 404 (ユーザー削除済み)
 ```
 
-**PUT /users/me** （要 Authorization: Bearer <token>）
+**PUT /users/me** （要 Cookie `access_token` / または `Authorization: Bearer <token>`）
 ```
 Request:  { "username"?: "string" }
           ※ level / exp / rank はサーバー管理のため除外（ADR 010）
@@ -61,7 +61,7 @@ Response: { id, username, level, exp, rank, created_at, updated_at }
 Error:    401, 400 (username重複), 404
 ```
 
-**DELETE /users/me** （要 Authorization: Bearer <token>）
+**DELETE /users/me** （要 Cookie `access_token` / または `Authorization: Bearer <token>`）
 ```
 Response: 204 No Content
 Error:    401, 404
@@ -75,7 +75,7 @@ Error:    401, 404
 | PUT | `/users/me/profile` | **必須** | 200 | 自分のプロフィール更新（Upsert） |
 | GET | `/users/{user_id}/profile` | 不要 | 200 | プロフィール取得（後方互換 / 管理者用） |
 
-**GET /users/me/profile**
+**GET /users/me/profile** （要 Cookie `access_token` / または `Authorization: Bearer <token>`）
 ```
 Response: { id, user_id, github_username, qiita_id, connpass_id,
             portfolio_url, portfolio_text, last_analyzed_at }
