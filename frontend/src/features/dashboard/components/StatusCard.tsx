@@ -40,7 +40,7 @@ export function StatusCard({ userStatus }: StatusCardProps) {
         </div>
       ) : rank ? (
         <div className="mb-4 space-y-2">
-          <RankBadge rank={rank.rank} label={rank.rank_label} size="lg" />
+          <RankBadge rank={rank.rank} label={rank.rank_name} size="lg" />
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {rank.reasoning}
           </p>
