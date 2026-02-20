@@ -1,10 +1,15 @@
-"""User API エンドポイントテスト（Issue #51）"""
+"""User API エンドポイントテスト（Issue #51, #61）
+
+/users/me   系 → JWT Bearer ヘッダー必須（ADR 014 / ADR 015）
+/users/{id} 系 → 後方互換 Read-Only（認証不要）
+"""
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.db.session import get_db
 from app.main import app
+from tests.conftest import auth_headers
 
 
 @pytest.fixture()
@@ -18,6 +23,11 @@ def client(db):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+def create_user(client, username: str) -> dict:
+    """ユーザーを作成して dict を返すヘルパー。"""
+    return client.post("/api/v1/users", json={"username": username}).json()
 
 
 # ---------------------------------------------------------------------------
@@ -43,12 +53,12 @@ def test_create_user_duplicate_username(client):
 
 
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}
+# GET /users/{user_id}  （後方互換・認証不要）
 # ---------------------------------------------------------------------------
 
 
 def test_get_user_success(client):
-    user_id = client.post("/api/v1/users", json={"username": "getme"}).json()["id"]
+    user_id = create_user(client, "getme")["id"]
     res = client.get(f"/api/v1/users/{user_id}")
     assert res.status_code == 200
     assert res.json()["username"] == "getme"
@@ -60,62 +70,91 @@ def test_get_user_not_found(client):
 
 
 # ---------------------------------------------------------------------------
-# PUT /users/{user_id}
+# GET /users/me  （認証必須）
 # ---------------------------------------------------------------------------
 
 
-def test_update_user_username(client):
-    user_id = client.post("/api/v1/users", json={"username": "before"}).json()["id"]
-    res = client.put(f"/api/v1/users/{user_id}", json={"username": "after"})
+def test_get_me_success(client):
+    user = create_user(client, "me_user")
+    res = client.get("/api/v1/users/me", headers=auth_headers(user["id"]))
+    assert res.status_code == 200
+    assert res.json()["username"] == "me_user"
+
+
+def test_get_me_unauthorized(client):
+    res = client.get("/api/v1/users/me")
+    assert res.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# PUT /users/me  （認証必須）
+# ---------------------------------------------------------------------------
+
+
+def test_update_me_username(client):
+    user = create_user(client, "before")
+    res = client.put(
+        "/api/v1/users/me",
+        json={"username": "after"},
+        headers=auth_headers(user["id"]),
+    )
     assert res.status_code == 200
     assert res.json()["username"] == "after"
 
 
-def test_update_user_not_found(client):
-    res = client.put("/api/v1/users/9999", json={"username": "nobody"})
-    assert res.status_code == 404
+def test_update_me_unauthorized(client):
+    res = client.put("/api/v1/users/me", json={"username": "nobody"})
+    assert res.status_code == 401
 
 
-def test_update_user_duplicate_username(client):
+def test_update_me_duplicate_username(client):
     """既存ユーザー名に変更しようとすると 400"""
-    client.post("/api/v1/users", json={"username": "existing"})
-    user_id = client.post("/api/v1/users", json={"username": "target"}).json()["id"]
-    res = client.put(f"/api/v1/users/{user_id}", json={"username": "existing"})
+    create_user(client, "existing")
+    user = create_user(client, "target")
+    res = client.put(
+        "/api/v1/users/me",
+        json={"username": "existing"},
+        headers=auth_headers(user["id"]),
+    )
     assert res.status_code == 400
 
 
-def test_update_user_null_username(client):
+def test_update_me_null_username(client):
     """username: null は無視され、既存の username が維持される"""
-    user_id = client.post("/api/v1/users", json={"username": "nulltest"}).json()["id"]
-    res = client.put(f"/api/v1/users/{user_id}", json={"username": None})
+    user = create_user(client, "nulltest")
+    res = client.put(
+        "/api/v1/users/me",
+        json={"username": None},
+        headers=auth_headers(user["id"]),
+    )
     assert res.status_code == 200
     assert res.json()["username"] == "nulltest"
 
 
 # ---------------------------------------------------------------------------
-# DELETE /users/{user_id}
+# DELETE /users/me  （認証必須）
 # ---------------------------------------------------------------------------
 
 
-def test_delete_user_success(client):
-    user_id = client.post("/api/v1/users", json={"username": "todelete"}).json()["id"]
-    res = client.delete(f"/api/v1/users/{user_id}")
+def test_delete_me_success(client):
+    user = create_user(client, "todelete")
+    res = client.delete("/api/v1/users/me", headers=auth_headers(user["id"]))
     assert res.status_code == 204
-    assert client.get(f"/api/v1/users/{user_id}").status_code == 404
+    assert client.get(f"/api/v1/users/{user['id']}").status_code == 404
 
 
-def test_delete_user_not_found(client):
-    res = client.delete("/api/v1/users/9999")
-    assert res.status_code == 404
+def test_delete_me_unauthorized(client):
+    res = client.delete("/api/v1/users/me")
+    assert res.status_code == 401
 
 
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/profile
+# GET /users/{user_id}/profile  （後方互換・認証不要）
 # ---------------------------------------------------------------------------
 
 
 def test_get_profile_not_found(client):
-    user_id = client.post("/api/v1/users", json={"username": "noprofile"}).json()["id"]
+    user_id = create_user(client, "noprofile")["id"]
     res = client.get(f"/api/v1/users/{user_id}/profile")
     assert res.status_code == 404
 
@@ -126,15 +165,16 @@ def test_get_profile_user_not_found(client):
 
 
 # ---------------------------------------------------------------------------
-# PUT /users/{user_id}/profile (Upsert)
+# PUT /users/me/profile  （認証必須・Upsert）
 # ---------------------------------------------------------------------------
 
 
 def test_upsert_profile_create(client):
-    user_id = client.post("/api/v1/users", json={"username": "profuser"}).json()["id"]
+    user = create_user(client, "profuser")
     res = client.put(
-        f"/api/v1/users/{user_id}/profile",
+        "/api/v1/users/me/profile",
         json={"github_username": "octocat", "qiita_id": "octocat_qiita"},
+        headers=auth_headers(user["id"]),
     )
     assert res.status_code == 200
     assert res.json()["github_username"] == "octocat"
@@ -142,35 +182,45 @@ def test_upsert_profile_create(client):
 
 
 def test_upsert_profile_update(client):
-    user_id = client.post("/api/v1/users", json={"username": "profupdate"}).json()["id"]
-    client.put(f"/api/v1/users/{user_id}/profile", json={"github_username": "first"})
+    user = create_user(client, "profupdate")
+    client.put(
+        "/api/v1/users/me/profile",
+        json={"github_username": "first"},
+        headers=auth_headers(user["id"]),
+    )
     res = client.put(
-        f"/api/v1/users/{user_id}/profile", json={"github_username": "second"}
+        "/api/v1/users/me/profile",
+        json={"github_username": "second"},
+        headers=auth_headers(user["id"]),
     )
     assert res.status_code == 200
     assert res.json()["github_username"] == "second"
 
 
-def test_upsert_profile_user_not_found(client):
-    res = client.put("/api/v1/users/9999/profile", json={"github_username": "x"})
-    assert res.status_code == 404
+def test_upsert_profile_unauthorized(client):
+    res = client.put("/api/v1/users/me/profile", json={"github_username": "x"})
+    assert res.status_code == 401
 
 
 def test_get_profile_after_upsert(client):
-    user_id = client.post("/api/v1/users", json={"username": "profget"}).json()["id"]
-    client.put(f"/api/v1/users/{user_id}/profile", json={"github_username": "gh"})
-    res = client.get(f"/api/v1/users/{user_id}/profile")
+    user = create_user(client, "profget")
+    client.put(
+        "/api/v1/users/me/profile",
+        json={"github_username": "gh"},
+        headers=auth_headers(user["id"]),
+    )
+    res = client.get(f"/api/v1/users/{user['id']}/profile")
     assert res.status_code == 200
     assert res.json()["github_username"] == "gh"
 
 
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/badges
+# GET /users/{user_id}/badges  （後方互換・認証不要）
 # ---------------------------------------------------------------------------
 
 
 def test_get_badges_empty(client):
-    user_id = client.post("/api/v1/users", json={"username": "badger"}).json()["id"]
+    user_id = create_user(client, "badger")["id"]
     res = client.get(f"/api/v1/users/{user_id}/badges")
     assert res.status_code == 200
     assert res.json() == []
@@ -182,12 +232,12 @@ def test_get_badges_user_not_found(client):
 
 
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/skill-trees
+# GET /users/{user_id}/skill-trees  （後方互換・認証不要）
 # ---------------------------------------------------------------------------
 
 
 def test_get_skill_trees_six_categories(client):
-    user_id = client.post("/api/v1/users", json={"username": "treeman"}).json()["id"]
+    user_id = create_user(client, "treeman")["id"]
     res = client.get(f"/api/v1/users/{user_id}/skill-trees")
     assert res.status_code == 200
     assert len(res.json()) == 6
@@ -199,12 +249,12 @@ def test_get_skill_trees_user_not_found(client):
 
 
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/quest-progress
+# GET /users/{user_id}/quest-progress  （後方互換・認証不要）
 # ---------------------------------------------------------------------------
 
 
 def test_get_quest_progress_empty(client):
-    user_id = client.post("/api/v1/users", json={"username": "quester"}).json()["id"]
+    user_id = create_user(client, "quester")["id"]
     res = client.get(f"/api/v1/users/{user_id}/quest-progress")
     assert res.status_code == 200
     assert res.json() == []
