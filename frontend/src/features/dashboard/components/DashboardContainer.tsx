@@ -118,7 +118,7 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
             {/* Title Overlay */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none font-sans">
               <h3
-                className="text-base font-bold tracking-widest"
+                className="text-2xl font-bold tracking-widest"
                 style={{
                   color: "#e8b849",
                   textShadow: "2px 2px 0 #7a5a10, -1px -1px 0 #0a0a0a",
