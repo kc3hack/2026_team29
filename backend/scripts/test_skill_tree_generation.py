@@ -11,6 +11,15 @@ GitHub APIとLLM APIを使用して、実際にスキルツリーを生成し、
 環境変数:
     - OPENAI_API_KEY または ANTHROPIC_API_KEY が必要
     - LLM_PROVIDER で使用するLLMを指定（デフォルト: openai）
+    - GITHUB_API_TOKEN を設定するとPrivateリポジトリも分析可能
+      （未設定の場合はPublicリポジトリのみ、Rate Limit: 60 req/hour）
+
+GitHub API Token の取得方法:
+    1. https://github.com/settings/tokens にアクセス
+    2. "Generate new token (classic)" を選択
+    3. スコープ: repo, read:user, user:email を選択
+    4. 生成されたトークンを環境変数に設定:
+       export GITHUB_API_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 """
 
 import asyncio
@@ -200,6 +209,21 @@ async def test_skill_tree_generation(github_username: str, categories: list[str]
         print(f"\n❌ エラー発生: {e}")
         import traceback
         traceback.print_exc()
+    
+    # GitHub API Token チェック
+    if settings.GITHUB_API_TOKEN:
+        print(f"\n✅ GitHub API Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
+        print("   → Privateリポジトリも分析可能")
+        print("   → Rate Limit: 5000 requests/hour")
+    else:
+        print("\n⚠️  GitHub API Token: 未設定")
+        print("   → Publicリポジトリのみ分析可能")
+        print("   → Rate Limit: 60 requests/hour")
+        print("\n   Privateリポジトリを分析する場合:")
+        print("   1. https://github.com/settings/tokens でトークン作成")
+        print("   2. スコープ: repo, read:user, user:email を選択")
+        print("   3. export GITHUB_API_TOKEN=<your_token> で設定")
+        print()
     finally:
         db.close()
 

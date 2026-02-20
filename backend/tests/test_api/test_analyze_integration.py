@@ -9,6 +9,18 @@
     
     # スキルツリー統合テストのみ実行:
     pytest tests/test_api/test_analyze_integration.py::test_generate_skill_tree_real_api -v -s
+
+環境変数:
+    - OPENAI_API_KEY または ANTHROPIC_API_KEY (必須)
+    - GITHUB_API_TOKEN (推奨)
+      ※未設定の場合はPublicリポジトリのみ分析（Rate Limit: 60 req/hour）
+      ※設定するとPrivateリポジトリも分析可能（Rate Limit: 5000 req/hour）
+      
+GitHub API Token の取得:
+    1. https://github.com/settings/tokens
+    2. "Generate new token (classic)"
+    3. スコープ: repo, read:user, user:email
+    4. export GITHUB_API_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 """
 
 import pytest
@@ -223,6 +235,17 @@ def test_generate_skill_tree_real_api(db: Session):
         if not settings.ANTHROPIC_API_KEY or "REPLACE" in settings.ANTHROPIC_API_KEY:
             pytest.skip("ANTHROPIC_API_KEY not set. Please set it in .env file.")
 
+    # GitHub API Token チェック
+    print("\n=== GitHub API Token Status ===")
+    if settings.GITHUB_API_TOKEN:
+        print(f"✅ Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
+        print("   → Privateリポジトリも分析可能 (Rate Limit: 5000 req/hour)")
+    else:
+        print("⚠️  Token: 未設定")
+        print("   → Publicリポジトリのみ分析可能 (Rate Limit: 60 req/hour)")
+        print("   → https://github.com/settings/tokens でPAT作成を推奨")
+    print("=" * 50)
+
     # テスト用のDBセッションをオーバーライド
     def override_get_db():
         try:
@@ -323,6 +346,17 @@ def test_generate_skill_tree_custom_github(db: Session):
     elif settings.LLM_PROVIDER.lower() == "anthropic":
         if not settings.ANTHROPIC_API_KEY or "REPLACE" in settings.ANTHROPIC_API_KEY:
             pytest.skip("ANTHROPIC_API_KEY not set")
+
+    # GitHub API Token チェック
+    print("\n=== GitHub API Token Status ===")
+    if settings.GITHUB_API_TOKEN:
+        print(f"✅ Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
+        print("   → Privateリポジトリも分析可能 (Rate Limit: 5000 req/hour)")
+    else:
+        print("⚠️  Token: 未設定")
+        print("   → Publicリポジトリのみ分析可能 (Rate Limit: 60 req/hour)")
+        print("   → https://github.com/settings/tokens でPAT作成を推奨")
+    print("=" * 50)
 
     # ここに自分のGitHubユーザー名を入力
     github_username = ""  # 例: "octocat"
