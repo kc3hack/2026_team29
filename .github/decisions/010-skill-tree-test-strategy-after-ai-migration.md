@@ -15,7 +15,7 @@
 1. **DBアクセス**: Profile/User取得、QuestProgress参照、SkillTreeテーブル更新
 2. **GitHub API呼び出し**: リポジトリ分析、使用言語/技術スタック抽出、習得済みスキル推定
 3. **LLM呼び出し**: Gemini APIでパーソナライズされたスキルツリー生成
-4. **キャッシュ管理**: 7日間キャッシュ、generated_at判定
+4. **キャッシュ管理**: 10分間キャッシュ、generated_at判定（ハッカソン最適化）
 5. **強制上書き処理**: GitHub分析結果がLLM判定より優先（Step 6.5）
 
 ### 発生した課題
@@ -202,7 +202,7 @@ with patch(
 │ - DB: Profile/User/QuestProgress/SkillTree │ ← test_skill_tree_service.py
 │ - GitHub API: リポジトリ分析              │     (ビジネスロジック)
 │ - LLM: Gemini API                        │
-│ - キャッシュ: 7日間判定                  │
+│ - キャッシュ: 10分間判定                 │
 │ - 強制上書き: GitHub > LLM (Step 6.5)   │
 └──────────────────────────────────────────┘
 ```
@@ -264,3 +264,108 @@ completion_signals = {}  # ← 常に空辞書を返す
 - Issue #35: モックAPIエンドポイント実装
 - `test_skill_tree_service.py`: 12テストでAI実装の詳細検証
 - `test_analyze_mock.py`: 10テストでAPIエンドポイント仕様検証
+
+---
+
+## 後続の決定: キャッシュ期間の変更（ハッカソン用最適化）
+
+### 背景
+
+初期実装では CACHE_VALID_DAYS = 7（7日間）でスキルツリーをキャッシュしていたが、以下の問題が判明:
+
+**ハッカソン環境における課題**:
+
+1. **デモ再現性の欠如**:
+   - 2日間のハッカソン期間中、ユーザーがGitHubで新しいコミット/リポジトリを作成してもスキルツリーが更新されない
+   - 審査員や来場者にAI機能を実演する際、「GitHubと連携している」ことを証明できない
+
+2. **GitHub分析の優先度矛盾**:
+   - Step 6.5で「GitHub分析結果 > LLM判定」という強制上書き機能を実装したが、7日間キャッシュではGitHub APIを呼ばない
+   - 最も重要な「ユーザーの実際のスキル」を反映する機能が動作しない
+
+3. **LLMコスト最適化の誤解**:
+   - 本番環境ではGemini APIコスト削減のため長期キャッシュが有効
+   - **しかしハッカソンでは機能デモが最優先**、コストは二の次
+
+### 決定
+
+**CACHE_VALID_MINUTES = 10**（10分間）に変更
+
+**根拠**:
+
+- **デモ体験**:
+  - 来場者がGitHubでクイックコミット → 10分後に再生成 → 「習得済み」スキルが増えることを確認可能
+  - LLM+GitHub統合の価値を実演できる
+
+- **負荷対策**:
+  - 10分間は連打防止として機能（Rate Limit保護）
+  - ハッカソン期間中の想定トラフィック（数十人×数回/日）では十分
+
+- **GitHub API Rate Limit**:
+  - 未認証: 60req/h → 1分で1回まで ⇒ 10分キャッシュで安全マージン確保
+  - 認証済み: 5000req/h → 余裕あり
+
+### 実装
+
+**変更箇所**:
+
+```python
+# backend/app/services/skill_tree_service.py
+CACHE_VALID_MINUTES = 10  # 旧: CACHE_VALID_DAYS = 7
+
+def _is_cache_valid(generated_at: datetime | None) -> bool:
+    return (now - generated_at) < timedelta(minutes=CACHE_VALID_MINUTES)
+```
+
+**環境変数化**:
+
+```dotenv
+# backend/.env.example
+# SKILL_TREE_CACHE_MINUTES=10  # 将来的に本番環境で調整可能（現在は未実装）
+```
+
+⇒ ハッカソン後、本番デプロイ時に環境変数で制御できるよう拡張可能
+
+### トレードオフ
+
+**メリット**:
+
+- ✅ リアルタイムでGitHub分析を反映（デモ効果大）
+- ✅ LLMパーソナライゼーションの価値を実証可能
+- ✅ ユーザーフィードバックを即座に取得できる
+
+**デメリット**:
+
+- ⚠️ Gemini APIコール回数増加（初回生成後10分で再度LLM呼び出し可能）
+- ⚠️ 本番環境では不適切（数時間〜1日が推奨）
+
+**リスク軽減策**:
+
+- ハッカソン終了時に`.env`でキャッシュ期間を延長する手順をREADME化
+- ADR 010に「本番では環境変数で制御すべき」と明記
+
+### 影響範囲
+
+**テストコード**:
+
+- `test_skill_tree_service.py`: キャッシュ判定ロジックのテストは引き続き動作（`CACHE_VALID_MINUTES`参照）
+- `test_analyze_mock.py`: モック化されているため影響なし
+
+**デプロイ**:
+
+- Docker環境変数でオーバーライド可能（将来対応）
+- 現状はソースコード固定値（ハッカソン期間中のみ）
+
+### 今後の方針
+
+**本番化時のアクション**:
+
+1. `settings.py`に `SKILL_TREE_CACHE_MINUTES` 環境変数を追加
+2. デフォルト値を `1440`（1日）に設定
+3. `skill_tree_service.py`で `settings.SKILL_TREE_CACHE_MINUTES` 参照に変更
+4. `.env.example`の設定項目をアンコメント
+
+**備考**:
+
+- ハッカソン期間中は固定値10分で運用
+- プロダクション環境では必ず環境変数化すること

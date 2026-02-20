@@ -24,8 +24,8 @@ from app.services.github_service import analyze_github_profile
 
 logger = logging.getLogger(__name__)
 
-# キャッシュ有効期間（7日間）
-CACHE_VALID_DAYS = 7
+# キャッシュ有効期間（10分間: ハッカソン用、本番では環境変数で調整可能）
+CACHE_VALID_MINUTES = 10
 
 # ベースラインJSONファイルのディレクトリ
 SKILL_TREE_DATA_DIR = Path(__file__).parent.parent.parent / "data" / "skill_trees"
@@ -63,7 +63,7 @@ async def generate_skill_tree_ai(
         HTTPException: ユーザーが見つからない、またはLLM呼び出しに失敗した場合
 
     Flow:
-        1. キャッシュチェック（generated_atが7日以内ならDBから返却）
+        1. キャッシュチェック（generated_atがCACHE_VALID_MINUTES以内ならDBから返却）
         2. ユーザー情報収集（Profile, QuestProgress, GitHub API）
         3. ベースラインJSON読み込み
         4. LLMプロンプト生成
