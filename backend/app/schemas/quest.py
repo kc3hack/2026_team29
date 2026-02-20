@@ -99,3 +99,4 @@ class QuestGenerationResponse(BaseModel):
     learning_objectives: list[str] = Field(..., description="学習目標")
     steps: list[QuestStep] = Field(..., min_length=1, description="演習ステップ")
     resources: list[str] = Field(default_factory=list, description="参考リソース")
+

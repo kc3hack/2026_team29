@@ -33,7 +33,7 @@ issue #31で6テーブル（Profile, OAuthAccount, Badge, Quest, QuestProgress, 
 - **変更理由**:
   - **Langchain/フロントエンドとの統一的な操作**: JSONB型（バイナリ形式）で一貫した扱いが必要
   - **テスト環境の統一**: SQLite（BLOB型）/PostgreSQL（JSONB型）両対応
-  - **将来の拡張性**: JSON内部検索の可能性を考慮
+  - **スキルツリーのクリア状態更新・検索**: SkillTree.tree_data 内の各ノード（`completed` フラグ）をノード単位で更新・検索する予定があるため、JSONB の GIN インデックスによる JSON 内部検索（`@>`, `?` 演算子等）が必要になる（Issue #54 参照）
 - **実装方針**:
   - PostgreSQL: JSONB型として保存
   - SQLite: BLOB型として保存（JSONBのバイナリ表現）
@@ -152,8 +152,8 @@ issue #31で6テーブル（Profile, OAuthAccount, Badge, Quest, QuestProgress, 
   - **対処法**: SQLAlchemy ORM の `relationship()` で簡潔に記述
 - **パフォーマンス**: 非正規化より若干遅い
   - **対処法**: ハッカソン規模（数百ユーザー）では影響なし、将来的にインデックス最適化
-- **JSONB型未使用**: PostgreSQL固有の高速検索機能を使えない
-  - **対処法**: MVP段階ではJSON内部検索が不要、必要になったら移行
+- **JSONB型採用による書き込みコスト**: JSON型より書き込み時のパース処理が若干重い
+  - **対処法**: ハッカソン規模では影響なし。スキルツリーはユーザー分析時のみ更新するため書き込み頻度が低い
 
 ### 実装ガイドライン
 

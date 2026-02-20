@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.api import api_router
 from app.core.config import settings, validate_encryption_key
 from app.api.admin import admin_app
+from app.db import base  # noqa: F401  # SQLAlchemyモデルの登録
 
 # 本番環境のみ暗号化キーの検証を実行（テストでは conftest.py で ENCRYPTION_KEY が設定される）
 if os.getenv("ENV", "development") == "production":

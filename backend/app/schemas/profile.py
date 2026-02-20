@@ -24,7 +24,6 @@ class ProfileUpdate(BaseModel):
 
 class Profile(BaseModel):
     id: int
-    user_id: int
     github_username: str | None
     qiita_id: str | None
     connpass_id: str | None

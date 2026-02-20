@@ -22,7 +22,6 @@ class BadgeCreate(BaseModel):
 
 class Badge(BaseModel):
     id: int
-    user_id: int
     category: BadgeCategory
     tier: int
     earned_at: datetime

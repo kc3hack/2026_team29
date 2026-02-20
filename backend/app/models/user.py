@@ -27,9 +27,17 @@ class User(Base):
         onupdate=func.now(),
     )
 
-    # Relationships
-    profile = relationship("Profile", back_populates="user", uselist=False)
-    oauth_accounts = relationship("OAuthAccount", back_populates="user")
-    badges = relationship("Badge", back_populates="user")
-    quest_progress = relationship("QuestProgress", back_populates="user")
-    skill_trees = relationship("SkillTree", back_populates="user")
+    # Relationships（cascade="all, delete-orphan" でユーザー削除時に関連レコードも削除）
+    profile = relationship(
+        "Profile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    oauth_accounts = relationship(
+        "OAuthAccount", back_populates="user", cascade="all, delete-orphan"
+    )
+    badges = relationship("Badge", back_populates="user", cascade="all, delete-orphan")
+    quest_progress = relationship(
+        "QuestProgress", back_populates="user", cascade="all, delete-orphan"
+    )
+    skill_trees = relationship(
+        "SkillTree", back_populates="user", cascade="all, delete-orphan"
+    )

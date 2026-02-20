@@ -1,0 +1,333 @@
+{
+  "nodes": [
+    {
+      "id": "infra_linux_admin",
+      "name": "Linuxシステム管理",
+      "completed": false,
+      "description": "ユーザー権限、パッケージ管理、プロセスとファイルシステム",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "infra_net_routing",
+      "name": "ネットワークルーティング基礎",
+      "completed": false,
+      "description": "IPアドレス、サブネット、DNSの基本",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "infra_shell_scripting",
+      "name": "シェルスクリプト",
+      "completed": false,
+      "description": "bashを用いた定型業務の自動化スクリプト作成",
+      "prerequisites": [
+        "infra_linux_admin"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "infra_virt_basics",
+      "name": "仮想化技術基礎",
+      "completed": false,
+      "description": "ハイパーバイザを用いたVMの構築と管理",
+      "prerequisites": [
+        "infra_linux_admin",
+        "infra_net_routing"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "infra_docker",
+      "name": "Dockerコンテナ",
+      "completed": false,
+      "description": "Dockerfileの記述とコンテナを用いた環境分離",
+      "prerequisites": [
+        "infra_linux_admin"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "infra_web_server",
+      "name": "Webサーバー構築",
+      "completed": false,
+      "description": "NginxやApacheを用いたリバースプロキシ設定",
+      "prerequisites": [
+        "infra_net_routing"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "infra_cicd_basics",
+      "name": "CI/CD基礎",
+      "completed": false,
+      "description": "GitHub Actionsを用いた自動テスト・ビルドの構築",
+      "prerequisites": [
+        "infra_docker",
+        "infra_shell_scripting"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "infra_db_admin",
+      "name": "データベース運用管理",
+      "completed": false,
+      "description": "PostgreSQL/MySQLのバックアップ、レプリケーション設定",
+      "prerequisites": [
+        "infra_linux_admin"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "infra_cloud_basics",
+      "name": "パブリッククラウド基礎",
+      "completed": false,
+      "description": "AWS/GCPの主要サービスの活用とネットワーキング",
+      "prerequisites": [
+        "infra_net_routing",
+        "infra_virt_basics"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "infra_serverless",
+      "name": "サーバーレスアーキテクチャ",
+      "completed": false,
+      "description": "AWS Lambda等を用いたイベント駆動型インフラの構築",
+      "prerequisites": [
+        "infra_cloud_basics"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "infra_iac",
+      "name": "IaC (Terraform)",
+      "completed": false,
+      "description": "インフラ構成のコード化とバージョン管理の自動化",
+      "prerequisites": [
+        "infra_cloud_basics"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "infra_config_mgmt",
+      "name": "コンフィグレーション管理",
+      "completed": false,
+      "description": "Ansibleを用いた複数サーバーの設定自動化",
+      "prerequisites": [
+        "infra_shell_scripting",
+        "infra_web_server"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "infra_observability",
+      "name": "オブザーバビリティ",
+      "completed": false,
+      "description": "Datadog/Prometheusを用いた監視、ログ基盤の構築",
+      "prerequisites": [
+        "infra_cloud_basics"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "infra_perf_tuning",
+      "name": "OS/DB パフォーマンスチューニング",
+      "completed": false,
+      "description": "カーネルパラメータの調整やスロークエリの改善",
+      "prerequisites": [
+        "infra_db_admin",
+        "infra_linux_admin"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "infra_k8s_basics",
+      "name": "コンテナオーケストレーション",
+      "completed": false,
+      "description": "Kubernetesの基本概念とクラスタ上へのデプロイ",
+      "prerequisites": [
+        "infra_docker",
+        "infra_iac"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "infra_service_mesh",
+      "name": "サービスメッシュ",
+      "completed": false,
+      "description": "Istio等を用いたマイクロサービス間の通信制御",
+      "prerequisites": [
+        "infra_cloud_basics",
+        "infra_net_routing"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "infra_k8s_advanced",
+      "name": "高度なKubernetes運用",
+      "completed": false,
+      "description": "カスタムコントローラの作成、Helm等のパッケージ運用",
+      "prerequisites": [
+        "infra_k8s_basics"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "infra_sec_compliance",
+      "name": "セキュリティ自動化",
+      "completed": false,
+      "description": "CSPMを用いたクラスタ設定の継続的監査と統制",
+      "prerequisites": [
+        "infra_iac",
+        "infra_observability"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "infra_sre",
+      "name": "SRE & 大規模分散システム",
+      "completed": false,
+      "description": "SLI/SLO運用とグローバルスケールの高可用性設計",
+      "prerequisites": [
+        "infra_k8s_advanced",
+        "infra_observability"
+      ],
+      "estimated_hours": 100
+    },
+    {
+      "id": "infra_chaos_eng",
+      "name": "カオスエンジニアリング",
+      "completed": false,
+      "description": "意図的な障害注入によるシステムのレジリエンス検証",
+      "prerequisites": [
+        "infra_sre",
+        "infra_perf_tuning"
+      ],
+      "estimated_hours": 100
+    }
+  ],
+  "edges": [
+    {
+      "from": "infra_linux_admin",
+      "to": "infra_shell_scripting"
+    },
+    {
+      "from": "infra_linux_admin",
+      "to": "infra_virt_basics"
+    },
+    {
+      "from": "infra_net_routing",
+      "to": "infra_virt_basics"
+    },
+    {
+      "from": "infra_linux_admin",
+      "to": "infra_docker"
+    },
+    {
+      "from": "infra_net_routing",
+      "to": "infra_web_server"
+    },
+    {
+      "from": "infra_docker",
+      "to": "infra_cicd_basics"
+    },
+    {
+      "from": "infra_shell_scripting",
+      "to": "infra_cicd_basics"
+    },
+    {
+      "from": "infra_linux_admin",
+      "to": "infra_db_admin"
+    },
+    {
+      "from": "infra_net_routing",
+      "to": "infra_cloud_basics"
+    },
+    {
+      "from": "infra_virt_basics",
+      "to": "infra_cloud_basics"
+    },
+    {
+      "from": "infra_cloud_basics",
+      "to": "infra_serverless"
+    },
+    {
+      "from": "infra_cloud_basics",
+      "to": "infra_iac"
+    },
+    {
+      "from": "infra_shell_scripting",
+      "to": "infra_config_mgmt"
+    },
+    {
+      "from": "infra_web_server",
+      "to": "infra_config_mgmt"
+    },
+    {
+      "from": "infra_cloud_basics",
+      "to": "infra_observability"
+    },
+    {
+      "from": "infra_db_admin",
+      "to": "infra_perf_tuning"
+    },
+    {
+      "from": "infra_linux_admin",
+      "to": "infra_perf_tuning"
+    },
+    {
+      "from": "infra_docker",
+      "to": "infra_k8s_basics"
+    },
+    {
+      "from": "infra_iac",
+      "to": "infra_k8s_basics"
+    },
+    {
+      "from": "infra_cloud_basics",
+      "to": "infra_service_mesh"
+    },
+    {
+      "from": "infra_net_routing",
+      "to": "infra_service_mesh"
+    },
+    {
+      "from": "infra_k8s_basics",
+      "to": "infra_k8s_advanced"
+    },
+    {
+      "from": "infra_iac",
+      "to": "infra_sec_compliance"
+    },
+    {
+      "from": "infra_observability",
+      "to": "infra_sec_compliance"
+    },
+    {
+      "from": "infra_k8s_advanced",
+      "to": "infra_sre"
+    },
+    {
+      "from": "infra_observability",
+      "to": "infra_sre"
+    },
+    {
+      "from": "infra_sre",
+      "to": "infra_chaos_eng"
+    },
+    {
+      "from": "infra_perf_tuning",
+      "to": "infra_chaos_eng"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 20,
+    "completed_nodes": 0,
+    "progress_percentage": 0.0,
+    "next_recommended": [
+      "infra_linux_admin",
+      "infra_net_routing"
+    ]
+  }
+}

@@ -66,63 +66,117 @@ JSON以外の形式や追加の説明は含めず、JSONのみを出力してく
 
 
 # ============================================================
-# スキルツリー生成用プロンプト（Phase 3で詳細実装）
+# スキルツリー生成用プロンプト（Phase 3 - LLMパーソナライゼーション）
 # ============================================================
+
+SKILL_TREE_ANALYSIS_TEMPLATE = """あなたは優秀なキャリアアドバイザーです。
+このエンジニアの現在のスキルレベルと目標に基づいて、
+パーソナライズされたスキルツリー（学習ロードマップ）を生成してください。
+
+## エンジニア情報
+- 現在のランク: {rank} ({rank_name})
+- GitHub: {github_username}
+  - 主な使用言語: {languages}
+  - リポジトリ数: {repo_count}
+  - 技術スタック: {tech_stack}
+  - 最近の活動: {recent_activity}
+- 習得済みスキル（GitHub分析結果）: {acquired_skills}
+- 完了したQuest: {completed_quests}
+
+## 選択されたカテゴリ: {category}
+
+## ベースラインスキルツリー
+{baseline_json}
+
+## 生成要件
+1. **未習得スキルの特定**: ベースラインから、ユーザーが次に学ぶべきスキル5-10個を選定
+2. **completed判定（最重要）**: 
+   - 「習得済みスキル」リストに含まれるスキルIDは必ず `completed: true` に設定
+   - 含まれないスキルは `completed: false` に設定
+   - GitHub分析結果を最優先で反映すること
+3. **前提条件の定義**: スキル間の依存関係（prerequisites）を技術的に正確に
+4. **難易度調整**: ユーザーのランクに応じた学習時間を推定
+   - rank 0-2（初心者）: 基礎スキルを手厚く、長めの学習時間
+   - rank 3-5（中級者）: 実践的スキル中心、標準的な学習時間
+   - rank 6-9（上級者）: 先端技術・アーキテクチャスキル、短めの学習時間
+5. **優先順位付け**: 次に取り組むべきスキル（next_recommended）を3つ提示
+
+## 出力形式（JSON）
+{{
+  "nodes": [
+    {{
+      "id": "unique-skill-id",
+      "name": "スキル名",
+      "completed": true/false,
+      "description": "スキルの説明",
+      "prerequisites": ["前提スキルID"],
+      "estimated_hours": 30
+    }}
+  ],
+  "edges": [
+    {{"from": "skill-a", "to": "skill-b"}}
+  ],
+  "metadata": {{
+    "total_nodes": 8,
+    "completed_nodes": 3,
+    "progress_percentage": 37.5,
+    "next_recommended": ["skill-x", "skill-y", "skill-z"]
+  }}
+}}
+
+JSON以外の形式や追加の説明は含めず、JSONのみを出力してください。"""
+
 
 SKILL_TREE_TEMPLATE = ChatPromptTemplate.from_messages(
     [
         ("system", SYSTEM_PROMPT_BASE),
-        (
-            "user",
-            """# スキルツリー生成
-
-ユーザー情報:
-- 現在のランク: {current_rank}
-- カテゴリ: {category}
-- 習得済みスキル: {acquired_skills}
-
-このユーザーが次のランクに進むために必要なマイルストーンを
-JSON形式で生成してください。
-
-出力形式:
-{{"nodes": [{{"id": 1, "skill": "スキル名", "acquired": true/false}}]}}
-""",
-        ),
+        ("user", SKILL_TREE_ANALYSIS_TEMPLATE),
     ]
 )
 
 
 # ============================================================
-# 演習生成用プロンプト（Phase 3で詳細実装）
+# 演習生成用プロンプト
 # ============================================================
 
-QUEST_GENERATION_TEMPLATE = ChatPromptTemplate.from_messages(
-    [
-        ("system", SYSTEM_PROMPT_BASE),
-        (
-            "user",
-            """# ハンズオン演習生成
+QUEST_GENERATION_TEMPLATE = """あなたは優秀な技術教育者です。
+以下のドキュメント内容を元に、ユーザーのランクに適したハンズオン演習を生成してください。
 
-ドキュメント内容:
+## ドキュメント内容
 {document_content}
 
-対象ユーザー:
-- ランク: {user_rank}
+## 対象ユーザー
+- ランク: {user_rank} (0: 種子, 1: 苗木, ..., 9: 世界樹)
 - 得意分野: {user_skills}
 
-このドキュメントの内容を学ぶための、実践的なハンズオン演習を生成してください。
+## 生成要件
+1. ユーザーのランクに適した難易度設定
+   - ランク0-2: 基礎的な手順、丁寧な説明
+   - ランク3-5: 中級者向け、応用要素を含む
+   - ランク6-9: 高度な実装、最適化やアーキテクチャ設計
+2. 段階的な手順（5-10ステップ）
+3. 各ステップは実行可能で具体的
+4. 学習効果が高く、実務に役立つ内容
 
-## 要件
-- ユーザーのランクに適した難易度
-- 段階的な手順（5-10ステップ）
-- 実行可能な具体的なタスク
-- 学習効果の高い内容
+## 出力形式（JSON）
+{{
+  "title": "演習タイトル",
+  "difficulty": "beginner|intermediate|advanced",
+  "estimated_time_minutes": 60,
+  "learning_objectives": ["目標1", "目標2", "目標3"],
+  "steps": [
+    {{
+      "step_number": 1,
+      "title": "ステップタイトル",
+      "description": "具体的な手順の説明",
+      "code_example": "コード例（必要に応じて）",
+      "checkpoints": ["確認ポイント1", "確認ポイント2"]
+    }}
+  ],
+  "resources": ["参考リンク1", "参考リンク2"]
+}}
 
-出力形式: Markdown
-""",
-        ),
-    ]
-)
+JSON以外の形式や追加の説明は含めず、JSONのみを出力してください。"""
 
 
 # ============================================================

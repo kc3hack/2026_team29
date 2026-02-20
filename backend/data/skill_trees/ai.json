@@ -1,0 +1,298 @@
+{
+  "nodes": [
+    {
+      "id": "ai_python_basics",
+      "name": "Pythonプログラミング基礎",
+      "completed": false,
+      "description": "基本構文とリスト内包表記などのPython的記述",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "ai_data_processing",
+      "name": "データ処理基礎",
+      "completed": false,
+      "description": "Numpy, Pandasを用いた行列演算とデータフレーム操作",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "ai_math_basics",
+      "name": "AI数学基礎",
+      "completed": false,
+      "description": "線形代数と微分積分の基礎知識",
+      "prerequisites": [
+        "ai_data_processing"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "ai_statistics",
+      "name": "統計学基礎",
+      "completed": false,
+      "description": "確率分布、仮説検定、ベイズ統計の入門",
+      "prerequisites": [
+        "ai_data_processing"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "ai_ml_basics",
+      "name": "機械学習基礎",
+      "completed": false,
+      "description": "Scikit-learnを用いた回帰・分類・クラスタリングの構築",
+      "prerequisites": [
+        "ai_math_basics",
+        "ai_python_basics"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "ai_data_viz",
+      "name": "データ可視化",
+      "completed": false,
+      "description": "MatplotlibやSeabornによる探索的データ分析(EDA)",
+      "prerequisites": [
+        "ai_data_processing"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "ai_dl_basics",
+      "name": "深層学習基礎",
+      "completed": false,
+      "description": "多層パーセプトロン、活性化関数、バックプロパゲーションの理解",
+      "prerequisites": [
+        "ai_ml_basics"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "ai_feature_eng",
+      "name": "特徴量エンジニアリング",
+      "completed": false,
+      "description": "ドメイン知識を活かしたデータ変換と次元削減",
+      "prerequisites": [
+        "ai_ml_basics",
+        "ai_statistics"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "ai_dl_fw",
+      "name": "DLフレームワーク",
+      "completed": false,
+      "description": "PyTorch / TensorFlowを用いたモデルの記述と学習",
+      "prerequisites": [
+        "ai_dl_basics"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "ai_cv_basics",
+      "name": "画像処理基礎 (CV)",
+      "completed": false,
+      "description": "CNN構造の理解と画像分類モデルの構築",
+      "prerequisites": [
+        "ai_dl_basics"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "ai_nlp_basics",
+      "name": "自然言語処理基礎 (NLP)",
+      "completed": false,
+      "description": "形態素解析、RNN、Word2Vecなどの基礎手法",
+      "prerequisites": [
+        "ai_dl_fw"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "ai_rl_basics",
+      "name": "強化学習基礎",
+      "completed": false,
+      "description": "Q学習やマルコフ決定過程(MDP)の理解",
+      "prerequisites": [
+        "ai_dl_fw"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "ai_transformer",
+      "name": "Transformerアーキテクチャ",
+      "completed": false,
+      "description": "Attentionメカニズムと事前学習モデルの活用",
+      "prerequisites": [
+        "ai_nlp_basics"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "ai_mlops_basics",
+      "name": "MLOps基礎",
+      "completed": false,
+      "description": "MLflow等を用いたモデルのバージョン管理と自動再学習パイプライン",
+      "prerequisites": [
+        "ai_dl_fw"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "ai_llm_app",
+      "name": "LLMアプリケーション開発",
+      "completed": false,
+      "description": "LangChainやRAGを用いたプロンプトエンジニアリングとエージェント実装",
+      "prerequisites": [
+        "ai_transformer"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "ai_generative_models",
+      "name": "生成モデル",
+      "completed": false,
+      "description": "GANやDiffusionモデルを用いた画像・音声生成の仕組み",
+      "prerequisites": [
+        "ai_cv_basics",
+        "ai_dl_fw"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "ai_fine_tuning",
+      "name": "モデルファインチューニング",
+      "completed": false,
+      "description": "LoRAやQLoRAを用いた巨大モデルの効率的な微調整",
+      "prerequisites": [
+        "ai_llm_app"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "ai_inference_opt",
+      "name": "推論最適化",
+      "completed": false,
+      "description": "ONNX変換、量子化、TensorRTを用いた高速なモデル推論基盤の構築",
+      "prerequisites": [
+        "ai_mlops_basics"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "ai_research",
+      "name": "新規アーキテクチャ研究",
+      "completed": false,
+      "description": "最新の論文の実装と、ドメイン特化型のAIモデル設計",
+      "prerequisites": [
+        "ai_fine_tuning"
+      ],
+      "estimated_hours": 100
+    },
+    {
+      "id": "ai_dist_training",
+      "name": "大規模分散学習",
+      "completed": false,
+      "description": "Megatron-LMやDeepSpeedを用いた複数GPUでの基盤モデル学習",
+      "prerequisites": [
+        "ai_inference_opt"
+      ],
+      "estimated_hours": 100
+    }
+  ],
+  "edges": [
+    {
+      "from": "ai_data_processing",
+      "to": "ai_math_basics"
+    },
+    {
+      "from": "ai_data_processing",
+      "to": "ai_statistics"
+    },
+    {
+      "from": "ai_math_basics",
+      "to": "ai_ml_basics"
+    },
+    {
+      "from": "ai_python_basics",
+      "to": "ai_ml_basics"
+    },
+    {
+      "from": "ai_data_processing",
+      "to": "ai_data_viz"
+    },
+    {
+      "from": "ai_ml_basics",
+      "to": "ai_dl_basics"
+    },
+    {
+      "from": "ai_ml_basics",
+      "to": "ai_feature_eng"
+    },
+    {
+      "from": "ai_statistics",
+      "to": "ai_feature_eng"
+    },
+    {
+      "from": "ai_dl_basics",
+      "to": "ai_dl_fw"
+    },
+    {
+      "from": "ai_dl_basics",
+      "to": "ai_cv_basics"
+    },
+    {
+      "from": "ai_dl_fw",
+      "to": "ai_nlp_basics"
+    },
+    {
+      "from": "ai_dl_fw",
+      "to": "ai_rl_basics"
+    },
+    {
+      "from": "ai_nlp_basics",
+      "to": "ai_transformer"
+    },
+    {
+      "from": "ai_dl_fw",
+      "to": "ai_mlops_basics"
+    },
+    {
+      "from": "ai_transformer",
+      "to": "ai_llm_app"
+    },
+    {
+      "from": "ai_cv_basics",
+      "to": "ai_generative_models"
+    },
+    {
+      "from": "ai_dl_fw",
+      "to": "ai_generative_models"
+    },
+    {
+      "from": "ai_llm_app",
+      "to": "ai_fine_tuning"
+    },
+    {
+      "from": "ai_mlops_basics",
+      "to": "ai_inference_opt"
+    },
+    {
+      "from": "ai_fine_tuning",
+      "to": "ai_research"
+    },
+    {
+      "from": "ai_inference_opt",
+      "to": "ai_dist_training"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 20,
+    "completed_nodes": 0,
+    "progress_percentage": 0.0,
+    "next_recommended": [
+      "ai_python_basics",
+      "ai_data_processing"
+    ]
+  }
+}

@@ -10,7 +10,6 @@ from app.models.enums import SkillCategory
 
 class SkillTree(BaseModel):
     id: int
-    user_id: int
     category: SkillCategory
     tree_data: dict[str, Any] = Field(default_factory=dict)
     generated_at: datetime | None

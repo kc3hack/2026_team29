@@ -1,0 +1,303 @@
+{
+  "nodes": [
+    {
+      "id": "web_html_css",
+      "name": "HTML/CSS基礎",
+      "completed": false,
+      "description": "セマンティックなマークアップと基本的なスタイリング",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "web_http_basics",
+      "name": "HTTPプロトコル基礎",
+      "completed": false,
+      "description": "リクエスト/レスポンス、メソッド、ステータスコードの理解",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "web_js_basics",
+      "name": "JavaScript基礎",
+      "completed": false,
+      "description": "変数、制御構文、基本的なDOM操作",
+      "prerequisites": [
+        "web_html_css"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "web_css_fw",
+      "name": "CSSフレームワーク",
+      "completed": false,
+      "description": "Tailwind CSSやBootstrap等を用いた効率的なスタイリング",
+      "prerequisites": [
+        "web_html_css"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "web_js_advanced",
+      "name": "モダンJavaScript",
+      "completed": false,
+      "description": "ES6+構文、非同期処理（Promise/async-await）",
+      "prerequisites": [
+        "web_js_basics"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "web_a11y_basics",
+      "name": "Webアクセシビリティ基礎",
+      "completed": false,
+      "description": "WAI-ARIAやコントラスト比など、基本的なアクセシビリティ対応",
+      "prerequisites": [
+        "web_html_css"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "web_typescript",
+      "name": "TypeScript",
+      "completed": false,
+      "description": "静的型付けによる堅牢なフロントエンド開発",
+      "prerequisites": [
+        "web_js_advanced"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "web_build_tools",
+      "name": "ビルドツール・バンドラー",
+      "completed": false,
+      "description": "ViteやWebpackを用いたフロントエンド開発環境の構築",
+      "prerequisites": [
+        "web_js_advanced"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "web_spa_fw",
+      "name": "SPAフレームワーク",
+      "completed": false,
+      "description": "ReactやVueを用いたコンポーネント指向UI開発",
+      "prerequisites": [
+        "web_typescript",
+        "web_build_tools"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "web_backend_api",
+      "name": "バックエンドAPI開発基礎",
+      "completed": false,
+      "description": "ExpressやFastAPIを用いた基本的なREST APIの構築",
+      "prerequisites": [
+        "web_http_basics",
+        "web_js_advanced"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "web_state_management",
+      "name": "状態管理",
+      "completed": false,
+      "description": "ReduxやZustandを用いたグローバルステートの管理",
+      "prerequisites": [
+        "web_spa_fw"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "web_db_orm",
+      "name": "DB連携・ORM",
+      "completed": false,
+      "description": "PrismaやSQLAlchemyを用いたデータベース操作",
+      "prerequisites": [
+        "web_backend_api"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "web_ssr_ssg",
+      "name": "SSR/SSG (Next.js/Nuxt)",
+      "completed": false,
+      "description": "サーバーサイドレンダリングや静的サイト生成の導入",
+      "prerequisites": [
+        "web_spa_fw"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "web_auth",
+      "name": "認証・認可",
+      "completed": false,
+      "description": "OAuth 2.0やJWTを用いたセキュアな認証フローの実装",
+      "prerequisites": [
+        "web_backend_api"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "web_graphql_bff",
+      "name": "GraphQL / BFF",
+      "completed": false,
+      "description": "複雑なデータ要件を満たすためのAPI設計とBFFアーキテクチャ",
+      "prerequisites": [
+        "web_ssr_ssg",
+        "web_auth"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "web_perf_tuning",
+      "name": "パフォーマンスチューニング",
+      "completed": false,
+      "description": "Core Web Vitalsの改善、レンダリングやバンドルサイズの最適化",
+      "prerequisites": [
+        "web_ssr_ssg"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "web_micro_frontends",
+      "name": "マイクロフロントエンド",
+      "completed": false,
+      "description": "大規模チーム向けにフロントエンドを分割・統合するアーキテクチャ",
+      "prerequisites": [
+        "web_perf_tuning",
+        "web_graphql_bff"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "web_secure_design",
+      "name": "セキュアフロントエンド設計",
+      "completed": false,
+      "description": "XSSやCSRF対策をアーキテクチャレベルで組み込む設計",
+      "prerequisites": [
+        "web_auth"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "web_wasm",
+      "name": "WebAssembly",
+      "completed": false,
+      "description": "Rust等を用いた、ブラウザ上でのネイティブに近い高速演算処理",
+      "prerequisites": [
+        "web_perf_tuning"
+      ],
+      "estimated_hours": 100
+    },
+    {
+      "id": "web_custom_fw",
+      "name": "独自フレームワーク開発",
+      "completed": false,
+      "description": "仮想DOMやリアクティビティシステムを自作し、コアを設計する",
+      "prerequisites": [
+        "web_micro_frontends"
+      ],
+      "estimated_hours": 100
+    }
+  ],
+  "edges": [
+    {
+      "from": "web_html_css",
+      "to": "web_js_basics"
+    },
+    {
+      "from": "web_html_css",
+      "to": "web_css_fw"
+    },
+    {
+      "from": "web_js_basics",
+      "to": "web_js_advanced"
+    },
+    {
+      "from": "web_html_css",
+      "to": "web_a11y_basics"
+    },
+    {
+      "from": "web_js_advanced",
+      "to": "web_typescript"
+    },
+    {
+      "from": "web_js_advanced",
+      "to": "web_build_tools"
+    },
+    {
+      "from": "web_typescript",
+      "to": "web_spa_fw"
+    },
+    {
+      "from": "web_build_tools",
+      "to": "web_spa_fw"
+    },
+    {
+      "from": "web_http_basics",
+      "to": "web_backend_api"
+    },
+    {
+      "from": "web_js_advanced",
+      "to": "web_backend_api"
+    },
+    {
+      "from": "web_spa_fw",
+      "to": "web_state_management"
+    },
+    {
+      "from": "web_backend_api",
+      "to": "web_db_orm"
+    },
+    {
+      "from": "web_spa_fw",
+      "to": "web_ssr_ssg"
+    },
+    {
+      "from": "web_backend_api",
+      "to": "web_auth"
+    },
+    {
+      "from": "web_ssr_ssg",
+      "to": "web_graphql_bff"
+    },
+    {
+      "from": "web_auth",
+      "to": "web_graphql_bff"
+    },
+    {
+      "from": "web_ssr_ssg",
+      "to": "web_perf_tuning"
+    },
+    {
+      "from": "web_perf_tuning",
+      "to": "web_micro_frontends"
+    },
+    {
+      "from": "web_graphql_bff",
+      "to": "web_micro_frontends"
+    },
+    {
+      "from": "web_auth",
+      "to": "web_secure_design"
+    },
+    {
+      "from": "web_perf_tuning",
+      "to": "web_wasm"
+    },
+    {
+      "from": "web_micro_frontends",
+      "to": "web_custom_fw"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 20,
+    "completed_nodes": 0,
+    "progress_percentage": 0.0,
+    "next_recommended": [
+      "web_html_css",
+      "web_http_basics"
+    ]
+  }
+}
