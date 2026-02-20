@@ -410,18 +410,11 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
     const c = canvasRef.current
     if (!c) return
 
-    const onMD = (e: MouseEvent) => { drag.current = { on: true, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY } }
-    const onMM = (e: MouseEvent) => {
-      if (!drag.current.on) return
-      const dpr = window.devicePixelRatio
-      tf.current.x += (e.clientX - drag.current.lx) * dpr
-      tf.current.y += (e.clientY - drag.current.ly) * dpr
-      drag.current.lx = e.clientX; drag.current.ly = e.clientY
-    }
+    const onMD = (e: MouseEvent) => { drag.current = { on: false, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY } }
+    const onMM = (_e: MouseEvent) => { /* drag disabled */ }
     const onMU = (e: MouseEvent) => {
       const d = drag.current
       const moved = Math.abs(e.clientX - d.sx) > 5 || Math.abs(e.clientY - d.sy) > 5
-      d.on = false
       if (!moved) {
         const rect = c.getBoundingClientRect()
         const sx = (e.clientX - rect.left) * window.devicePixelRatio
@@ -440,7 +433,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
 
     let lastDist = 0
     const onTS = (e: TouchEvent) => {
-      if (e.touches.length === 1) drag.current = { on: true, sx: e.touches[0].clientX, sy: e.touches[0].clientY, lx: e.touches[0].clientX, ly: e.touches[0].clientY }
+      if (e.touches.length === 1) drag.current = { on: false, sx: e.touches[0].clientX, sy: e.touches[0].clientY, lx: e.touches[0].clientX, ly: e.touches[0].clientY }
       else if (e.touches.length === 2) {
         const dx = e.touches[0].clientX - e.touches[1].clientX
         const dy = e.touches[0].clientY - e.touches[1].clientY
@@ -449,12 +442,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
     }
     const onTM = (e: TouchEvent) => {
       e.preventDefault()
-      if (e.touches.length === 1 && drag.current.on) {
-        const dpr = window.devicePixelRatio
-        tf.current.x += (e.touches[0].clientX - drag.current.lx) * dpr
-        tf.current.y += (e.touches[0].clientY - drag.current.ly) * dpr
-        drag.current.lx = e.touches[0].clientX; drag.current.ly = e.touches[0].clientY
-      } else if (e.touches.length === 2) {
+      if (e.touches.length === 2) { /* 1-finger pan disabled */
         const dx = e.touches[0].clientX - e.touches[1].clientX
         const dy = e.touches[0].clientY - e.touches[1].clientY
         const dist = Math.sqrt(dx * dx + dy * dy)
@@ -497,7 +485,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
 
   return (
     <div ref={boxRef} className="absolute inset-0">
-      <canvas ref={canvasRef} className="block w-full h-full cursor-grab active:cursor-grabbing" style={{ imageRendering: "pixelated" }} />
+      <canvas ref={canvasRef} className="block w-full h-full cursor-default" style={{ imageRendering: "pixelated" }} />
     </div>
   )
 }
