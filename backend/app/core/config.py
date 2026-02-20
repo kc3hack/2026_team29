@@ -57,6 +57,18 @@ class Settings(BaseSettings):
     # GitHub API（スキルツリー生成で使用）
     GITHUB_API_TOKEN: str = ""  # オプション: Rate Limit緩和のため推奨
 
+    # GitHub OAuth アプリ設定（Issue #59, ADR 014）
+    GITHUB_CLIENT_ID: str = ""  # 本番では必ず .env で設定すること
+    GITHUB_CLIENT_SECRET: str = ""  # 本番では必ず .env で設定すること
+
+    # JWT 設定（ADR 014: Bearer Token 認証）
+    JWT_SECRET_KEY: str = ""  # 本番では必ず .env で設定すること
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_HOURS: int = 24  # MVP: 24h（本番では短縮 + リフレッシュトークン化）
+
+    # フロントエンドURL（OAuth コールバック後のリダイレクト先）
+    FRONTEND_URL: str = "http://localhost:3000"
+
 
 settings = Settings()
 

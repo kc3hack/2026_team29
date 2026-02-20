@@ -18,6 +18,23 @@ def get_oauth_account_by_user_provider(
     )
 
 
+def get_by_provider_user_id(
+    db: Session, provider: str, provider_user_id: str
+) -> OAuthAccount | None:
+    """プロバイダーとプロバイダー側ユーザーIDで OAuthAccount を取得する。
+
+    GitHub OAuth コールバック時の既存ユーザー照合に使用。
+    """
+    return (
+        db.query(OAuthAccount)
+        .filter(
+            OAuthAccount.provider == provider,
+            OAuthAccount.provider_user_id == provider_user_id,
+        )
+        .first()
+    )
+
+
 def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAccount:
     db_account = OAuthAccount(
         user_id=oauth_in.user_id,
