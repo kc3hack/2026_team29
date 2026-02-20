@@ -34,6 +34,7 @@ pytest-cov = "^7.0.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["tests"]
 markers = [
     "integration: marks tests as integration tests (require real API keys)",
 ]

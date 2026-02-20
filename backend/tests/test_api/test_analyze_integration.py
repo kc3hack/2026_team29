@@ -6,12 +6,32 @@
 
 実行方法:
     pytest tests/test_api/test_analyze_integration.py -v -s
+
+    # スキルツリー統合テストのみ実行:
+    pytest tests/test_api/test_analyze_integration.py::test_generate_skill_tree_real_api -v -s
+
+環境変数:
+    - OPENAI_API_KEY または ANTHROPIC_API_KEY (必須)
+    - GITHUB_API_TOKEN (推奨)
+      ※未設定の場合はPublicリポジトリのみ分析（Rate Limit: 60 req/hour）
+      ※設定するとPrivateリポジトリも分析可能（Rate Limit: 5000 req/hour）
+
+GitHub API Token の取得:
+    1. https://github.com/settings/tokens
+    2. "Generate new token (classic)"
+    3. スコープ: repo, read:user, user:email
+    4. export GITHUB_API_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 """
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 from app.main import app
 from app.core.config import settings
+from app.models.user import User
+from app.models.profile import Profile
+from app.crud.skill_tree import initialize_skill_trees_for_user
+from app.db.session import get_db
 
 
 client = TestClient(app)
@@ -185,3 +205,234 @@ def test_analyze_rank_endpoint_custom():
     print(f"Rank: {data['rank']} ({data['rank_name']})")
     print(f"Reasoning: {data['reasoning']}")
     print("=" * 40)
+
+
+# ====================================
+# スキルツリー生成エンドポイント統合テスト
+# ====================================
+
+
+@pytest.mark.integration
+def test_generate_skill_tree_real_api(db: Session):
+    """
+    実際のGitHub API + LLM APIを使用したスキルツリー生成テスト
+
+    Issue #64: スキルツリー生成の統合テスト
+
+    検証項目:
+    - POST /api/v1/analyze/skill-tree が正常に動作する
+    - GitHub APIでユーザー情報を取得できる
+    - LLMでパーソナライズされたスキルツリーが生成される
+    - GitHub分析結果でcompletedフラグが更新される
+    - レスポンスが正しいスキーマに従っている
+    """
+    # APIキーチェック
+    if settings.LLM_PROVIDER.lower() == "openai":
+        if not settings.OPENAI_API_KEY or "REPLACE" in settings.OPENAI_API_KEY:
+            pytest.skip("OPENAI_API_KEY not set. Please set it in .env file.")
+    elif settings.LLM_PROVIDER.lower() == "anthropic":
+        if not settings.ANTHROPIC_API_KEY or "REPLACE" in settings.ANTHROPIC_API_KEY:
+            pytest.skip("ANTHROPIC_API_KEY not set. Please set it in .env file.")
+
+    # GitHub API Token チェック
+    print("\n=== GitHub API Token Status ===")
+    if settings.GITHUB_API_TOKEN:
+        print(f"✅ Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
+        print("   → Privateリポジトリも分析可能 (Rate Limit: 5000 req/hour)")
+    else:
+        print("⚠️  Token: 未設定")
+        print("   → Publicリポジトリのみ分析可能 (Rate Limit: 60 req/hour)")
+        print("   → https://github.com/settings/tokens でPAT作成を推奨")
+    print("=" * 50)
+
+    # テスト用のDBセッションをオーバーライド
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    try:
+        # テストユーザー作成
+        test_user = User(username="test_skill_tree_user", rank=3)
+        db.add(test_user)
+        db.flush()
+
+        test_profile = Profile(
+            user_id=test_user.id,
+            github_username="torvalds",  # Linux創始者のGitHubアカウント
+            qiita_id="",
+        )
+        db.add(test_profile)
+        db.commit()
+
+        # スキルツリー初期化
+        initialize_skill_trees_for_user(db, test_user.id)
+
+        # スキルツリー生成リクエスト（WEBカテゴリ）
+        response = client.post(
+            "/api/v1/analyze/skill-tree",
+            json={"user_id": test_user.id, "category": "web"},
+        )
+
+        # レスポンス検証
+        assert (
+            response.status_code == 200
+        ), f"Expected 200, got {response.status_code}: {response.text}"
+
+        data = response.json()
+
+        # スキーマ検証
+        assert "category" in data, "category field is missing"
+        assert "tree_data" in data, "tree_data field is missing"
+        assert "generated_at" in data, "generated_at field is missing"
+
+        assert data["category"] == "web"
+
+        # tree_data構造検証
+        tree_data = data["tree_data"]
+        assert "nodes" in tree_data, "tree_data.nodes is missing"
+        assert "edges" in tree_data, "tree_data.edges is missing"
+        assert "metadata" in tree_data, "tree_data.metadata is missing"
+
+        # nodes検証
+        assert isinstance(tree_data["nodes"], list), "nodes must be a list"
+        assert len(tree_data["nodes"]) > 0, "nodes must not be empty"
+
+        # completedフラグが設定されているノードを確認
+        completed_nodes = [
+            node for node in tree_data["nodes"] if node.get("completed", False)
+        ]
+
+        print("\n=== Skill Tree Generation API Response ===")
+        print(f"Status Code: {response.status_code}")
+        print(f"Category: {data['category']}")
+        print(f"Total Nodes: {len(tree_data['nodes'])}")
+        print(f"Completed Nodes: {len(completed_nodes)}")
+        print(f"Completed Node IDs: {[node['id'] for node in completed_nodes]}")
+        print(f"Progress: {tree_data['metadata'].get('progress_percentage', 0)}%")
+        print(f"Generated At: {data['generated_at']}")
+        print("=" * 40)
+
+        # クリーンアップ
+        db.delete(test_user)
+        db.commit()
+    finally:
+        # dependency_overridesをクリア
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.integration
+def test_generate_skill_tree_custom_github(db: Session):
+    """
+    自分のGitHubアカウントでスキルツリー生成をテスト
+
+    使い方:
+    1. 以下の github_username を自分のGitHubユーザー名に変更
+    2. @pytest.mark.skip をコメントアウト
+    3. pytest tests/test_api/test_analyze_integration.py::test_generate_skill_tree_custom_github -v -s で実行
+
+    確認ポイント:
+    - 自分のGitHubリポジトリが分析される
+    - 使用している言語・技術スタックが検出される
+    - 該当するスキルノードがcompletedになる
+    """
+    # APIキーチェック
+    if settings.LLM_PROVIDER.lower() == "openai":
+        if not settings.OPENAI_API_KEY or "REPLACE" in settings.OPENAI_API_KEY:
+            pytest.skip("OPENAI_API_KEY not set")
+    elif settings.LLM_PROVIDER.lower() == "anthropic":
+        if not settings.ANTHROPIC_API_KEY or "REPLACE" in settings.ANTHROPIC_API_KEY:
+            pytest.skip("ANTHROPIC_API_KEY not set")
+
+    # GitHub API Token チェック
+    print("\n=== GitHub API Token Status ===")
+    if settings.GITHUB_API_TOKEN:
+        print(f"✅ Token: 設定済み ({settings.GITHUB_API_TOKEN[:10]}...)")
+        print("   → Privateリポジトリも分析可能 (Rate Limit: 5000 req/hour)")
+    else:
+        print("⚠️  Token: 未設定")
+        print("   → Publicリポジトリのみ分析可能 (Rate Limit: 60 req/hour)")
+        print("   → https://github.com/settings/tokens でPAT作成を推奨")
+    print("=" * 50)
+
+    # ここに自分のGitHubユーザー名を入力
+    github_username = "Inlet-back"  # 認証済みユーザー
+
+    if not github_username:
+        pytest.skip("github_username not set. Please set it in the test code.")
+
+    # テスト用のDBセッションをオーバーライド
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    try:
+        # テストユーザー作成
+        test_user = User(username=f"test_{github_username}", rank=3)
+        db.add(test_user)
+        db.flush()
+
+        test_profile = Profile(
+            user_id=test_user.id,
+            github_username=github_username,
+            qiita_id="",
+        )
+        db.add(test_profile)
+        db.commit()
+
+        # スキルツリー初期化
+        initialize_skill_trees_for_user(db, test_user.id)
+
+        # 全カテゴリでスキルツリー生成
+        categories = ["web", "ai", "security", "infrastructure", "design", "game"]
+
+        for category in categories:
+            print(f"\n{'='*50}")
+            print(f"カテゴリ: {category.upper()}")
+            print("=" * 50)
+
+            response = client.post(
+                "/api/v1/analyze/skill-tree",
+                json={"user_id": test_user.id, "category": category},
+            )
+
+            assert (
+                response.status_code == 200
+            ), f"Failed for {category}: {response.text}"
+
+            data = response.json()
+            tree_data = data["tree_data"]
+
+            # 完了ノード抽出
+            completed_nodes = [
+                node for node in tree_data["nodes"] if node.get("completed", False)
+            ]
+
+            print(f"総ノード数: {len(tree_data['nodes'])}")
+            print(f"完了ノード数: {len(completed_nodes)}")
+            print(f"進捗率: {tree_data['metadata'].get('progress_percentage', 0):.1f}%")
+
+            if completed_nodes:
+                print("\n完了済みスキル:")
+                for node in completed_nodes[:5]:  # 最初の5個だけ表示
+                    print(f"  - {node.get('name', node.get('id'))}")
+                if len(completed_nodes) > 5:
+                    print(f"  ... 他 {len(completed_nodes) - 5} 個")
+
+        print("\n" + "=" * 50)
+        print("全カテゴリのスキルツリー生成が完了しました!")
+        print("=" * 50)
+
+        # クリーンアップ
+        db.delete(test_user)
+        db.commit()
+    finally:
+        # dependency_overridesをクリア
+        app.dependency_overrides.clear()
