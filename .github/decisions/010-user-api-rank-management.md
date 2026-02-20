@@ -74,6 +74,20 @@ PUT /users/{id} では rank は変更不可
 
 > **Note**: 現在の `analyze_user_rank()`（`app/services/rank_service.py`）は `db` / `user_id` を受け取らず、LLM 判定結果を返すだけの純粋な分析ツールとして実装している。`update_user_rank(db, user_id, rank)` の呼び出しは AI サービス統合（Issue #54）のタイミングで追加する。
 
+### rankの更新フロー（Future: Issue #54 実装時）
+
+**設計原則**: rank の UPDATE はエンドポイントがサーバー内部で完結させる。フロントエンドは analyze 結果を受け取るだけでよく、別途 `PUT /users/{id}` で保存する必要はない。Issue #54 の `generate_skill_tree_ai(user_id, category, db)` が SkillTree テーブルを直接更新するパターンと同じ。
+
+```
+POST /analyze/rank (user_id, github_username, ...)
+  └─ analyze_user_rank(db, user_id, ...) を呼び出し
+  └─ LLM が percentile から rank 判定
+  └─ 内部で update_user_rank(db, user_id, rank) を呼び出して DB 保存
+  └─ フロントはレスポンスを表示するだけ（DB 保存はサーバー側で完結）
+
+PUT /users/{id} では rank は変更不可（変わらず）
+```
+
 ## 代替案との比較 (Options)
 
 ### 1. PUT /users/{id} に rank を含め、フロントが保存する
