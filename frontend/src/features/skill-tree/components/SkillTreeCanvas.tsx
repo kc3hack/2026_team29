@@ -287,9 +287,9 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
         ctx.fillRect(Math.round((x - PX) / PX) * PX, Math.round((ay + PX * 6) / PX) * PX, PX * 2, PX)
       }
 
-      // Category color outer ring (2px)
+      // Category color outer ring (4px)
       const cc = status === "locked" ? "#2a2e34" : CAT[category]
-      px(ctx, x - S - PX * 2, y - S - PX * 2, (S + PX * 2) * 2, (S + PX * 2) * 2, cc)
+      px(ctx, x - S - PX * 4, y - S - PX * 4, (S + PX * 4) * 2, (S + PX * 4) * 2, cc)
 
       // Outline
       px(ctx, x - S - PX, y - S - PX, (S + PX) * 2, (S + PX) * 2, p.rim)
