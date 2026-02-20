@@ -3,13 +3,16 @@
 
 Issue #35: AI実装Phase 2 - モックAPIエンドポイント
 Issue #36: AI実装Phase 3 - ランク判定AI（LLM実装）
+Issue #54: AI実装Phase 3 - スキルツリー生成（LLMパーソナライゼーション）
 
 POST /api/v1/analyze/rank - ユーザーランクの判定（LLM実装、issue #36）
-POST /api/v1/analyze/skill-tree - スキルツリー生成（モック実装、issue #35）
+POST /api/v1/analyze/skill-tree - スキルツリー生成（LLM実装、issue #54）
 POST /api/v1/analyze/quest - 演習生成（モック実装、issue #35）
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+
 from app.schemas.analyze import (
     RankAnalysisRequest,
     RankAnalysisResponse,
@@ -19,7 +22,9 @@ from app.schemas.analyze import (
     QuestGenerationResponse,
 )
 from app.services.rank_service import analyze_user_rank
-from app.services.mock_ai_service import generate_skill_tree_mock, generate_quest_mock
+from app.services.skill_tree_service import generate_skill_tree_ai
+from app.services.mock_ai_service import generate_quest_mock
+from app.db.session import get_db
 
 router = APIRouter()
 
@@ -68,21 +73,24 @@ async def analyze_rank(request: RankAnalysisRequest) -> RankAnalysisResponse:
 
 
 @router.post("/skill-tree", response_model=SkillTreeResponse)
-async def generate_skill_tree(request: SkillTreeRequest) -> SkillTreeResponse:
+async def generate_skill_tree(
+    request: SkillTreeRequest, db: Session = Depends(get_db)
+) -> SkillTreeResponse:
     """
-    スキルツリー生成（モック実装 - Issue #35）
+    スキルツリー生成（LLM実装 - Issue #54）
 
     Args:
         request: スキルツリー生成リクエスト（user_id, category）
+        db: DBセッション
 
     Returns:
-        SkillTreeResponse: スキルツリーデータ（固定レスポンス）
+        SkillTreeResponse: パーソナライズされたスキルツリーデータ
 
     Note:
-        Phase 3移行時:
         - user_id から Profile と SkillTree テーブルを参照
+        - GitHub APIでリポジトリを分析（習得済みスキル推定）
         - LLMでパーソナライズされたロードマップを生成
-        - 学習履歴に基づいて completed フラグを動的に設定
+        - キャッシュ機能（7日間）: generated_atが新しければDBから返却
 
     Example:
         Request:
@@ -103,11 +111,13 @@ async def generate_skill_tree(request: SkillTreeRequest) -> SkillTreeResponse:
             }
     """
     try:
-        result = generate_skill_tree_mock(
-            user_id=request.user_id,
-            category=request.category,
+        result = await generate_skill_tree_ai(
+            user_id=request.user_id, category=request.category, db=db
         )
         return result
+    except HTTPException:
+        # HTTPExceptionはそのまま再送出
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Skill tree generation failed: {str(e)}"

@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     # Admin API Access Control
     ADMIN_API_KEY: str = ""  # 本番では必ず.envで設定すること
 
+    # GitHub API（スキルツリー生成で使用）
+    GITHUB_API_TOKEN: str = ""  # オプション: Rate Limit緩和のため推奨
+
 
 settings = Settings()
 
