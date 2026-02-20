@@ -62,7 +62,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
     if (!zoomAction) return
     const t = tf.current
     if (zoomAction.type === "in") t.s = Math.min(t.s * 1.25, 3)
-    else if (zoomAction.type === "out") t.s = Math.max(t.s / 1.25, 0.25)
+    else if (zoomAction.type === "out") t.s = Math.max(t.s / 1.25, 0.7)
     else { t.s = 0.7; t.x = 0; t.y = 0 }
   }, [zoomAction])
 
@@ -155,78 +155,65 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
       const trunkC = ["#5c3a1e", "#6b4226", "#7a4e30", "#6b4226", "#5c3a1e"]
       const hiC = "#8b6240"
 
-      // Main trunk: wide at base, narrow at top
-      for (let y = 600; y > -200; y -= PX) {
-        const prog = (600 - y) / 800
-        const w = 28 - prog * 18
-        const ci = Math.floor(((y + Math.floor(sway)) / (PX * 3)) % trunkC.length)
-        const xo = Math.sin(prog * 1.5) * 3 + sway
+      // Trunk: 地面(y=632) → Rootノード(y=400) まで。下が太く上（Root）が細い
+      const trunkTop = 400
+      const trunkBot = 632
+      const totalH = trunkBot - trunkTop   // 232px
+      for (let y = trunkBot; y >= trunkTop; y -= PX) {
+        const prog = (trunkBot - y) / totalH  // 0=地面（太い）, 1=Root（細い）
+        const w = Math.round(44 - prog * 32)  // 44px → 12px
+        const ci = Math.floor(((Math.abs(y) + Math.floor(sway)) / (PX * 3)) % trunkC.length)
+        const xo = Math.sin(prog * 2.0 + tick.current * 0.015) * prog * 3 + sway
         px(ctx, -w / 2 + xo, y, w, PX, trunkC[ci])
       }
-      // trunk highlight
-      for (let y = 580; y > -180; y -= PX) {
-        const prog = (580 - y) / 760
-        const xo = Math.sin(prog * 1.5) * 3 + sway
-        px(ctx, -2 + xo, y, PX, PX, hiC)
-      }
-
-      // Big branches to each Tier-1 category
-      const tier1 = SKILL_NODES.filter(n => n.tier === 1)
-      for (const nd of tier1) {
-        // main branch from trunk split point
-        const splitY = 380 - Math.abs(nd.x) * 0.15
-        const midX = nd.x * 0.35 + sway
-        const midY = (splitY + nd.y) / 2
-
-        pxLine(ctx, sway, splitY, midX, midY, "#5c3a1e", 3)
-        pxLine(ctx, midX, midY, nd.x, nd.y + 30, "#5c3a1e", 2)
-        // highlight
-        pxLine(ctx, sway + PX, splitY - PX, midX + PX, midY - PX, hiC, 1)
-
-        // Sub-branches to tier-2 children
-        for (const cid of nd.children) {
-          const ch = getNodeById(cid)
-          if (!ch) continue
-          const cmx = (nd.x + ch.x) / 2 + sway * 0.5
-          const cmy = (nd.y + ch.y) / 2
-          pxLine(ctx, nd.x, nd.y - 18, cmx, cmy, "#4a2e14", 2)
-          pxLine(ctx, cmx, cmy, ch.x, ch.y + 24, "#4a2e14", 1)
-        }
-      }
-
-      // Deeper tier branches
+      
+      // Generic connection loop for all nodes
       for (const nd of SKILL_NODES) {
-        if (nd.tier < 2) continue
         for (const cid of nd.children) {
           const ch = getNodeById(cid)
           if (!ch) continue
-          const cmx = (nd.x + ch.x) / 2
-          const cmy = (nd.y + ch.y) / 2
-          pxLine(ctx, nd.x, nd.y - 18, cmx, cmy, "#3d2210", 1)
-          pxLine(ctx, cmx, cmy, ch.x, ch.y + 24, "#3d2210", 1)
+
+          // Draw branches behind connections
+          pxLine(ctx, nd.x, nd.y - 20, ch.x, ch.y + 20, "#5c3a1e", 3)
         }
       }
     }
 
     /* ---- Pixel leaf clusters ---- */
     function drawLeaves(ctx: CanvasRenderingContext2D) {
+      // 下に末広がり: Root(y=400)が下部・Tier1(y=200)が最大幅→上へ小さくなる
       const clusters = [
-        { x: 0, y: -500, rx: 140, ry: 80 },
-        { x: -200, y: -420, rx: 120, ry: 70 },
-        { x: 200, y: -420, rx: 120, ry: 70 },
-        { x: -400, y: -300, rx: 100, ry: 60 },
-        { x: 400, y: -300, rx: 100, ry: 60 },
-        { x: -550, y: -150, rx: 90, ry: 55 },
-        { x: 550, y: -150, rx: 90, ry: 55 },
-        { x: -350, y: -100, rx: 80, ry: 50 },
-        { x: 350, y: -100, rx: 80, ry: 50 },
-        { x: -150, y: -200, rx: 90, ry: 55 },
-        { x: 150, y: -200, rx: 90, ry: 55 },
-        { x: 0, y: -320, rx: 100, ry: 65 },
-        { x: -600, y: 20, rx: 70, ry: 45 },
-        { x: 600, y: 20, rx: 70, ry: 45 },
-        { x: -700, y: -100, rx: 60, ry: 40 },
-        { x: 700, y: -100, rx: 60, ry: 40 },
+        // Root (y=400) - 幹の先端・エンジニアの種
+        { x: 0, y: 400, rx: 70, ry: 42 },
+
+        // Tier 1 (y=200) - span ±1100（最広）
+        { x: -1100, y: 200, rx: 118, ry: 64 },
+        { x:  -550, y: 200, rx: 110, ry: 60 },
+        { x:     0, y: 200, rx: 110, ry: 60 },
+        { x:   550, y: 200, rx: 110, ry: 60 },
+        { x:  1100, y: 200, rx: 118, ry: 64 },
+
+        // Tier 2 (y=0) - span ±900
+        { x: -900, y: 0, rx:  95, ry: 52 },
+        { x: -460, y: 0, rx:  90, ry: 50 },
+        { x:    0, y: 0, rx:  90, ry: 50 },
+        { x:  460, y: 0, rx:  90, ry: 50 },
+        { x:  900, y: 0, rx:  95, ry: 52 },
+
+        // Tier 3 (y=-200) - span ±700
+        { x: -700, y: -200, rx:  90, ry: 50 },
+        { x: -390, y: -200, rx:  86, ry: 48 },
+        { x:  -80, y: -200, rx:  86, ry: 48 },
+        { x:   80, y: -200, rx:  86, ry: 48 },
+        { x:  390, y: -200, rx:  86, ry: 48 },
+        { x:  700, y: -200, rx:  90, ry: 50 },
+
+        // Tier 4 (y=-400) - span ±400（最も狭い）
+        { x: -400, y: -400, rx:  78, ry: 44 },
+        { x: -200, y: -400, rx:  74, ry: 42 },
+        { x:    0, y: -400, rx:  74, ry: 42 },
+        { x:   200, y: -400, rx:  74, ry: 42 },
+        { x:   400, y: -400, rx:  78, ry: 44 },
       ]
       const greens = ["#1a4a1a", "#255a25", "#306830", "#1e5020", "#2a6a2a", "#3a7a3a"]
 
@@ -447,7 +434,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
       // Prevent default only if Ctrl key is pressed or using pinch gesture (generic heuristic)
       if (e.ctrlKey || e.metaKey) {
           e.preventDefault()
-          tf.current.s = Math.max(0.25, Math.min(3, tf.current.s * (e.deltaY > 0 ? 0.92 : 1.08)))
+          tf.current.s = Math.max(0.7, Math.min(3, tf.current.s * (e.deltaY > 0 ? 0.92 : 1.08)))
       }
     }
 
@@ -471,7 +458,7 @@ export function SkillTreeCanvas({ onSelectNode, selectedNode, zoomAction }: Prop
         const dx = e.touches[0].clientX - e.touches[1].clientX
         const dy = e.touches[0].clientY - e.touches[1].clientY
         const dist = Math.sqrt(dx * dx + dy * dy)
-        if (lastDist > 0) tf.current.s = Math.max(0.25, Math.min(3, tf.current.s * (dist / lastDist)))
+        if (lastDist > 0) tf.current.s = Math.max(0.7, Math.min(3, tf.current.s * (dist / lastDist)))
         lastDist = dist
       }
     }
