@@ -1,3 +1,5 @@
+import pytest
+
 from app.crud.skill_tree import get_skill_tree_by_user_category
 from app.crud.user import (
     create_user,
@@ -121,3 +123,18 @@ def test_update_user_rank(db):
 def test_update_user_rank_not_found(db):
     result = update_user_rank(db, 9999, 4)
     assert result is None
+
+
+def test_update_user_null_username_ignored(db):
+    """username=None は exclude_none=True により無視される。"""
+    user = create_user(db, UserCreate(username="BEFORE_NULL"))
+    updated = update_user(db, user.id, UserUpdate(username=None))
+    assert updated is not None
+    assert updated.username == "BEFORE_NULL"
+
+
+def test_update_user_rank_out_of_range(db):
+    """rank が 0-9 範囲外は ValueError を raise する。"""
+    user = create_user(db, UserCreate(username="RANKVALIDATE"))
+    with pytest.raises(ValueError):
+        update_user_rank(db, user.id, 10)
