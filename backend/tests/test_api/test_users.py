@@ -76,6 +76,22 @@ def test_update_user_not_found(client):
     assert res.status_code == 404
 
 
+def test_update_user_duplicate_username(client):
+    """既存ユーザー名に変更しようとすると 400"""
+    client.post("/api/v1/users", json={"username": "existing"})
+    user_id = client.post("/api/v1/users", json={"username": "target"}).json()["id"]
+    res = client.put(f"/api/v1/users/{user_id}", json={"username": "existing"})
+    assert res.status_code == 400
+
+
+def test_update_user_null_username(client):
+    """username: null は無視され、既存の username が維持される"""
+    user_id = client.post("/api/v1/users", json={"username": "nulltest"}).json()["id"]
+    res = client.put(f"/api/v1/users/{user_id}", json={"username": None})
+    assert res.status_code == 200
+    assert res.json()["username"] == "nulltest"
+
+
 # ---------------------------------------------------------------------------
 # DELETE /users/{user_id}
 # ---------------------------------------------------------------------------
