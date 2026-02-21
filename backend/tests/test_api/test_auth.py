@@ -10,7 +10,7 @@
   GET /auth/logout              → Cookie クリア
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -47,7 +47,7 @@ FAKE_ACCESS_TOKEN = "ghs_fakegithubaccesstoken"
 
 
 def _mock_httpx_client(token_ok=True, user_ok=True, github_user=None):
-    """httpx.Client をモックして GitHub API 応答を偽装するコンテキストマネージャを返す。"""
+    """httpx.AsyncClient をモックして GitHub API 応答を偽装する async 対応モックを返す。"""
     if github_user is None:
         github_user = FAKE_GITHUB_USER
 
@@ -66,10 +66,11 @@ def _mock_httpx_client(token_ok=True, user_ok=True, github_user=None):
     mock_user_resp.raise_for_status = MagicMock()
     mock_user_resp.json.return_value = github_user
 
-    mock_client.__enter__ = MagicMock(return_value=mock_client)
-    mock_client.__exit__ = MagicMock(return_value=False)
-    mock_client.post = MagicMock(return_value=mock_token_resp)
-    mock_client.get = MagicMock(return_value=mock_user_resp)
+    # async with httpx.AsyncClient() as client: に対応
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.post = AsyncMock(return_value=mock_token_resp)
+    mock_client.get = AsyncMock(return_value=mock_user_resp)
 
     return mock_client
 
@@ -91,6 +92,7 @@ def test_login_redirects_to_github(client):
     with patch("app.api.endpoints.auth.settings") as mock_settings:
         mock_settings.GITHUB_CLIENT_ID = "fake_client_id"
         mock_settings.JWT_SECRET_KEY = "test-jwt-secret-key-for-testing-only"
+        mock_settings.FRONTEND_URL = "http://localhost:3000"
         res = client.get("/api/v1/auth/github/login")
 
     assert res.status_code in (302, 307)  # RedirectResponse デフォルトは 307
@@ -117,9 +119,10 @@ def test_login_503_when_no_client_id(client):
 def test_callback_new_user_creates_user_and_sets_cookie(client):
     """初回ログイン: User + OAuthAccount が作成され、JWT Cookie が付与されてフロントへリダイレクト。"""
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
     mock_client = _mock_httpx_client()
 
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
     assert res.status_code == 302
@@ -137,8 +140,9 @@ def test_callback_new_user_username_collision(client, db):
     pre_res = client.post("/api/v1/auth/register", json={"username": "testuser_gh", "password": "testpass123"})
     assert pre_res.status_code == 201
 
+    client.cookies.set("oauth_state", state)
     mock_client = _mock_httpx_client()
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
     assert res.status_code == 302
@@ -168,14 +172,16 @@ def test_callback_existing_user_updates_token(client):
     mock_client = _mock_httpx_client()
 
     # 1回目: 新規登録
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    client.cookies.set("oauth_state", state)
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res1 = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
     assert res1.status_code == 302
 
     # 2回目: 既存ユーザーとしてログイン
     state2 = _valid_state()
     mock_client2 = _mock_httpx_client()
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client2):
+    client.cookies.set("oauth_state", state2)
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client2):
         res2 = client.get(f"/api/v1/auth/github/callback?code=fake_code2&state={state2}")
 
     assert res2.status_code == 302
@@ -202,9 +208,10 @@ def test_callback_missing_state_returns_422(client):
 def test_callback_github_token_exchange_fails(client):
     """GitHub がアクセストークンを返さない場合は 400。"""
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
     mock_client = _mock_httpx_client(token_ok=False)
 
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res = client.get(f"/api/v1/auth/github/callback?code=bad_code&state={state}")
 
     assert res.status_code == 400
@@ -219,8 +226,9 @@ def test_logout_clears_cookie(client):
     """ログアウトで Set-Cookie に max-age=0 または expires=past が含まれる。"""
     # まず Cookie をセット（認証済みにする）
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
     mock_client = _mock_httpx_client()
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
     res = client.get("/api/v1/auth/logout")
@@ -246,13 +254,14 @@ def test_logout_without_cookie_still_200(client):
 def test_callback_token_exchange_network_error(client):
     """HTTPネットワークエラーでトークン交換が失敗した場合は 502。"""
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
 
     mock_client = MagicMock()
-    mock_client.__enter__ = MagicMock(return_value=mock_client)
-    mock_client.__exit__ = MagicMock(return_value=False)
-    mock_client.post = MagicMock(side_effect=httpx.HTTPError("connection error"))
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.post = AsyncMock(side_effect=httpx.HTTPError("connection error"))
 
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
     assert res.status_code == 502
@@ -261,24 +270,25 @@ def test_callback_token_exchange_network_error(client):
 def test_callback_user_info_network_error(client):
     """トークン取得成功後、GitHub ユーザー情報取得で HTTP エラーが発生した場合は 502。"""
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
 
     # 1 回目: token exchange 成功
     mock_token_client = MagicMock()
     mock_token_resp = MagicMock()
     mock_token_resp.raise_for_status = MagicMock()
     mock_token_resp.json.return_value = {"access_token": "ghs_fake_token"}
-    mock_token_client.__enter__ = MagicMock(return_value=mock_token_client)
-    mock_token_client.__exit__ = MagicMock(return_value=False)
-    mock_token_client.post = MagicMock(return_value=mock_token_resp)
+    mock_token_client.__aenter__ = AsyncMock(return_value=mock_token_client)
+    mock_token_client.__aexit__ = AsyncMock(return_value=False)
+    mock_token_client.post = AsyncMock(return_value=mock_token_resp)
 
     # 2 回目: user info で失敗
     mock_user_client = MagicMock()
-    mock_user_client.__enter__ = MagicMock(return_value=mock_user_client)
-    mock_user_client.__exit__ = MagicMock(return_value=False)
-    mock_user_client.get = MagicMock(side_effect=httpx.HTTPError("user info error"))
+    mock_user_client.__aenter__ = AsyncMock(return_value=mock_user_client)
+    mock_user_client.__aexit__ = AsyncMock(return_value=False)
+    mock_user_client.get = AsyncMock(side_effect=httpx.HTTPError("user info error"))
 
     with patch(
-        "app.api.endpoints.auth.httpx.Client",
+        "app.api.endpoints.auth.httpx.AsyncClient",
         side_effect=[mock_token_client, mock_user_client],
     ):
         res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
@@ -293,17 +303,18 @@ def test_callback_token_exchange_http_status_error(client):
     except ブロックで正しくキャッチされることを確認する。
     """
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
 
     mock_client = MagicMock()
-    mock_client.__enter__ = MagicMock(return_value=mock_client)
-    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
     mock_resp = MagicMock()
     mock_resp.raise_for_status.side_effect = httpx.HTTPStatusError(
         "503 Service Unavailable", request=MagicMock(), response=MagicMock()
     )
-    mock_client.post = MagicMock(return_value=mock_resp)
+    mock_client.post = AsyncMock(return_value=mock_resp)
 
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
     assert res.status_code == 502
@@ -319,8 +330,9 @@ def test_callback_redirect_location_is_frontend_url(client):
     from app.core.config import settings
 
     state = _valid_state()
+    client.cookies.set("oauth_state", state)
     mock_client = _mock_httpx_client()
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
     assert res.status_code == 302
