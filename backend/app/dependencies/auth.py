@@ -41,10 +41,13 @@ def _decode_token(token: str) -> int:
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        user_id: int | None = payload.get("user_id")
-        if user_id is None:
+        user_id_str: str | None = payload.get("sub")
+        if user_id_str is None:
             raise credentials_exception
-        return user_id
+        try:
+            return int(user_id_str)
+        except (ValueError, TypeError):
+            raise credentials_exception
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

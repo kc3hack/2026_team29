@@ -153,7 +153,7 @@ def test_callback_new_user_username_collision(client, db):
     import jwt as _jwt
     from app.core.config import settings as _settings
     payload = _jwt.decode(token, _settings.JWT_SECRET_KEY, algorithms=[_settings.JWT_ALGORITHM])
-    user_id = payload["user_id"]
+    user_id = int(payload["sub"])
     from app.crud.user import get_user
     created_user = get_user(db, user_id)
     assert created_user is not None

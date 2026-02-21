@@ -56,6 +56,16 @@ POST /auth/login  { "username": "alice", "password": "secret" }
 - GitHub OAuth ユーザーへの ID+パスワードログイン試行は **401** を返す
   （403 は「その username は存在する」ことを確定させるため、User Enumeration 防止のため 401 に統一）。
 
+### 3. パスワードポリシー（MVP 方針）
+
+- **最小長チェック: なし**（MVP 優先のため。UX を阻害しないことを重視）
+  - 本番化前に要検討（OWASP 推奨は 8文字以上）
+- **最大長チェック: 128文字**（PBKDF2 の DoS 耐性確保のため必須）
+- **空文字チェック: あり**（実装済み）
+- 複雑度要件（大文字・数字・記号の強制）: **なし**（OWASP 2021 は複雑度強制を非推奨）
+
+> ⚠️ MVP トレードオフ: 最小長未設定のため短いパスワードが許容される。本番サービス化時には最小長（8文字以上）を追加すること（別 Issue 管理予定）。
+
 ### 3. Alembic マイグレーション `0003_add_hashed_password`
 
 ```sql
@@ -71,7 +81,7 @@ ALTER TABLE users ADD COLUMN hashed_password VARCHAR;  -- nullable
 | パスワードなし新規作成が可能だった | `POST /auth/register` の `password` フィールドを必須化 |
 | GitHub OAuth ユーザーへのブルートフォース | 401 に統一（User Enumeration 防止）。rate-limit は将来対応 |
 | パスワードの平文保存 | `hashlib.pbkdf2_hmac`（PBKDF2-SHA256、iterations=600,000）でハッシュ化。CRUD 層で即時変換 |
-| タイミング攻撒 | `verify_password` は `secrets.compare_digest` による定数時間比較を使用 |
+| タイミング攻撃 | `verify_password` は `secrets.compare_digest` による定数時間比較を使用 |
 | state リプレイ攻撃 | HMAC ベースの state はステートレスのため、10分ウィンドウ内なら同一 state を再利用可能。MVP トレードオフとして許容（本番化時は Redis 等でワンタイム管理へ移行すること） |
 
 ## Product-Spec との整合
@@ -113,7 +123,9 @@ ALTER TABLE users ADD COLUMN hashed_password VARCHAR;  -- nullable
 - 2026-02-21: **変更**—レビューにて以下を改定（Issue #59）
   - `POST /auth/login` を登録・認証の両責務から「認証専用」に切り出し、`POST /auth/register` を新設
   - GitHub OAuth ユーザーへの ID+パスワードログイン試行を **403 → 401** に変更
-    - 理由: 403 は「その username が GitHub 登録済みで存在する」ことを漏洩し、User Enumeration 攻撒の稿になるため、401 に統一して情報開示を最小化する
+    - 理由: 403 は「その username が GitHub 登録済みで存在する」ことを漏洩し、User Enumeration 攻撃の糸口になるため、401 に統一して情報開示を最小化する
     - UX トレードオフ: 「GitHub から入ってください」のヒントは返せなくなるが、フロントエンド側の UI 誘導（GitHub ログインボタンの定常表示等）で補完する
+  - パスワード最小長チェックを **削除**（MVP 優先。短いパスワードを許容し UX を優先。本番化前に要追加）
+  - パスワード最大長 **128文字** チェックを**追加**（PBKDF2 DoS 対策）
 - `app/api/endpoints/auth.py`: `POST /auth/login` 実装
 - `alembic/versions/0003_add_hashed_password.py`: DBマイグレーション

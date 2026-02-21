@@ -23,9 +23,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./test.db"
 
     # 暗号化（OAuthトークン保護用）
-    # ⚠️ デフォルト値は開発専用の固定キー。本番では必ず .env で上書きすること。
+    # 必ず .env で設定すること。未設定のまま起動すると validate_encryption_key() が ValueError を送出する。
     # 生成: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-    ENCRYPTION_KEY: str = "ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg="
+    ENCRYPTION_KEY: str = ""
 
     # ランク計算（product-spec 4.1 準拠）
     # ランクn に到達するために必要な累積経験値（仕様確定後に調整）
@@ -64,8 +64,8 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str = ""  # 本番では必ず .env で設定すること
 
     # JWT 設定（ADR 014: Bearer Token 認証）
-    # ⚠️ デフォルト値は開発専用。本番では必ず .env で上書きすること。
-    JWT_SECRET_KEY: str = "dev-secret-key-change-in-production-000000000000"
+    # 必ず .env で設定すること。未設定の場合 /auth/github/login は 503 を返す。
+    JWT_SECRET_KEY: str = ""
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_HOURS: int = 24  # MVP: 24h（本番では短縮 + リフレッシュトークン化）
 

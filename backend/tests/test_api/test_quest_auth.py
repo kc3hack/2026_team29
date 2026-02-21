@@ -1,6 +1,6 @@
 """Quest / QuestProgress 認証統合テスト（Issue #65）
 
-start / complete エンドポイントは認証必須（JWT Cookie / Bearer）。
+/api/v1/quest/{quest_id}/start|complete は認証必須（JWT Cookie / Bearer）。
 正常系・異常系（401 / 404 / 409 / 400）を検証する。
 """
 
@@ -55,14 +55,14 @@ def _make_user(db, username="testuser"):
 def test_start_quest_401_when_no_auth(client, db):
     """未認証で start → 401。"""
     quest = _make_quest(db)
-    res = client.post(f"/api/v1/quests/{quest.id}/start")
+    res = client.post(f"/api/v1/quest/{quest.id}/start")
     assert res.status_code == 401
 
 
 def test_start_quest_404_when_quest_not_found(client, db):
     """存在しないクエスト ID で start → 404。"""
     user = _make_user(db)
-    res = client.post("/api/v1/quests/999999/start", headers=auth_headers(user.id))
+    res = client.post("/api/v1/quest/999999/start", headers=auth_headers(user.id))
     assert res.status_code == 404
 
 
@@ -70,7 +70,7 @@ def test_start_quest_201_success(client, db):
     """認証済みユーザーがクエストを開始 → 201 + QuestProgress 返却。"""
     user = _make_user(db)
     quest = _make_quest(db)
-    res = client.post(f"/api/v1/quests/{quest.id}/start", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
     assert res.status_code == 201
     data = res.json()
     assert data["quest_id"] == quest.id
@@ -81,27 +81,27 @@ def test_start_quest_409_when_already_started(client, db):
     """同じクエストを二重 start → 409。"""
     user = _make_user(db)
     quest = _make_quest(db)
-    client.post(f"/api/v1/quests/{quest.id}/start", headers=auth_headers(user.id))
-    res = client.post(f"/api/v1/quests/{quest.id}/start", headers=auth_headers(user.id))
+    client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
     assert res.status_code == 409
 
 
 # ---------------------------------------------------------------------------
-# POST /quests/{quest_id}/complete
+# POST /quest/{quest_id}/complete
 # ---------------------------------------------------------------------------
 
 
 def test_complete_quest_401_when_no_auth(client, db):
     """未認証で complete → 401。"""
     quest = _make_quest(db)
-    res = client.post(f"/api/v1/quests/{quest.id}/complete")
+    res = client.post(f"/api/v1/quest/{quest.id}/complete")
     assert res.status_code == 401
 
 
 def test_complete_quest_404_when_quest_not_found(client, db):
     """存在しないクエスト ID で complete → 404。"""
     user = _make_user(db)
-    res = client.post("/api/v1/quests/999999/complete", headers=auth_headers(user.id))
+    res = client.post("/api/v1/quest/999999/complete", headers=auth_headers(user.id))
     assert res.status_code == 404
 
 
@@ -109,7 +109,7 @@ def test_complete_quest_404_when_not_started(client, db):
     """未開始クエストに complete → 404（進捗が存在しない）。"""
     user = _make_user(db)
     quest = _make_quest(db)
-    res = client.post(f"/api/v1/quests/{quest.id}/complete", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", headers=auth_headers(user.id))
     assert res.status_code == 404
 
 
@@ -118,8 +118,8 @@ def test_complete_quest_success(client, db):
     user = _make_user(db)
     quest = _make_quest(db)
     # start してから complete
-    client.post(f"/api/v1/quests/{quest.id}/start", headers=auth_headers(user.id))
-    res = client.post(f"/api/v1/quests/{quest.id}/complete", headers=auth_headers(user.id))
+    client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", headers=auth_headers(user.id))
     assert res.status_code == 200
     data = res.json()
     assert data["quest_id"] == quest.id

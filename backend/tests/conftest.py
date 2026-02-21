@@ -64,7 +64,6 @@ def make_test_token(user_id: int) -> str:
 
     payload = {
         "sub": str(user_id),
-        "user_id": user_id,
         "exp": datetime.now(timezone.utc) + timedelta(hours=1),
         "iat": datetime.now(timezone.utc),
     }
@@ -86,7 +85,6 @@ def make_expired_token(user_id: int) -> str:
 
     payload = {
         "sub": str(user_id),
-        "user_id": user_id,
         "exp": datetime.now(timezone.utc) - timedelta(hours=1),
         "iat": datetime.now(timezone.utc) - timedelta(hours=2),
     }

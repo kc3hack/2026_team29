@@ -60,8 +60,7 @@ def create_access_token(user_id: int) -> str:
         raise ValueError("JWT_SECRET_KEY is not configured")
     expire = datetime.now(timezone.utc) + timedelta(hours=settings.JWT_EXPIRE_HOURS)
     payload = {
-        "sub": str(user_id),
-        "user_id": user_id,
+        "sub": str(user_id),  # RFC 7519 標準クレーム（文字列型）
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
@@ -297,10 +296,10 @@ async def github_callback(
                 commit=False,
             )
             db.commit()
-            db.refresh(db_user)
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail="ユーザー登録に失敗しました") from e
+        db.refresh(db_user)  # commit 後に refresh（rollback 対象外）
 
     if db_user is None:
         raise HTTPException(status_code=500, detail="User lookup failed after OAuth flow")
