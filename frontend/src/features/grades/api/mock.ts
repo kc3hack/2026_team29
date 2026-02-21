@@ -4,7 +4,14 @@ export const getGradeStats = async (): Promise<GradeStats> => {
   // TODO: Replace with actual API call
   return {
     consecutiveDays: 365,
-    completedQuests: 365
+    completedQuests: 42,
+    highestRank: {
+      rank: 5,
+      category: "web",
+      categoryName: "Web/App",
+      rankName: "林",
+      color: "#55aaff"
+    }
   };
 };
 
