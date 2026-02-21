@@ -18,56 +18,53 @@ export function RankBar() {
 
   return (
     <div
-      className="absolute top-3 left-3 z-20 flex items-center gap-2 px-2.5 py-1.5 font-sans"
+      className="absolute top-3 left-3 z-20 flex items-center gap-2 px-3 py-2 font-sans"
       style={{
-        background: "rgba(10,10,20,0.75)",
-        border: "2px solid rgba(232,184,73,0.5)",
-        backdropFilter: "blur(4px)",
+        background: "rgba(31, 41, 55, 0.95)",
+        border: "2px solid #e8b849",
+        boxShadow: "2px 2px 0 #2C5F2D",
+        imageRendering: "pixelated",
       }}
     >
       {/* Tier badge */}
       <div
-        className="w-6 h-6 flex items-center justify-center text-[10px] font-bold shrink-0"
+        className="w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0 bg-[#111827]"
         style={{
-          background: "rgba(42,42,78,0.8)",
           border: "2px solid",
           borderColor: colors.text,
           color: colors.text,
+          boxShadow: `0 0 4px ${colors.text}44`
         }}
       >
         {currentRank.tier}
       </div>
 
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold" style={{ color: colors.text }}>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold tracking-wide" style={{ color: colors.text }}>
             {currentRank.nameJa}
           </span>
-          <span className="text-[8px]" style={{ color: "#666680" }}>
+          <span className="text-[10px] uppercase tracking-wider text-gray-400">
             {currentRank.nameEn}
           </span>
         </div>
 
         {/* Tiny EXP bar */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[7px]" style={{ color: "#666680" }}>{"EXP"}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold text-gray-500">{"EXP"}</span>
           <div
-            className="h-[6px] w-20 relative overflow-hidden"
-            style={{
-              background: "#0a0a1e",
-              border: "1px solid #333355",
-            }}
+            className="h-2 w-24 relative overflow-hidden bg-[#111827] border border-gray-700"
           >
             <div
-              className="h-full absolute left-0 top-0"
+              className="h-full absolute left-0 top-0 transition-all duration-500"
               style={{
                 width: `${progress * 100}%`,
                 background: colors.bar,
-                boxShadow: `inset 0 -1px 0 ${colors.barDark}`,
+                boxShadow: `0 0 4px ${colors.bar}`
               }}
             />
           </div>
-          <span className="text-[7px]" style={{ color: "#666680" }}>
+          <span className="text-[9px] font-bold text-gray-400">
             {completedCount}/{totalCount}
           </span>
         </div>

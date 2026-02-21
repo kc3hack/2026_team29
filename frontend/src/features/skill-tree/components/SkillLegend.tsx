@@ -1,16 +1,16 @@
 'use client';
 
 const rpgBoxStyle = {
-  background: "#1a1a2e",
-  border: "4px solid #e8b849",
-  boxShadow: "inset 2px 2px 0 #f5d97a, inset -2px -2px 0 #a67c20, 0 4px 0 #0a0a1a",
+  background: "rgba(31, 41, 55, 0.95)",
+  border: "2px solid #e8b849",
+  boxShadow: "4px 4px 0 #2C5F2D",
   imageRendering: "pixelated" as const,
 }
 
 const statusEntries = [
-  { color: "#e8b849", label: "\u30AF\u30EA\u30A2\u6E08\u307F" },
-  { color: "#5abf5a", label: "\u6311\u6226\u53EF\u80FD" },
-  { color: "#5a6068", label: "\u30ED\u30C3\u30AF\u4E2D" },
+  { color: "#e8b849", label: "CLEARED" },
+  { color: "#5abf5a", label: "AVAILABLE" },
+  { color: "#6b7280", label: "LOCKED" },
 ]
 
 const categoryEntries = [
@@ -23,33 +23,33 @@ const categoryEntries = [
 
 export function SkillLegend() {
   return (
-    <div className="absolute top-4 right-4 z-20 p-3 font-sans" style={rpgBoxStyle}>
-      <div className="text-[9px] font-bold mb-2 uppercase tracking-widest" style={{ color: "#8888aa" }}>
+    <div className="absolute top-4 right-4 z-20 p-4 font-sans" style={rpgBoxStyle}>
+      <div className="text-xs font-bold mb-3 uppercase tracking-widest text-[#e8b849] border-b border-[#e8b849]/30 pb-1">
         {"STATUS"}
       </div>
-      <div className="flex flex-col gap-1.5 mb-3">
+      <div className="flex flex-col gap-2 mb-4">
         {statusEntries.map((e, i) => (
           <div key={i} className="flex items-center gap-2">
             <div
               className="w-3 h-3 shrink-0"
-              style={{ background: e.color, border: "1px solid #000", boxShadow: `inset 1px 1px 0 ${e.color}88` }}
+              style={{ background: e.color, border: "1px solid #111827" }}
             />
-            <span className="text-[10px]" style={{ color: "#c0c0d0" }}>{e.label}</span>
+            <span className="text-xs font-bold tracking-wide text-gray-200">{e.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="text-[9px] font-bold mb-2 uppercase tracking-widest" style={{ color: "#8888aa" }}>
+      <div className="text-xs font-bold mb-3 uppercase tracking-widest text-[#e8b849] border-b border-[#e8b849]/30 pb-1">
         {"CATEGORY"}
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {categoryEntries.map((c, i) => (
           <div key={i} className="flex items-center gap-2">
             <div
               className="w-3 h-3 shrink-0"
-              style={{ background: c.color, border: "1px solid #000", boxShadow: `inset 1px 1px 0 ${c.color}88` }}
+              style={{ background: c.color, border: "1px solid #111827" }}
             />
-            <span className="text-[10px]" style={{ color: "#c0c0d0" }}>{c.label}</span>
+            <span className="text-xs font-bold tracking-wide text-gray-200">{c.label}</span>
           </div>
         ))}
       </div>
