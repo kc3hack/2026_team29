@@ -11,7 +11,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-[#FDFEF0]">
       {/* Top Header Bar - Full Width */}
       <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between bg-[#14532D] px-6 text-white border-b-4 border-black shadow-[0_4px_0_rgba(0,0,0,0.2)]">
          {/* Logo / Brand Area */}
