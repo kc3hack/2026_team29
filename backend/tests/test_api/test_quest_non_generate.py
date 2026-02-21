@@ -100,7 +100,7 @@ def test_list_quests_response_schema(client, db):
     data = client.get("/api/v1/quest").json()[0]
     assert "id" in data
     assert "title" in data
-    assert "description" in data
+    assert "description" not in data  # 一覧は QuestSummary（description 除外）
     assert "difficulty" in data
     assert "category" in data
     assert "is_generated" in data

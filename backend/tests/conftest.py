@@ -16,6 +16,8 @@ os.environ.setdefault("JWT_SECRET_KEY", TEST_JWT_SECRET)
 # GitHub OAuth テスト用ダミー値（本番環境では絶対に使用しないこと）
 os.environ.setdefault("GITHUB_CLIENT_ID", "test_github_client_id")
 os.environ.setdefault("GITHUB_CLIENT_SECRET", "test_github_client_secret")
+# 管理 API テスト用ダミーキー（本番環境では絶対に使用しないこと）
+os.environ.setdefault("ADMIN_API_KEY", "test-admin-key-for-testing-only")
 
 from app.core.encryption import reset_fernet  # noqa: E402
 from app.db.base import Base  # noqa: E402, F401  # 全モデル登録のためbase経由でimport

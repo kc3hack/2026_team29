@@ -34,6 +34,19 @@ class Quest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class QuestSummary(BaseModel):
+    """description を除いた軽量クエストスキーマ（一覧取得用）。"""
+
+    id: int
+    title: str
+    difficulty: int
+    category: QuestCategory
+    is_generated: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ============================================================
 # ハンズオン演習生成用スキーマ
 # ============================================================

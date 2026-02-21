@@ -48,3 +48,17 @@ def create_quest(db: Session, quest_in: QuestCreate) -> Quest:
         raise
     db.refresh(db_quest)
     return db_quest
+
+
+def delete_quest(db: Session, quest_id: int) -> bool:
+    """クエストを削除する。存在しない場合は False を返す。"""
+    db_quest = db.query(Quest).filter(Quest.id == quest_id).first()
+    if db_quest is None:
+        return False
+    db.delete(db_quest)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return True
