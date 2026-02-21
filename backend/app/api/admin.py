@@ -17,7 +17,7 @@ from app.crud import quest as crud_quest
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.quest import Quest as QuestSchema
-from app.schemas.quest import QuestCreate
+from app.schemas.quest import QuestCreate, QuestUpdate
 
 # Admin専用のFastAPIアプリ（独立したSwagger UI用）
 admin_app = FastAPI(
@@ -111,6 +111,28 @@ def admin_create_quest(
     description は Markdown 形式で入力すること（ADR 012）。
     """
     return crud_quest.create_quest(db, quest_in)
+
+
+@admin_app.put("/quests/{quest_id}", response_model=QuestSchema)
+def admin_update_quest(
+    quest_id: int,
+    quest_in: QuestUpdate,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_key),
+) -> QuestSchema:
+    """クエスト部分更新（指定フィールドのみ上書き）。
+
+    認証: X-Admin-Key ヘッダーが必要
+
+    - 200: 更新成功
+    - 404: 指定 ID のクエストが存在しない
+
+    description を変更する場合は Markdown 形式で入力すること（ADR 012）。
+    """
+    updated = crud_quest.update_quest(db, quest_id, quest_in)
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quest not found")
+    return updated
 
 
 @admin_app.delete("/quests/{quest_id}", status_code=204)

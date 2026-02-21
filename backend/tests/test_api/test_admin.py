@@ -4,11 +4,11 @@ Note: APIキー認証のテストはE2Eテストで実施。
 ここではビジネスロジックをテストする。
 """
 
-from app.api.admin import admin_create_quest, admin_delete_quest, fix_user_ranks
+from app.api.admin import admin_create_quest, admin_delete_quest, admin_update_quest, fix_user_ranks
 from app.crud.quest import get_quest
 from app.crud.user import create_user
 from app.models.enums import QuestCategory
-from app.schemas.quest import QuestCreate
+from app.schemas.quest import QuestCreate, QuestUpdate
 from app.schemas.user import UserCreate
 
 
@@ -75,11 +75,6 @@ def test_admin_create_quest_is_generated_false_by_default(db):
     assert result.is_generated is False
 
 
-# ---------------------------------------------------------------------------
-# Quest 削除
-# ---------------------------------------------------------------------------
-
-
 def test_admin_delete_quest_success(db):
     """存在するクエストを削除すると 204 相当で正常終了する。"""
     created = admin_create_quest(quest_in=_quest_create(), db=db, _=None)
@@ -103,3 +98,49 @@ def test_admin_delete_quest_removes_from_list(db):
     created = admin_create_quest(quest_in=_quest_create(), db=db, _=None)
     admin_delete_quest(quest_id=created.id, db=db, _=None)
     assert get_quest(db, created.id) is None
+
+
+# ---------------------------------------------------------------------------
+# Quest 更新
+# ---------------------------------------------------------------------------
+
+
+def test_admin_update_quest_partial(db):
+    """指定フィールドのみ更新される。"""
+    created = admin_create_quest(quest_in=_quest_create(title="Before", difficulty=1), db=db, _=None)
+    result = admin_update_quest(
+        quest_id=created.id,
+        quest_in=QuestUpdate(title="After"),
+        db=db,
+        _=None,
+    )
+    assert result.title == "After"
+    assert result.difficulty == 1  # 変更していないフィールドはそのまま
+
+
+def test_admin_update_quest_description_markdown(db):
+    """description（Markdown）を更新できる。"""
+    created = admin_create_quest(quest_in=_quest_create(), db=db, _=None)
+    new_md = "## 新しい手順\n### Step 1\n内容を変更する"
+    result = admin_update_quest(
+        quest_id=created.id,
+        quest_in=QuestUpdate(description=new_md),
+        db=db,
+        _=None,
+    )
+    assert result.description == new_md
+
+
+def test_admin_update_quest_not_found(db):
+    """存在しない ID を更新すると 404 例外が上がる。"""
+    import pytest
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc_info:
+        admin_update_quest(
+            quest_id=9999,
+            quest_in=QuestUpdate(title="Ghost"),
+            db=db,
+            _=None,
+        )
+    assert exc_info.value.status_code == 404

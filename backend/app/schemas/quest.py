@@ -22,6 +22,25 @@ class QuestCreate(BaseModel):
         return v
 
 
+class QuestUpdate(BaseModel):
+    """クエスト更新用スキーマ（全フィールド任意）。
+
+    指定したフィールドのみ更新する。description は Markdown 形式（ADR 012）。
+    """
+
+    title: str | None = None
+    description: str | None = None
+    difficulty: int | None = None
+    category: QuestCategory | None = None
+
+    @field_validator("difficulty")
+    @classmethod
+    def validate_difficulty(cls, v: int | None) -> int | None:
+        if v is not None and (v < 0 or v > 9):
+            raise ValueError("difficulty must be 0-9 (rank: 種子〜世界樹)")
+        return v
+
+
 class QuestSummary(BaseModel):
     """クエスト一覧用スキーマ（description 除外）。
 
