@@ -192,11 +192,11 @@ async def test_analyze_user_rank_from_github_fallback():
             github_stats=github_stats, profile=None
         )
 
-        # デフォルト値が返される
+        # デフォルト值が返される
         assert result["rank"] == 3
         assert result["rank_name"] == "巨木"
         assert result["percentile"] == 50.0
-        assert result["estimated_exp"] == 500
+        assert result["estimated_exp"] == 800  # estimate_exp_from_rank(3) = (600+1000)//2
 
 
 def test_estimate_exp_from_rank():

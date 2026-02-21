@@ -148,8 +148,8 @@ async def analyze_user_rank_from_github(
         total_stars=github_stats.get("total_stars", 0),
         languages=languages_str,
         bio=github_stats.get("bio", "") or "未入力",
-        portfolio_text=profile.portfolio_text if profile else "未入力",
-        qiita_id=profile.qiita_id if profile else "未入力",
+        portfolio_text=(profile.portfolio_text or "未入力") if profile else "未入力",
+        qiita_id=(profile.qiita_id or "未入力") if profile else "未入力",
         other_info=other_info,
     )
 
@@ -191,7 +191,7 @@ async def analyze_user_rank_from_github(
             "percentile": 50.0,
             "rank": 3,
             "rank_name": "巨木",
-            "estimated_exp": 500,
+            "estimated_exp": estimate_exp_from_rank(3),
             "reasoning": "GitHub統計の解析に失敗したため、デフォルト値を設定しました。",
         }
 
