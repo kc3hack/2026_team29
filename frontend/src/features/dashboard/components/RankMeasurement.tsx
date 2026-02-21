@@ -29,6 +29,7 @@ export function RankMeasurement({ githubUsername, onComplete }: RankMeasurementP
 
   const chargeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const decreaseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
   const pressTimeRef = useRef<number>(0);
   const isPressingRef = useRef(false);
 
@@ -83,9 +84,9 @@ export function RankMeasurement({ githubUsername, onComplete }: RankMeasurementP
     }
 
     // チャージプログレスアニメーション（カスタムイージング適用）
-    const startTime = Date.now() - initialElapsed;
+    startTimeRef.current = Date.now() - initialElapsed;
     chargeTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
+      const elapsed = Date.now() - startTimeRef.current;
       const linearProgress = Math.min(elapsed / CHARGE_DURATION, 1);
       
       // カスタムイージング適用：最初は速く、後半激遅
