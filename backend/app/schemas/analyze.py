@@ -69,18 +69,16 @@ class RankAnalysisResponse(BaseModel):
 
 
 class SkillTreeRequest(BaseModel):
-    """スキルツリー生成リクエスト"""
+    """スキルツリー生成リクエスト（認証済みユーザー）"""
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "user_id": 1,
                 "category": "web",
             }
         }
     )
 
-    user_id: int = Field(..., gt=0, description="ユーザーID")
     category: SkillCategory = Field(..., description="スキルカテゴリ（6種類）")
 
 

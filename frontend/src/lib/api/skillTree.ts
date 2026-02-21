@@ -37,20 +37,18 @@ function getApiBaseUrl(): string {
 
 /**
  * 保存済みスキルツリーの取得（存在しない場合は自動生成）
+ * 認証済みユーザーのスキルツリーを取得（/users/me エンドポイント使用）
  *
- * @param userId - ユーザーID
  * @param category - スキルカテゴリ（web/ai/security/infrastructure/game/design）
  * @returns スキルツリーデータ
  * @throws APIエラー時
  */
-export async function fetchSkillTree(
-  userId: number,
-  category: string,
-): Promise<SkillTreeData> {
+export async function fetchSkillTree(category: string): Promise<SkillTreeData> {
   const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl}/api/v1/users/${userId}/skill-trees?category=${category}`;
+  // 認証済みユーザーは /users/me エンドポイントを使用（Issue #61, ADR 014）
+  const url = `${baseUrl}/api/v1/users/me/skill-trees?category=${category}`;
 
-  console.log(`Fetching skill tree: userId=${userId}, category=${category}`);
+  console.log(`Fetching skill tree: category=${category}`);
 
   const response = await fetch(url, {
     credentials: "include",
@@ -74,7 +72,7 @@ export async function fetchSkillTree(
     console.log(
       `カテゴリ '${category}' のスキルツリーが存在しないため、生成します...`,
     );
-    return await generateSkillTree(userId, category);
+    return await generateSkillTree(category);
   }
 
   // 配列の場合は最初の要素を返す（通常は1つのみ）
@@ -87,26 +85,26 @@ export async function fetchSkillTree(
 
 /**
  * AI によるスキルツリーの生成
+ * 認証済みユーザーのスキルツリーを生成
  *
- * @param userId - ユーザーID
  * @param category - スキルカテゴリ（web/ai/security/infrastructure/game/design）
  * @returns 生成されたスキルツリーデータ
  * @throws APIエラー時
  */
 export async function generateSkillTree(
-  userId: number,
   category: string,
 ): Promise<SkillTreeData> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/v1/analyze/skill-tree`;
 
+  // Note: user_idは不要。バックエンドが認証Cookieから自動的に取得
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ user_id: userId, category }),
+    body: JSON.stringify({ category }),
   });
 
   if (!response.ok) {

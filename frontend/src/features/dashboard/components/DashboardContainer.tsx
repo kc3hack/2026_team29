@@ -79,13 +79,10 @@ export function DashboardContainer({
         setLoading(true);
         setError(null);
 
-        // TODO: 認証実装後は実際のuserIdを使用（Issue #59マージ後）
-        const numericUserId = 1; // 仮のユーザーID
-
         // ユーザー基本情報とスキルツリーを並行取得
         const [statusData, treeData] = await Promise.all([
           fetchUserDashboard(userId), // バッジ、ランク等（既存のmock API）
-          fetchSkillTree(numericUserId, category), // スキルツリー（バックエンドAPI）
+          fetchSkillTree(category), // スキルツリー（バックエンドAPI、認証済みユーザー）
         ]);
 
         setUserStatus(statusData);
