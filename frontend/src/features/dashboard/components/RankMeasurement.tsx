@@ -30,7 +30,6 @@ export function RankMeasurement({ githubUsername, onComplete }: RankMeasurementP
   const chargeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const decreaseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
-  const pressTimeRef = useRef<number>(0);
   const isPressingRef = useRef(false);
 
   // チャージ時間（ミリ秒）
@@ -84,9 +83,15 @@ export function RankMeasurement({ githubUsername, onComplete }: RankMeasurementP
     }
 
     // チャージプログレスアニメーション（カスタムイージング適用）
-    startTimeRef.current = Date.now() - initialElapsed;
+    // performance.now()はsetIntervalコールバック内で呼び出す
+    startTimeRef.current = 0; // リセット（0は未初期化を示す）
     chargeTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
+      // 初回のみ開始時刻を設定
+      if (startTimeRef.current === 0) {
+        startTimeRef.current = performance.now() - initialElapsed;
+      }
+      
+      const elapsed = performance.now() - startTimeRef.current;
       const linearProgress = Math.min(elapsed / CHARGE_DURATION, 1);
       
       // カスタムイージング適用：最初は速く、後半激遅
