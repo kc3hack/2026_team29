@@ -144,3 +144,26 @@ def test_admin_update_quest_not_found(db):
             _=None,
         )
     assert exc_info.value.status_code == 404
+
+
+def test_quest_update_explicit_null_raises_validation_error():
+    """明示的に null を送ると 422 相当の ValidationError が上がる。
+
+    nullable=False な DB 列への None 代入（IntegrityError→500）を防ぐ。
+    """
+    import pytest
+    from pydantic import ValidationError
+
+    # title=None を明示的にセット → model_fields_set に入るため reject_explicit_null が発火
+    with pytest.raises(ValidationError) as exc_info:
+        QuestUpdate(title=None)
+    assert "title" in str(exc_info.value)
+
+    with pytest.raises(ValidationError):
+        QuestUpdate(description=None)
+
+    with pytest.raises(ValidationError):
+        QuestUpdate(difficulty=None)
+
+    with pytest.raises(ValidationError):
+        QuestUpdate(category=None)
