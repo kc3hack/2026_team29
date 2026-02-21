@@ -44,6 +44,11 @@ def initialize_skill_trees_for_user(db: Session, user_id: int) -> list[SkillTree
     return trees
 
 
+def get_skill_trees_by_user(db: Session, user_id: int) -> list[SkillTree]:
+    """ユーザーの全スキルツリーを取得する。"""
+    return db.query(SkillTree).filter(SkillTree.user_id == user_id).all()
+
+
 def update_skill_tree(
     db: Session, user_id: int, category: SkillCategory, tree_data: dict[str, Any]
 ) -> SkillTree:

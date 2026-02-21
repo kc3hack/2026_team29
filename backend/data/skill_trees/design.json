@@ -1,0 +1,318 @@
+{
+  "nodes": [
+    {
+      "id": "design_visual",
+      "name": "ビジュアルデザイン基礎",
+      "completed": false,
+      "description": "構図、余白(ホワイトスペース)、プロポーションの理解",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "design_color_typo",
+      "name": "色彩とタイポグラフィ",
+      "completed": false,
+      "description": "カラーセオリーと、可読性を高めるフォント選定",
+      "prerequisites": [],
+      "estimated_hours": 15
+    },
+    {
+      "id": "design_ui_patterns",
+      "name": "UIコンポーネントとパターン",
+      "completed": false,
+      "description": "ボタンやフォーム等、標準的なUI要素の役割と配置",
+      "prerequisites": [
+        "design_visual"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "design_tools_basics",
+      "name": "デザインツール基礎",
+      "completed": false,
+      "description": "Figma等のツールを用いたベクター描画と基本操作",
+      "prerequisites": [
+        "design_visual",
+        "design_color_typo"
+      ],
+      "estimated_hours": 20
+    },
+    {
+      "id": "design_wireframe_ia",
+      "name": "ワイヤーフレームとIA",
+      "completed": false,
+      "description": "情報アーキテクチャに基づく画面構成のラフ設計",
+      "prerequisites": [
+        "design_ui_patterns"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "design_usability",
+      "name": "ユーザビリティ原則",
+      "completed": false,
+      "description": "ヤコブの法則など、使いやすさに関するヒューリスティクスの理解",
+      "prerequisites": [
+        "design_ui_patterns"
+      ],
+      "estimated_hours": 25
+    },
+    {
+      "id": "design_prototyping",
+      "name": "プロトタイピング",
+      "completed": false,
+      "description": "画面遷移の設定と検証可能なモックアップの作成",
+      "prerequisites": [
+        "design_wireframe_ia",
+        "design_tools_basics"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "design_interaction",
+      "name": "インタラクションデザイン",
+      "completed": false,
+      "description": "マイクロインタラクションによるフィードバックの視覚化",
+      "prerequisites": [
+        "design_ui_patterns"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "design_research",
+      "name": "ユーザーリサーチ",
+      "completed": false,
+      "description": "ユーザーインタビューやアンケートを用いた課題抽出",
+      "prerequisites": [
+        "design_wireframe_ia"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "design_persona",
+      "name": "ペルソナとジャーニーマップ",
+      "completed": false,
+      "description": "ターゲットユーザーの可視化と体験シナリオの設計",
+      "prerequisites": [
+        "design_research"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "design_testing",
+      "name": "ユーザビリティテスト",
+      "completed": false,
+      "description": "プロトタイプを用いた検証、ABテストの実施",
+      "prerequisites": [
+        "design_prototyping",
+        "design_research"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "design_data_ux",
+      "name": "データドリブンUX",
+      "completed": false,
+      "description": "アクセス解析等の定量データに基づいたUI改善",
+      "prerequisites": [
+        "design_usability"
+      ],
+      "estimated_hours": 50
+    },
+    {
+      "id": "design_system",
+      "name": "デザインシステム構築",
+      "completed": false,
+      "description": "デザイントークンとコンポーネントライブラリの設計・保守",
+      "prerequisites": [
+        "design_prototyping",
+        "design_tools_basics"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "design_ux_writing",
+      "name": "UXライティング",
+      "completed": false,
+      "description": "ユーザーを迷わせないマイクロコピーやエラー文言の設計",
+      "prerequisites": [
+        "design_persona"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "design_a11y",
+      "name": "アクセシビリティ (a11y)",
+      "completed": false,
+      "description": "WCAG基準に準拠し、多様な環境に対応した設計",
+      "prerequisites": [
+        "design_system",
+        "design_color_typo"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "design_cross_platform",
+      "name": "クロスプラットフォームUX",
+      "completed": false,
+      "description": "Web/モバイル/タブレット全体で一貫した体験設計",
+      "prerequisites": [
+        "design_system"
+      ],
+      "estimated_hours": 70
+    },
+    {
+      "id": "design_inclusive",
+      "name": "インクルーシブデザイン",
+      "completed": false,
+      "description": "様々な障壁を持つユーザーを開発初期から巻き込む手法",
+      "prerequisites": [
+        "design_a11y",
+        "design_research"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "design_service",
+      "name": "サービスデザイン",
+      "completed": false,
+      "description": "デジタル領域を超え、顧客接点全体の体験を設計する",
+      "prerequisites": [
+        "design_persona"
+      ],
+      "estimated_hours": 80
+    },
+    {
+      "id": "design_ux_strategy",
+      "name": "UX戦略と組織導入",
+      "completed": false,
+      "description": "ビジネス目標とUXを合致させ、デザイン文化を牽引する",
+      "prerequisites": [
+        "design_testing",
+        "design_service"
+      ],
+      "estimated_hours": 100
+    },
+    {
+      "id": "design_ethics",
+      "name": "デザイン倫理とスペキュラティヴ",
+      "completed": false,
+      "description": "ダークパターンを排除し、社会への影響を考察する未来志向の設計",
+      "prerequisites": [
+        "design_inclusive"
+      ],
+      "estimated_hours": 100
+    }
+  ],
+  "edges": [
+    {
+      "from": "design_visual",
+      "to": "design_ui_patterns"
+    },
+    {
+      "from": "design_visual",
+      "to": "design_tools_basics"
+    },
+    {
+      "from": "design_color_typo",
+      "to": "design_tools_basics"
+    },
+    {
+      "from": "design_ui_patterns",
+      "to": "design_wireframe_ia"
+    },
+    {
+      "from": "design_ui_patterns",
+      "to": "design_usability"
+    },
+    {
+      "from": "design_wireframe_ia",
+      "to": "design_prototyping"
+    },
+    {
+      "from": "design_tools_basics",
+      "to": "design_prototyping"
+    },
+    {
+      "from": "design_ui_patterns",
+      "to": "design_interaction"
+    },
+    {
+      "from": "design_wireframe_ia",
+      "to": "design_research"
+    },
+    {
+      "from": "design_research",
+      "to": "design_persona"
+    },
+    {
+      "from": "design_prototyping",
+      "to": "design_testing"
+    },
+    {
+      "from": "design_research",
+      "to": "design_testing"
+    },
+    {
+      "from": "design_usability",
+      "to": "design_data_ux"
+    },
+    {
+      "from": "design_prototyping",
+      "to": "design_system"
+    },
+    {
+      "from": "design_tools_basics",
+      "to": "design_system"
+    },
+    {
+      "from": "design_persona",
+      "to": "design_ux_writing"
+    },
+    {
+      "from": "design_system",
+      "to": "design_a11y"
+    },
+    {
+      "from": "design_color_typo",
+      "to": "design_a11y"
+    },
+    {
+      "from": "design_system",
+      "to": "design_cross_platform"
+    },
+    {
+      "from": "design_a11y",
+      "to": "design_inclusive"
+    },
+    {
+      "from": "design_research",
+      "to": "design_inclusive"
+    },
+    {
+      "from": "design_persona",
+      "to": "design_service"
+    },
+    {
+      "from": "design_testing",
+      "to": "design_ux_strategy"
+    },
+    {
+      "from": "design_service",
+      "to": "design_ux_strategy"
+    },
+    {
+      "from": "design_inclusive",
+      "to": "design_ethics"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 20,
+    "completed_nodes": 0,
+    "progress_percentage": 0.0,
+    "next_recommended": [
+      "design_visual",
+      "design_color_typo"
+    ]
+  }
+}

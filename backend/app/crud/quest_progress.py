@@ -19,6 +19,11 @@ def get_quest_progress(
     )
 
 
+def get_quest_progress_by_user(db: Session, user_id: int) -> list[QuestProgress]:
+    """ユーザーの全クエスト進捗を取得する。"""
+    return db.query(QuestProgress).filter(QuestProgress.user_id == user_id).all()
+
+
 def start_quest(db: Session, user_id: int, quest_id: int) -> QuestProgress:
     db_progress = QuestProgress(
         user_id=user_id,

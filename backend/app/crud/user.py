@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.skill_tree import initialize_skill_trees_for_user
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate
 
 
 def get_user(db: Session, user_id: int) -> User | None:
@@ -27,4 +27,58 @@ def create_user(db: Session, user: UserCreate) -> User:
     except Exception:
         db.rollback()
         raise
+    return db_user
+
+
+def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User | None:
+    """ユーザー情報更新（username のみ）。"""
+    db_user = get_user(db, user_id)
+    if db_user is None:
+        return None
+    update_data = user_update.model_dump(exclude_unset=True, exclude_none=True)
+    if "username" in update_data and update_data["username"] != db_user.username:
+        if get_user_by_username(db, update_data["username"]) is not None:
+            raise ValueError("Username already exists")
+    for field, value in update_data.items():
+        setattr(db_user, field, value)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(db_user)
+    return db_user
+
+
+def delete_user(db: Session, user_id: int) -> bool:
+    """ユーザー削除。存在しない場合は False を返す。"""
+    db_user = get_user(db, user_id)
+    if db_user is None:
+        return False
+    db.delete(db_user)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return True
+
+
+def update_user_rank(db: Session, user_id: int, rank: int) -> User | None:
+    """AI分析結果のランク保存専用。エンドポイントには公開しない。
+    rank は analyze/rank エンドポイント経由でのみ更新される。
+    詳細は ADR 010 参照。
+    """
+    if not 0 <= rank <= 9:
+        raise ValueError("rank must be between 0 and 9")
+    db_user = get_user(db, user_id)
+    if db_user is None:
+        return None
+    db_user.rank = rank
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(db_user)
     return db_user
