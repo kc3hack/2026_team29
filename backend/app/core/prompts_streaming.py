@@ -34,6 +34,8 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 **重要:** Tierが深くなるほど、ノード数を増やすこと。これにより下に行くほど横に広がる三角形△を形成する。
 
+**【絶対厳守】 9, 10...などの階層は絶対に生成しないでください。**
+
 ## スキル名の命名規則（必須）:
 - **キーワード中心、3-5単語以内**
 - **名詞・技術用語のみ、動詞は不要**
@@ -57,8 +59,9 @@ GitHub:{github_username} | スタック:{tech_stack}
 ## 出力ルール:
 1. **合計50-60ノード程度**（Tier 0からTier 5まで、下層ほど多く）
 2. completed:trueは習得済みのみ
-3. **出力順序**: Tier 0 → Tier 1 → Tier 2 → Tier 3 → Tier 4 → Tier 5
+3. **出力順序**: Tier 0 → Tier 1 → Tier 2 → Tier 3 → Tier 4 → Tier 5 （ここで終了）
 4. JSON Lines形式: 1行1ノード、```jsonは不要
+5. **【重要】Tier 6以上の階層は絶対に生成しないでください。Tier 5で必ず停止してください。**
 
 ## 例(3ノード - フォーマット参考のみ):
 {{"type":"node","id":"web_foundation","name":"HTTP/HTML/CSS基礎","completed":true,"desc":"HTTPとHTMLの仕組み理解","prerequisites":[],"hours":30}}
@@ -80,6 +83,8 @@ GitHub:{github_username} | スタック:{tech_stack}
 | 5 | 16-20個 | [Tier 4] |
 
 **合計50-60ノード** - 下に行くほど数を増やし、三角形△を形成
+
+**【絶対禁止】Tier 6, 7, 8, 9, 10...などの階層を生成することは絶対に禁止です。Tier 5が最終階層です。**
 
 名前は短く（3-5単語）、詳細はdescで（30文字以内）。
 
