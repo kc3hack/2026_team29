@@ -59,7 +59,7 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-transparent">
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
         <div className="text-center">
           <div className="mb-4 inline-flex h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-[#559C71]" />
           <p className="text-[#559C71] tracking-widest">
@@ -72,7 +72,7 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
   if (error || !userStatus) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-transparent">
+      <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
         <div className="rounded-none border-2 border-red-500 bg-white p-8 text-center shadow-[4px_4px_0px_0px_rgba(239,68,68,1)]">
           <p className="text-red-500">
             {error || 'Error loading dashboard'}
@@ -83,7 +83,7 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
   }
 
   return (
-    <main className="min-h-screen bg-transparent px-4 py-4 font-sans text-gray-900">
+    <main className="min-h-screen bg-[#FDFEF0] px-4 py-4 font-sans text-gray-900">
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Header Section */}
         <div className="flex flex-col gap-6 relative z-10 md:flex-row md:items-start md:justify-between">
