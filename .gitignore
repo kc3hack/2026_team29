@@ -409,3 +409,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/python,node,linux,macos,windows,visualstudiocode
 # Custom: Generated skill tree JSON files (contains user personal data)
 backend/scripts/skill_tree_*.json
+
+renderbackup.yaml
+vercelbackup.json
