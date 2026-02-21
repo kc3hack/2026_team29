@@ -18,7 +18,6 @@ from fastapi.testclient import TestClient
 
 from app.db.session import get_db
 from app.main import app
-from tests.conftest import auth_headers, make_test_token
 
 
 @pytest.fixture()

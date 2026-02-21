@@ -29,7 +29,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.password import hash_password, verify_password
+from app.core.password import verify_password
 from app.crud import oauth_account as crud_oauth
 from app.crud import user as crud_user
 from app.db.session import get_db
