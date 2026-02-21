@@ -77,29 +77,41 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 ## CRITICAL: スキルツリー構造の制約（必ず守ること）
 
-**【基礎層】prerequisites:[] のノードは正確に2個または3個**
-- 絶対にこれより多く作成してはいけません
-- カテゴリの最も基礎的な2-3個のみ
-- 例: Web → HTML/CSS + HTTP の2個
-- 例: AI → Python + 数学 の2個
+**【Tier 0 基礎層】prerequisites:[] のノードは正確に1個**
+- カテゴリの最も根幹となる土台スキル
 
-**【中級層】prerequisites:[1個] のノードは5-7個**
-- 基礎スキル1つに依存するスキル
+**【Tier 1 初級層】prerequisites:[1個] のノードは正確に3個**
+- 基礎から直接派生する基本技術スキル（各自が独立した技術領域を代表）
 
-**【応用層】prerequisites:[1-2個] のノードは8-10個**
-- 中級スキルを組み合わせた高度なスキル
+**【Tier 2 中級層】prerequisites:[1個] のノードは正確に8個**
+- 初級スキルから派生する実践的スキル（各初級から2-3個ずつ派生）
+
+**【Tier 3 応用層】prerequisites:[1-2個] のノードは正確に18個**
+- 中級スキルを組み合わせた高度で専門的なスキル
+
+## スキル名の命名規則（必須）:
+- **キーワード中心、3-5単語以内**
+- **名詞・技術用語のみ、動詞は不要**
+- 悪い例: "型システムを活用した堅牢なAPI型定義の実装" (長すぎる)
+- 良い例: "TypeScript型設計" (簡潔)
+- 良い例: "REST API設計" (簡潔)
+
+## 説明（description）の要件:
+- **スキル名で伝えきれない詳細情報をここに記載**
+- 最低60文字以上
+- 何ができるようになるか、関連技術・ツール・パターン名を含める
 
 ## 出力ルール:
-1. 合計15-20ノード (基礎2-3 + 中級5-7 + 応用8-10)
+1. **必ず正確に30ノード** (1+3+8+18)
 2. completed:trueは習得済みのみ
 3. prerequisitesを正確に設定
 
-## 出力形式
+## 出力形式（JSON）
 ```json
-{{"nodes":[{{"id":"skill-id","name":"名前","completed":true/false,"description":"説明","prerequisites":[],"estimated_hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":20,"completed_nodes":5,"progress_percentage":25.0,"next_recommended":["x","y","z"]}}}}
+{{"nodes":[{{"id":"skill-id","name":"キーワード(3-5単語)","completed":true/false,"description":"最低60文字以上の詳細な説明。何ができるようになるか、関連技術・ツール・パターン名を含める","prerequisites":[],"estimated_hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":30,"completed_nodes":1,"progress_percentage":3.3,"next_recommended":["x","y","z"]}}}}
 ```
 
-**重要: 基礎(prerequisites:[])は2-3個のみ。中級5-7個、応用8-10個で三角形を形成**。JSON形式のみ出力してください（説明不要）。"""
+**重要: Tier 0:1個、Tier 1:3個、Tier 2:8個、Tier 3:18個で段階的に広がる三角形△を形成（合計30ノード必須）**。JSON形式のみ出力してください（説明不要）。"""
 
 
 SKILL_TREE_TEMPLATE = ChatPromptTemplate.from_messages(
