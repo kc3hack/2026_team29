@@ -13,7 +13,10 @@ POST /api/v1/analyze/quest - 演習生成（LLM実装、issue #57）
 
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+import json
+import asyncio
 
 from app.schemas.analyze import (
     RankAnalysisRequest,
@@ -129,6 +132,209 @@ async def generate_skill_tree(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Skill tree generation failed: {str(e)}"
+        )
+
+
+@router.get("/skill-tree/stream")
+async def stream_skill_tree(
+    category: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    スキルツリー生成（ストリーミング版 - プログレッシブ表示）
+
+    Args:
+        category: スキルカテゴリ (web, ai, game, etc.)
+        current_user: 認証済みユーザー
+        db: DBセッション
+
+    Returns:
+        StreamingResponse: Server-Sent Events (SSE) 形式でノード単位にストリーミング
+
+    Note:
+        - JSON Lines形式でLLMがノードを生成するたびに送信
+        - フロントエンドで EventSource を使用してリアルタイム表示
+        - 完了後はDBにキャッシュ保存
+
+    Example:
+        GET /api/v1/analyze/skill-tree/stream?category=web
+
+        Response (SSE):
+            data: {"type":"node","id":"html-css","name":"HTML/CSS基礎",...}
+
+            data: {"type":"node","id":"javascript","name":"JavaScript基礎",...}
+
+            data: {"type":"metadata","total_nodes":15,...}
+
+            data: {"type":"done"}
+    """
+    from app.models.enums import SkillCategory
+    from app.core.prompts_streaming import SKILL_TREE_STREAMING_TEMPLATE
+    from app.core.llm import stream_llm
+    from app.services.skill_tree_service import (
+        RANK_NAMES,
+        _load_baseline_json,
+        _simplify_baseline_for_prompt,
+    )
+    from app.crud.profile import get_profile_by_user_id
+    from app.services.github_service import analyze_github_profile
+    from app.crud.skill_tree import update_skill_tree
+
+    try:
+        # カテゴリをenumに変換
+        try:
+            category_enum = SkillCategory(category)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid category: {category}")
+
+        # ユーザー情報収集
+        profile = get_profile_by_user_id(db, current_user.id)
+        if profile is None:
+            raise HTTPException(
+                status_code=404, detail=f"User {current_user.id} not found"
+            )
+
+        # GitHub分析
+        github_analysis = await analyze_github_profile(profile.github_username)
+
+        # 習得済みスキル抽出
+        acquired_skills = [
+            skill_id
+            for skill_id, completed in github_analysis.get(
+                "completion_signals", {}
+            ).items()
+            if completed
+        ]
+
+        # ランク取得
+        user_rank = profile.user.rank if profile.user else 0
+        rank_name = RANK_NAMES.get(user_rank, "不明")
+
+        # ベースライン簡略化
+        baseline_data = _load_baseline_json(category_enum)
+        simplified_baseline = _simplify_baseline_for_prompt(baseline_data)
+
+        # プロンプト生成
+        prompt = SKILL_TREE_STREAMING_TEMPLATE.format(
+            rank=user_rank,
+            rank_name=rank_name,
+            github_username=profile.github_username or "未設定",
+            tech_stack=", ".join(github_analysis.get("tech_stack", [])) or "なし",
+            acquired_skills=", ".join(acquired_skills) or "なし",
+            category=category_enum.value,
+            baseline_json=simplified_baseline,
+        )
+
+        # ストリーミング生成
+        async def generate_sse():
+            """SSE形式でノードを順次送信"""
+            buffer = ""
+            nodes = []
+            edges = []
+            metadata = {}
+
+            try:
+                async for chunk in stream_llm(prompt, temperature=0.2):
+                    buffer += chunk
+
+                    # 改行ごとにJSON Lines をパース
+                    while "\n" in buffer:
+                        line, buffer = buffer.split("\n", 1)
+                        line = line.strip()
+
+                        if not line or line.startswith("#"):
+                            continue
+
+                        try:
+                            # JSONパース
+                            data = json.loads(line)
+                            data_type = data.get("type")
+
+                            if data_type == "node":
+                                nodes.append(data)
+                                # SSE形式で送信
+                                yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                                await asyncio.sleep(
+                                    0.1
+                                )  # フロントエンドでの表示を見やすく
+
+                            elif data_type == "edge":
+                                edges.append(data)
+
+                            elif data_type == "metadata":
+                                metadata = data
+                                yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+                        except json.JSONDecodeError:
+                            # JSON不完全の場合はスキップ
+                            continue
+
+                # 残りのバッファをチェック
+                if buffer.strip():
+                    try:
+                        data = json.loads(buffer.strip())
+                        data_type = data.get("type")
+                        if data_type == "node":
+                            nodes.append(data)
+                            yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                        elif data_type == "edge":
+                            edges.append(data)
+                        elif data_type == "metadata":
+                            metadata = data
+                            yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                    except json.JSONDecodeError:
+                        pass
+
+                # 完了通知 + DBキャッシュ保存
+                tree_data = {"nodes": nodes, "edges": edges, "metadata": metadata}
+
+                # 既存のスキルツリーを取得、なければ新規作成
+                from app.crud.skill_tree import get_skill_tree_by_user_category
+                from app.models.skill_tree import SkillTree as SkillTreeModel
+
+                existing_tree = get_skill_tree_by_user_category(
+                    db, current_user.id, category_enum
+                )
+                if existing_tree:
+                    # 既存レコードを更新
+                    update_skill_tree(db, current_user.id, category_enum, tree_data)
+                else:
+                    # 新規作成
+                    new_tree = SkillTreeModel(
+                        user_id=current_user.id,
+                        category=category_enum.value,
+                        tree_data=tree_data,
+                        generated_at=datetime.now(timezone.utc),
+                    )
+                    db.add(new_tree)
+                    db.commit()
+                    db.refresh(new_tree)
+
+                yield f'data: {{"type":"done","total_nodes":{len(nodes)}}}\n\n'
+
+            except Exception as e:
+                # エラー通知
+                error_msg = json.dumps(
+                    {"type": "error", "message": str(e)}, ensure_ascii=False
+                )
+                yield f"data: {error_msg}\n\n"
+
+        return StreamingResponse(
+            generate_sse(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",  # nginx buffering無効化
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Stream generation failed: {str(e)}"
         )
 
 

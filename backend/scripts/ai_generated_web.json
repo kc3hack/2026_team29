@@ -1,0 +1,184 @@
+{
+  "nodes": [
+    {
+      "id": "web_fastapi",
+      "name": "FastAPIの高度な活用",
+      "completed": true,
+      "description": "FastAPIを用いた非同期プログラミングやデータバリデーションの最適化",
+      "prerequisites": [],
+      "estimated_hours": 40
+    },
+    {
+      "id": "web_nextjs_advanced",
+      "name": "Next.jsの高度な機能",
+      "completed": true,
+      "description": "Next.jsを用いたカスタムサーバー設定やAPIルートの構築",
+      "prerequisites": [],
+      "estimated_hours": 40
+    },
+    {
+      "id": "web_postgresql_advanced",
+      "name": "PostgreSQLの高度な機能",
+      "completed": false,
+      "description": "トランザクション管理やパフォーマンスチューニングの手法",
+      "prerequisites": [],
+      "estimated_hours": 35
+    },
+    {
+      "id": "web_docker_advanced",
+      "name": "Dockerの高度な使用法",
+      "completed": false,
+      "description": "Docker ComposeやKubernetesを用いた大規模なアプリケーションの管理",
+      "prerequisites": [],
+      "estimated_hours": 50
+    },
+    {
+      "id": "web_typescript_advanced",
+      "name": "TypeScriptの応用",
+      "completed": false,
+      "description": "型定義のカスタマイズや高度な型システムの活用",
+      "prerequisites": [],
+      "estimated_hours": 30
+    },
+    {
+      "id": "web_api_testing",
+      "name": "APIテスト",
+      "completed": false,
+      "description": "RESTful APIのためのテスト手法（Postman、pytestなど）",
+      "prerequisites": [
+        "web_fastapi"
+      ],
+      "estimated_hours": 30
+    },
+    {
+      "id": "web_security_basics",
+      "name": "Webセキュリティ基礎",
+      "completed": false,
+      "description": "基本的なセキュリティの脅威（XSS, CSRFなど）と対策",
+      "prerequisites": [],
+      "estimated_hours": 25
+    },
+    {
+      "id": "web_graphql_basics",
+      "name": "GraphQLの基礎",
+      "completed": false,
+      "description": "GraphQLの基本概念と簡単なAPI設計",
+      "prerequisites": [],
+      "estimated_hours": 30
+    },
+    {
+      "id": "web_state_management_advanced",
+      "name": "状態管理の高度な手法",
+      "completed": false,
+      "description": "Redux ToolkitやMobXを用いた状態管理の最適化",
+      "prerequisites": [
+        "web_state_management"
+      ],
+      "estimated_hours": 40
+    },
+    {
+      "id": "web_serverless",
+      "name": "サーバーレスアーキテクチャ",
+      "completed": false,
+      "description": "AWS LambdaやAzure Functionsを用いたサーバーレス開発",
+      "prerequisites": [
+        "web_fastapi"
+      ],
+      "estimated_hours": 45
+    },
+    {
+      "id": "web_performance_tuning",
+      "name": "Webアプリケーションのパフォーマンス最適化",
+      "completed": false,
+      "description": "Core Web Vitalsの改善やパフォーマンスチューニング手法",
+      "prerequisites": [],
+      "estimated_hours": 35
+    },
+    {
+      "id": "web_ui_testing",
+      "name": "UIテスト",
+      "completed": false,
+      "description": "CypressやSeleniumを用いたUIテストの実施",
+      "prerequisites": [],
+      "estimated_hours": 30
+    },
+    {
+      "id": "web_microservices",
+      "name": "マイクロサービスアーキテクチャ",
+      "completed": false,
+      "description": "マイクロサービスの設計原則と実装手法",
+      "prerequisites": [],
+      "estimated_hours": 50
+    },
+    {
+      "id": "web_auth_advanced",
+      "name": "認証・認可の高度な手法",
+      "completed": false,
+      "description": "OAuth 2.0やOpenID Connectを用いた複雑な認証フローの実装",
+      "prerequisites": [
+        "web_auth"
+      ],
+      "estimated_hours": 60
+    },
+    {
+      "id": "web_integration_testing",
+      "name": "統合テスト",
+      "completed": false,
+      "description": "複数コンポーネント間の統合テスト手法",
+      "prerequisites": [],
+      "estimated_hours": 30
+    }
+  ],
+  "edges": [
+    {
+      "from": "web_fastapi",
+      "to": "web_api_testing"
+    },
+    {
+      "from": "web_fastapi",
+      "to": "web_serverless"
+    },
+    {
+      "from": "web_fastapi",
+      "to": "web_auth_advanced"
+    },
+    {
+      "from": "web_nextjs_advanced",
+      "to": "web_state_management_advanced"
+    },
+    {
+      "from": "web_nextjs_advanced",
+      "to": "web_performance_tuning"
+    },
+    {
+      "from": "web_postgresql_advanced",
+      "to": "web_microservices"
+    },
+    {
+      "from": "web_docker_advanced",
+      "to": "web_microservices"
+    },
+    {
+      "from": "web_security_basics",
+      "to": "web_auth_advanced"
+    },
+    {
+      "from": "web_graphql_basics",
+      "to": "web_api_testing"
+    },
+    {
+      "from": "web_state_management_advanced",
+      "to": "web_integration_testing"
+    }
+  ],
+  "metadata": {
+    "total_nodes": 28,
+    "completed_nodes": 15,
+    "progress_percentage": 53.57,
+    "next_recommended": [
+      "web_postgresql_advanced",
+      "web_docker_advanced",
+      "web_ui_testing"
+    ]
+  }
+}

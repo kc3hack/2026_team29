@@ -64,6 +64,17 @@ export function AppSidebar() {
               <span className="text-lg">STATS</span>
             </Link>
           </li>
+          
+          {/* Rank Measurement */}
+          <li>
+            <Link
+              href="/rank-measurement"
+              className={getLinkClass('/rank-measurement')}
+            >
+              <div className="flex h-8 w-8 items-center justify-center text-xl mr-3 bg-white border-2 border-black text-black">🎯</div>
+              <span className="text-lg">RANK</span>
+            </Link>
+          </li>
         </ul>
         
         {/* System Info Box */}

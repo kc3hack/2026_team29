@@ -9,7 +9,12 @@ from fastapi.testclient import TestClient
 
 from app.db.session import get_db
 from app.main import app
-from tests.conftest import auth_headers, make_expired_token, make_tampered_token, make_test_token
+from tests.conftest import (
+    auth_headers,
+    make_expired_token,
+    make_tampered_token,
+    make_test_token,
+)
 
 
 @pytest.fixture()
@@ -31,7 +36,9 @@ def create_user(client, username: str) -> dict:
         "/api/v1/auth/register",
         json={"username": username, "password": "testpass123"},
     )
-    assert res.status_code == 201, f"Failed to create user: {res.status_code} {res.text}"
+    assert (
+        res.status_code == 201
+    ), f"Failed to create user: {res.status_code} {res.text}"
     data = res.json()
     return {"id": data["user_id"], "username": username}
 
@@ -108,7 +115,10 @@ def test_delete_me_success(client):
     res = client.delete("/api/v1/users/me", headers=auth_headers(user["id"]))
     assert res.status_code == 204
     # 削除後は同トークンで /me にアクセスしても 401
-    assert client.get("/api/v1/users/me", headers=auth_headers(user["id"])).status_code == 401
+    assert (
+        client.get("/api/v1/users/me", headers=auth_headers(user["id"])).status_code
+        == 401
+    )
 
 
 def test_delete_me_unauthorized(client):
@@ -197,7 +207,9 @@ def test_get_my_skill_trees_six_categories(client):
 
 def test_get_my_quest_progress_empty(client):
     user = create_user(client, "quester")
-    res = client.get("/api/v1/users/me/quest-progress", headers=auth_headers(user["id"]))
+    res = client.get(
+        "/api/v1/users/me/quest-progress", headers=auth_headers(user["id"])
+    )
     assert res.status_code == 200
     assert res.json() == []
 
@@ -210,7 +222,7 @@ def test_get_my_quest_progress_empty(client):
 def test_get_me_expired_token_is_rejected(client):
     """期限切れ JWT は 401 を返すこと（Token Expiry 後保証）"""
     user = create_user(client, "expired_user")
-    client.post("/api/v1/auth/logout")  # register で付与した Cookie を Max-Age=0 で確実に削除
+    client.cookies.clear()  # register で付与した Cookie を確実に削除
     headers = {"Authorization": f"Bearer {make_expired_token(user['id'])}"}
     res = client.get("/api/v1/users/me", headers=headers)
     assert res.status_code == 401
@@ -219,7 +231,7 @@ def test_get_me_expired_token_is_rejected(client):
 def test_get_me_tampered_token_is_rejected(client):
     """署名改ざん JWT は 401 を返すこと（Signature Validation 後保証）"""
     user = create_user(client, "tampered_user")
-    client.post("/api/v1/auth/logout")  # register で付与した Cookie を Max-Age=0 で確実に削除
+    client.cookies.clear()  # register で付与した Cookie を確実に削除
     headers = {"Authorization": f"Bearer {make_tampered_token(user['id'])}"}
     res = client.get("/api/v1/users/me", headers=headers)
     assert res.status_code == 401
