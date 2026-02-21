@@ -43,7 +43,7 @@ def list_quests(
     db: Session = Depends(get_db),
 ) -> list[QuestSummary]:
     """クエスト一覧取得。description は除外（ADR 012: 軽量化のため）。
-    演習詳細は GET /quests/{quest_id} で取得すること。
+    演習詳細は GET /api/v1/quest/{quest_id} で取得すること。
     category・difficulty でフィルタリング可能。
     """
     return crud_quest.list_quests(
