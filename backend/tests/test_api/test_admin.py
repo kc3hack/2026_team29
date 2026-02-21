@@ -4,7 +4,8 @@ Note: APIキー認証のテストはE2Eテストで実施。
 ここではビジネスロジックをテストする。
 """
 
-from app.api.admin import admin_create_quest, admin_delete_quest, admin_list_quests, fix_user_ranks
+from app.api.admin import admin_create_quest, admin_delete_quest, fix_user_ranks
+from app.crud.quest import get_quest
 from app.crud.user import create_user
 from app.models.enums import QuestCategory
 from app.schemas.quest import QuestCreate
@@ -49,42 +50,6 @@ def test_fix_user_ranks_logic(db):
     db.refresh(user2)
     assert user1.rank == 1
     assert user2.rank == 4
-
-
-# ---------------------------------------------------------------------------
-# Quest 一覧
-# ---------------------------------------------------------------------------
-
-
-def test_admin_list_quests_empty(db):
-    """クエストが0件の場合、空リストを返す。"""
-    result = admin_list_quests(skip=0, limit=50, db=db, _=None)
-    assert result == []
-
-
-def test_admin_list_quests_returns_created(db):
-    """作成したクエストが一覧に含まれる。"""
-    admin_create_quest(quest_in=_quest_create(title="A"), db=db, _=None)
-    admin_create_quest(quest_in=_quest_create(title="B"), db=db, _=None)
-    result = admin_list_quests(skip=0, limit=50, db=db, _=None)
-    assert len(result) == 2
-
-
-def test_admin_list_quests_filter_category(db):
-    """category フィルタが機能する。"""
-    admin_create_quest(quest_in=_quest_create(category=QuestCategory.WEB), db=db, _=None)
-    admin_create_quest(quest_in=_quest_create(category=QuestCategory.AI), db=db, _=None)
-    result = admin_list_quests(skip=0, limit=50, category=QuestCategory.WEB, db=db, _=None)
-    assert len(result) == 1
-    assert result[0].category == QuestCategory.WEB
-
-
-def test_admin_list_quests_skip_limit(db):
-    """skip/limit が正しく動作する。"""
-    for i in range(5):
-        admin_create_quest(quest_in=_quest_create(title=f"Q{i}"), db=db, _=None)
-    result = admin_list_quests(skip=2, limit=2, db=db, _=None)
-    assert len(result) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -134,8 +99,7 @@ def test_admin_delete_quest_not_found(db):
 
 
 def test_admin_delete_quest_removes_from_list(db):
-    """削除後、一覧から取得できなくなる。"""
+    """削除後、DB からクエストが取得できなくなる。"""
     created = admin_create_quest(quest_in=_quest_create(), db=db, _=None)
     admin_delete_quest(quest_id=created.id, db=db, _=None)
-    result = admin_list_quests(skip=0, limit=50, db=db, _=None)
-    assert all(q.id != created.id for q in result)
+    assert get_quest(db, created.id) is None
