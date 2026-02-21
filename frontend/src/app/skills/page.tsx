@@ -1,28 +1,30 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect } from "react"
-import { SkillTreeCanvas } from "../../features/skill-tree/components/SkillTreeCanvas"
-import { SkillNodePanel } from "../../features/skill-tree/components/SkillNodePanel"
-import { RankBar } from "../../features/skill-tree/components/RankBar"
-import { SkillLegend } from "../../features/skill-tree/components/SkillLegend"
-import { ZoomControls } from "../../features/skill-tree/components/ZoomControls"
-import type { SkillNode } from "../../features/skill-tree/types/data"
+import { useState, useCallback } from "react";
+import { SkillTreeCanvas } from "../../features/skill-tree/components/SkillTreeCanvas";
+import { SkillNodePanel } from "../../features/skill-tree/components/SkillNodePanel";
+import { RankBar } from "../../features/skill-tree/components/RankBar";
+import { SkillLegend } from "../../features/skill-tree/components/SkillLegend";
+import { ZoomControls } from "../../features/skill-tree/components/ZoomControls";
+import type { SkillNode } from "../../features/skill-tree/types/data";
 
 export default function SkillTreePage() {
-  const [selectedNode, setSelectedNode] = useState<SkillNode | null>(null)
-  const [zoomAction, setZoomAction] = useState<{ type: string; ts: number } | null>(null)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const [selectedNode, setSelectedNode] = useState<SkillNode | null>(null);
+  const [zoomAction, setZoomAction] = useState<{
+    type: string;
+    ts: number;
+  } | null>(null);
+  const [mounted] = useState(true);
 
   const handleSelectNode = useCallback((node: SkillNode | null) => {
-    setSelectedNode(node)
-  }, [])
+    setSelectedNode(node);
+  }, []);
 
   return (
-    <div className="relative w-full h-[calc(100vh-4rem)] overflow-hidden rounded-lg border border-border" style={{ background: "#0a0f08" }}>
+    <div
+      className="relative w-full h-[calc(100vh-4rem)] overflow-hidden rounded-lg border border-border"
+      style={{ background: "#0a0f08" }}
+    >
       <SkillTreeCanvas
         onSelectNode={handleSelectNode}
         selectedNode={selectedNode}
@@ -49,15 +51,24 @@ export default function SkillTreePage() {
           {"SKILL TREE"}
         </h1>
         {mounted && (
-          <p className="text-[9px] mt-1" style={{ color: "#666680" }} suppressHydrationWarning>
-            {"\u30C9\u30E9\u30C3\u30B0\u3067\u79FB\u52D5 / \u30B9\u30AF\u30ED\u30FC\u30EB\u3067\u30BA\u30FC\u30E0 / \u30CE\u30FC\u30C9\u3092\u30AF\u30EA\u30C3\u30AF\u3067\u8A73\u7D30"}
+          <p
+            className="text-[9px] mt-1"
+            style={{ color: "#666680" }}
+            suppressHydrationWarning
+          >
+            {
+              "\u30C9\u30E9\u30C3\u30B0\u3067\u79FB\u52D5 / \u30B9\u30AF\u30ED\u30FC\u30EB\u3067\u30BA\u30FC\u30E0 / \u30CE\u30FC\u30C9\u3092\u30AF\u30EA\u30C3\u30AF\u3067\u8A73\u7D30"
+            }
           </p>
         )}
       </div>
 
       {selectedNode && (
-        <SkillNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+        <SkillNodePanel
+          node={selectedNode}
+          onClose={() => setSelectedNode(null)}
+        />
       )}
     </div>
-  )
+  );
 }
