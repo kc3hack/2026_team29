@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Exercise } from '../types';
 
 interface ExerciseListItemProps {
   exercise: Exercise;
-  onClick: () => void;
 }
 
-export function ExerciseListItem({ exercise, onClick }: ExerciseListItemProps) {
+export function ExerciseListItem({ exercise }: ExerciseListItemProps) {
   const getStatusIcon = (status: Exercise['status']) => {
     switch (status) {
       case 'completed':
@@ -32,9 +32,9 @@ export function ExerciseListItem({ exercise, onClick }: ExerciseListItemProps) {
   };
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full bg-[#FDFEF0] border-2 border-[#3A7E56] px-6 py-4 text-left transition-all hover:bg-[#F0F7F0] hover:border-[#2C5F2D] hover:shadow-md group"
+    <Link
+      href={`/exercises/${exercise.category}/${exercise.id}`}
+      className="block w-full bg-[#FDFEF0] border-2 border-[#3A7E56] px-6 py-4 text-left transition-all hover:bg-[#F0F7F0] hover:border-[#2C5F2D] hover:shadow-md group"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
@@ -63,6 +63,6 @@ export function ExerciseListItem({ exercise, onClick }: ExerciseListItemProps) {
           <span className="text-2xl text-[#3A7E56] group-hover:translate-x-1 transition-transform">›</span>
         </div>
       </div>
-    </button>
+    </Link>
   );
 }

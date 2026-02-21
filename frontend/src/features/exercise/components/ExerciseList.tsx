@@ -34,12 +34,6 @@ export function ExerciseList({ category }: ExerciseListProps) {
 
   const filteredExercises = exercises.filter((ex) => ex.difficulty === activeDifficulty);
 
-  const handleExerciseClick = (exerciseId: string) => {
-    // TODO: Navigate to exercise detail page
-    console.log(`Navigate to exercise: ${exerciseId}`);
-    // router.push(`/exercise/${category}/${exerciseId}`);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -82,7 +76,6 @@ export function ExerciseList({ category }: ExerciseListProps) {
             <ExerciseListItem
               key={exercise.id}
               exercise={exercise}
-              onClick={() => handleExerciseClick(exercise.id)}
             />
           ))
         ) : (
