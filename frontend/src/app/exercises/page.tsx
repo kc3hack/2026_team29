@@ -1,16 +1,19 @@
-'use client';
+"use client";
 
 /**
- * Exercise Menu Page
+ * Exercise Menu Page（認証必須）
  */
 
-import React from 'react';
-import { ExerciseMenu } from '@/features/exercise/components/ExerciseMenu';
+import React from "react";
+import { withAuth } from "@/lib/auth/withAuth";
+import { ExerciseMenu } from "@/features/exercise/components/ExerciseMenu";
 
-export default function ExercisePage() {
+function ExercisePage() {
   return (
     <div className="h-full w-full">
       <ExerciseMenu />
     </div>
   );
 }
+
+export default withAuth(ExercisePage);

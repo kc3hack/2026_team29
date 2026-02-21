@@ -8,7 +8,7 @@ rank 管理方針は ADR 010 参照。
 /users/{id} 系の管理者向けエンドポイントは、別途管理 API モジュール／Issue で扱う。
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.crud import badge as crud_badge
@@ -19,6 +19,7 @@ from app.crud import user as crud_user
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
+from app.models.enums import SkillCategory
 from app.schemas.badge import Badge as BadgeSchema
 from app.schemas.profile import Profile as ProfileSchema
 from app.schemas.profile import ProfileCreate, ProfileUpdate
@@ -103,11 +104,33 @@ def get_my_badges(
 
 @router.get("/me/skill-trees", response_model=list[SkillTreeSchema])
 def get_my_skill_trees(
+    category: str | None = Query(
+        None,
+        description="スキルカテゴリでフィルタ（web/ai/security/infrastructure/game/design）",
+    ),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[SkillTreeSchema]:
-    """認証済みユーザー自身のスキルツリー一覧取得（6カテゴリ）。"""
-    return crud_skill_tree.get_skill_trees_by_user(db, current_user.id)
+    """認証済みユーザー自身のスキルツリー取得。
+
+    category パラメータが指定された場合は該当カテゴリのみ返却。
+    未指定の場合は全カテゴリ（6カテゴリ）を返却。
+    """
+    all_trees = crud_skill_tree.get_skill_trees_by_user(db, current_user.id)
+
+    if category:
+        # categoryでフィルタリング
+        try:
+            # 文字列をEnumに変換して検証
+            cat_enum = SkillCategory(category.lower())
+            return [tree for tree in all_trees if tree.category == cat_enum.value]
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid category: {category}. Valid values: web, ai, security, infrastructure, game, design",
+            )
+
+    return all_trees
 
 
 @router.get("/me/quest-progress", response_model=list[QuestProgressSchema])

@@ -15,6 +15,7 @@
 
 import hashlib
 import hmac
+import logging
 import secrets
 import time
 from datetime import datetime, timedelta, timezone
@@ -32,9 +33,11 @@ from app.core.config import settings
 from app.core.password import verify_password
 from app.crud import oauth_account as crud_oauth
 from app.crud import user as crud_user
+from app.crud import profile as crud_profile
 from app.db.session import get_db
 from app.schemas.oauth_account import OAuthAccountCreate, OAuthTokenUpdate
 from app.schemas.user import UserCreate
+from app.schemas.profile import ProfileCreate
 
 router = APIRouter()
 
@@ -286,16 +289,32 @@ async def github_callback(
             OAuthTokenUpdate(access_token=access_token),
         )
         db_user = crud_user.get_user(db, existing_oauth.user_id)
+
+        # 既存ユーザーでもProfileが存在しない場合は作成（マイグレーション対策: Issue #71）
+        if db_user and not crud_profile.get_profile_by_user_id(db, db_user.id):
+            try:
+                crud_profile.create_profile(
+                    db,
+                    ProfileCreate(
+                        user_id=db_user.id,
+                        github_username=github_login_name,
+                    ),
+                )
+            except Exception as e:
+                # Profileの作成に失敗してもログインは継続（Warning のみ）
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"Failed to create profile for user_id={db_user.id}: {e}"
+                )
     else:
         # 新規登録: username の重複回避
         username = github_login_name
         if crud_user.get_user_by_username(db, username) is not None:
             username = f"{github_login_name}_{github_user_id}"
 
-        # User と OAuthAccount を同一トランザクションで作成（アトミック性保証）
-        # commit=False にして両方を flush した後、一括 commit する。
+        # User と OAuthAccount と Profile を同一トランザクションで作成（アトミック性保証）
+        # commit=False にして全てを flush した後、一括 commit する。
         # これにより「User だけが永続化されるゾンビレコード」を防ぐ。
-        # create_user / create_oauth_account の flush も含めて全体を囲う（C-1修正）
         try:
             db_user = crud_user.create_user(
                 db, UserCreate(username=username), commit=False
@@ -308,6 +327,15 @@ async def github_callback(
                     provider="github",
                     provider_user_id=github_user_id,
                     access_token=access_token,
+                ),
+                commit=False,
+            )
+            # Profile 作成（スキルツリー生成に必要: Issue #71）
+            crud_profile.create_profile(
+                db,
+                ProfileCreate(
+                    user_id=db_user.id,
+                    github_username=github_login_name,
                 ),
                 commit=False,
             )

@@ -136,6 +136,37 @@ def test_callback_new_user_creates_user_and_sets_cookie(client):
     assert "httponly" in set_cookie_header.lower()
 
 
+def test_callback_new_user_creates_profile_with_github_username(client, db):
+    """初回ログイン: User + OAuthAccount + Profile が同一トランザクションで作成され、
+    Profile.github_username が GitHub login 名で設定される (Issue #71)。"""
+    state = _valid_state()
+    client.cookies.set("oauth_state", state)
+    mock_client = _mock_httpx_client()
+
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
+        res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    assert res.status_code == 302
+
+    # JWT デコードして user_id を取得
+    import jwt as _jwt
+    from app.core.config import settings as _settings
+
+    token = res.cookies.get("access_token")
+    assert token is not None
+    payload = _jwt.decode(
+        token, _settings.JWT_SECRET_KEY, algorithms=[_settings.JWT_ALGORITHM]
+    )
+    user_id = int(payload["sub"])
+
+    # Profile が作成されていることを確認
+    from app.crud.profile import get_profile_by_user_id
+
+    profile = get_profile_by_user_id(db, user_id)
+    assert profile is not None
+    assert profile.github_username == FAKE_GITHUB_USER["login"]
+
+
 def test_callback_new_user_username_collision(client, db):
     """GitHub のログイン名がすでに使われている場合は username に ID を付与。"""
     state = _valid_state()
@@ -200,6 +231,50 @@ def test_callback_existing_user_updates_token(client):
 
     assert res2.status_code == 302
     assert "access_token" in res2.cookies
+
+
+def test_callback_existing_user_without_profile_creates_profile(client, db):
+    """既存ユーザーで Profile が欠損している場合、GitHub OAuth ログイン時に
+    Profile を自動作成する（移行ケース対応: Issue #71）。"""
+    # 既存ユーザーを Profile なしで準備（移行前データを模倣）
+    from app.crud.user import create_user as db_create_user
+    from app.crud.oauth_account import create_oauth_account
+    from app.schemas.user import UserCreate
+    from app.schemas.oauth_account import OAuthAccountCreate
+
+    existing_user = db_create_user(
+        db, UserCreate(username="legacy_user", password=None)
+    )
+    # OAuthAccount は存在するが Profile は存在しない状態
+    create_oauth_account(
+        db,
+        OAuthAccountCreate(
+            user_id=existing_user.id,
+            provider="github",
+            provider_user_id=str(FAKE_GITHUB_USER["id"]),
+            access_token="old_token",
+        ),
+    )
+    db.commit()
+
+    # Profile が存在しないことを確認
+    from app.crud.profile import get_profile_by_user_id
+
+    assert get_profile_by_user_id(db, existing_user.id) is None
+
+    # OAuth callback でログイン
+    state = _valid_state()
+    client.cookies.set("oauth_state", state)
+    mock_client = _mock_httpx_client()
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
+        res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    assert res.status_code == 302
+
+    # Profile が自動作成されたことを確認
+    profile = get_profile_by_user_id(db, existing_user.id)
+    assert profile is not None
+    assert profile.github_username == FAKE_GITHUB_USER["login"]
 
 
 # ---------------------------------------------------------------------------

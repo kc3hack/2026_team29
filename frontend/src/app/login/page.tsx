@@ -39,26 +39,23 @@ export default function LoginPage() {
     window.location.href = `${apiBaseUrl}/api/v1/auth/github/login`;
   };
 
-  // テストユーザー情報
-  const testUsers = [
-    { username: "test_beginner", info: "初心者 (rank=2, GitHub: beginner123)" },
-    {
-      username: "test_intermediate",
-      info: "中級者 (rank=5, GitHub: Inlet-back)",
-    },
-    { username: "test_advanced", info: "上級者 (rank=8, GitHub: torvalds)" },
-  ];
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#97C88C] p-4">
-      <div className="w-full max-w-md rounded-lg border-4 border-[#2C5F2D] bg-[#F5F5DC] p-8 shadow-[8px_8px_0_0_#2C5F2D]">
-        <h1 className="mb-6 text-center font-mono text-3xl font-bold tracking-widest text-[#2C5F2D]">
-          ログイン
-        </h1>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#97C88C] via-[#A8D5A1] to-[#8BC880] p-4">
+      <div className="w-full max-w-md rounded-lg border-4 border-[#2C5F2D] bg-[#F5F5DC] p-8 shadow-[8px_8px_0_0_#2C5F2D] animate-[slideUp_0.3s_ease-out]">
+        {/* Header with Icon */}
+        <div className="mb-6 text-center">
+          <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#2C5F2D] text-3xl shadow-[4px_4px_0_0_#1F4521]">
+            🌳
+          </div>
+          <h1 className="font-mono text-3xl font-bold tracking-widest text-[#2C5F2D]">
+            SKILL TREE
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">あなたの成長を可視化する</p>
+        </div>
 
         {error && (
-          <div className="mb-4 rounded border-2 border-red-600 bg-red-100 p-3 text-sm text-red-800">
-            {error}
+          <div className="mb-4 rounded border-2 border-red-600 bg-red-100 p-3 text-sm text-red-800 shadow-[2px_2px_0_0_rgba(220,38,38,0.3)] animate-[shake_0.3s]">
+            ⚠️ {error}
           </div>
         )}
 
@@ -67,12 +64,18 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleGitHubLogin}
-            className="w-full rounded border-2 border-[#2C5F2D] bg-[#2C5F2D] p-4 font-mono font-bold tracking-widest text-white transition-colors hover:bg-[#1F4521]"
+            disabled={loading}
+            className="group relative w-full overflow-hidden rounded border-2 border-[#2C5F2D] bg-[#2C5F2D] p-4 font-mono font-bold tracking-widest text-white shadow-[4px_4px_0_0_#1F4521] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1F4521] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🚀 GitHub でログイン（推奨）
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              🚀 GitHub でログイン（推奨）
+            </span>
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
           </button>
-          <p className="mt-2 text-center text-xs text-gray-600">
-            あなたのGitHubリポジトリを分析してスキルツリーを自動生成
+          <p className="mt-3 text-center text-xs text-gray-600 leading-relaxed">
+            💡 GitHubリポジトリを分析して
+            <br />
+            パーソナライズされたスキルツリーを自動生成
           </p>
         </div>
 
@@ -128,13 +131,18 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded border-2 border-[#2C5F2D] bg-white p-3 font-mono font-bold tracking-widest text-[#2C5F2D] transition-colors hover:bg-gray-100 disabled:opacity-50"
+            className="w-full rounded border-2 border-[#2C5F2D] bg-white p-3 font-mono font-bold tracking-widest text-[#2C5F2D] shadow-[2px_2px_0_0_#2C5F2D] transition-all hover:translate-x-px hover:translate-y-px hover:shadow-[1px_1px_0_0_#2C5F2D] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading
-              ? "処理中..."
-              : isRegister
-                ? "登録してログイン"
-                : "ID/パスワードでログイン"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#2C5F2D] border-t-transparent" />
+                処理中...
+              </span>
+            ) : isRegister ? (
+              "登録してログイン"
+            ) : (
+              "ID/パスワードでログイン"
+            )}
           </button>
         </form>
 
@@ -142,33 +150,40 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setIsRegister(!isRegister)}
-            className="font-mono text-sm text-[#2C5F2D] underline hover:text-[#1F4521]"
+            className="font-mono text-sm text-[#2C5F2D] underline hover:text-[#1F4521] transition-colors"
           >
             {isRegister
               ? "既にアカウントをお持ちの方はこちら"
               : "新規登録はこちら"}
           </button>
         </div>
-
-        {/* テストユーザー情報 */}
-        <div className="mt-8 rounded border-2 border-[#2C5F2D] bg-white p-4">
-          <h2 className="mb-2 font-mono text-sm font-bold text-[#2C5F2D]">
-            テストユーザー（パスワード: testpass123）
-          </h2>
-          <ul className="space-y-1 text-xs">
-            {testUsers.map((user) => (
-              <li key={user.username} className="font-mono text-gray-700">
-                <span className="font-bold">{user.username}</span>
-                <br />
-                <span className="text-gray-600">{user.info}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs text-gray-500">
-            ※ テストユーザーは手動設定されたGitHubユーザー名を使用
-          </p>
-        </div>
       </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          25% {
+            transform: translateX(-5px);
+          }
+          75% {
+            transform: translateX(5px);
+          }
+        }
+      `}</style>
     </div>
   );
 }
