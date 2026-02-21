@@ -75,17 +75,31 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 参考:{baseline_json}
 
-要件:
-1. 15-20ノード(基礎8-10 + 応用7-10)
+## CRITICAL: スキルツリー構造の制約（必ず守ること）
+
+**【基礎層】prerequisites:[] のノードは正確に2個または3個**
+- 絶対にこれより多く作成してはいけません
+- カテゴリの最も基礎的な2-3個のみ
+- 例: Web → HTML/CSS + HTTP の2個
+- 例: AI → Python + 数学 の2個
+
+**【中級層】prerequisites:[1個] のノードは5-7個**
+- 基礎スキル1つに依存するスキル
+
+**【応用層】prerequisites:[1-2個] のノードは8-10個**
+- 中級スキルを組み合わせた高度なスキル
+
+## 出力ルール:
+1. 合計15-20ノード (基礎2-3 + 中級5-7 + 応用8-10)
 2. completed:trueは習得済みのみ
-3. prerequisitesを正確に
+3. prerequisitesを正確に設定
 
 ## 出力形式
 ```json
 {{"nodes":[{{"id":"skill-id","name":"名前","completed":true/false,"description":"説明","prerequisites":[],"estimated_hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":20,"completed_nodes":5,"progress_percentage":25.0,"next_recommended":["x","y","z"]}}}}
 ```
 
-**JSON形式のみ出力**してください（説明不要）。"""
+**重要: 基礎(prerequisites:[])は2-3個のみ。中級5-7個、応用8-10個で三角形を形成**。JSON形式のみ出力してください（説明不要）。"""
 
 
 SKILL_TREE_TEMPLATE = ChatPromptTemplate.from_messages(

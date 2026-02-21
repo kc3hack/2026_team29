@@ -14,6 +14,9 @@ export function convertApiNodesToCanvasNodes(
   apiNodes: ApiSkillNode[],
   category: string = "web",
 ): SkillNode[] {
+  console.log("🟦 convertApiNodesToCanvasNodes 開始");
+  console.log("  Input nodes:", apiNodes.length);
+
   if (!apiNodes || apiNodes.length === 0) {
     return [];
   }
@@ -59,40 +62,9 @@ export function convertApiNodesToCanvasNodes(
   // 全ノードの基本tierを計算
   apiNodes.forEach((node) => calculateBaseTier(node.id));
 
-  // バランス調整: 同じtierに集中しすぎる場合は再分配
-  const tierCounts = new Map<number, number>();
-  tierMap.forEach((tier) => {
-    tierCounts.set(tier, (tierCounts.get(tier) || 0) + 1);
-  });
-
-  const maxTier = Math.max(...Array.from(tierMap.values()));
-  const avgNodesPerTier = Math.ceil(apiNodes.length / (maxTier + 1));
-
-  // あるtierに集中しすぎている場合（avg * 2以上）、次のtierに押し出す
-  const rebalancedTierMap = new Map<string, number>();
-  const tierNodeIds = new Map<number, string[]>();
-  tierMap.forEach((tier, nodeId) => {
-    if (!tierNodeIds.has(tier)) tierNodeIds.set(tier, []);
-    tierNodeIds.get(tier)!.push(nodeId);
-  });
-
-  tierNodeIds.forEach((nodeIds, tier) => {
-    if (nodeIds.length > avgNodesPerTier * 1.5) {
-      // 後半を次のtierに移動
-      const splitIndex = Math.ceil(nodeIds.length / 2);
-      nodeIds
-        .slice(0, splitIndex)
-        .forEach((id) => rebalancedTierMap.set(id, tier));
-      nodeIds
-        .slice(splitIndex)
-        .forEach((id) => rebalancedTierMap.set(id, tier + 1));
-    } else {
-      nodeIds.forEach((id) => rebalancedTierMap.set(id, tier));
-    }
-  });
-
-  // 再バランス後のtierMapを適用
-  rebalancedTierMap.forEach((tier, nodeId) => tierMap.set(nodeId, tier));
+  // Note: バランス調整は削除（依存関係ベースのtierで十分）
+  // プロンプト側で基礎2-3個、中級5-7個、応用8-10個と自然な分散を指定しているため、
+  // 再バランス処理は不要かつレイアウトのチラつきの原因となる
 
   // Step 2: tierごとにノードをグループ化
   const nodesByTier = new Map<number, ApiSkillNode[]>();
@@ -180,6 +152,18 @@ export function convertApiNodesToCanvasNodes(
   //   );
   //   console.log(`   Children: [${node.children.join(", ")}]`);
   // });
+
+  const tierDistribution = Array.from(new Set(canvasNodes.map((n) => n.tier)))
+    .sort((a, b) => a - b)
+    .map(
+      (tier) =>
+        `Tier${tier}:${canvasNodes.filter((n) => n.tier === tier).length}`,
+    )
+    .join(", ");
+
+  console.log("🟦 convertApiNodesToCanvasNodes 完了");
+  console.log("  Output nodes:", canvasNodes.length);
+  console.log("  Tier distribution:", tierDistribution);
 
   return canvasNodes;
 }

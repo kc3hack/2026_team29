@@ -235,7 +235,7 @@ async def stream_skill_tree(
             metadata = {}
 
             try:
-                async for chunk in stream_llm(prompt, temperature=0.1):
+                async for chunk in stream_llm(prompt, temperature=0.2):
                     buffer += chunk
 
                     # 改行ごとにJSON Lines をパース
@@ -288,7 +288,28 @@ async def stream_skill_tree(
 
                 # 完了通知 + DBキャッシュ保存
                 tree_data = {"nodes": nodes, "edges": edges, "metadata": metadata}
-                update_skill_tree(db, current_user.id, category_enum, tree_data)
+
+                # 既存のスキルツリーを取得、なければ新規作成
+                from app.crud.skill_tree import get_skill_tree_by_user_category
+                from app.models.skill_tree import SkillTree as SkillTreeModel
+
+                existing_tree = get_skill_tree_by_user_category(
+                    db, current_user.id, category_enum
+                )
+                if existing_tree:
+                    # 既存レコードを更新
+                    update_skill_tree(db, current_user.id, category_enum, tree_data)
+                else:
+                    # 新規作成
+                    new_tree = SkillTreeModel(
+                        user_id=current_user.id,
+                        category=category_enum.value,
+                        tree_data=tree_data,
+                        generated_at=datetime.now(timezone.utc),
+                    )
+                    db.add(new_tree)
+                    db.commit()
+                    db.refresh(new_tree)
 
                 yield f'data: {{"type":"done","total_nodes":{len(nodes)}}}\n\n'
 

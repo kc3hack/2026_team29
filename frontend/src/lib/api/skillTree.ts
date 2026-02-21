@@ -330,12 +330,6 @@ export function streamSkillTreeBuffered(
           estimated_hours: data.estimated_hours || 0,
         };
         nodeBuffer.push(node);
-
-        // 進捗通知（受信中）
-        if (metadata && metadata.total_nodes > 0) {
-          const progress = (nodeBuffer.length / metadata.total_nodes) * 50; // 50%まで（受信フェーズ）
-          onProgress(Math.min(progress, 50));
-        }
       } else if (data.type === "metadata") {
         // メタデータ保存
         metadata = {
@@ -349,18 +343,14 @@ export function streamSkillTreeBuffered(
         eventSource.close();
 
         // 受信完了 → ソート実行
-        onProgress(50);
         const sortedNodes = sortNodesByDependencies(nodeBuffer);
-        onProgress(60);
 
-        // ソート済みノードを順次送信
+        // ソート済みノードを順次コールバック（表示判断はフロントエンド側）
         sortedNodes.forEach((node, index) => {
-          const progress = 60 + ((index + 1) / sortedNodes.length) * 40; // 60-100%（送信フェーズ）
-          onProgress(Math.min(progress, 100));
           onSortedNode(node, index, sortedNodes.length);
         });
 
-        onProgress(100);
+        // 完了通知
         onComplete();
       } else if (data.type === "error") {
         eventSource.close();

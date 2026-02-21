@@ -126,8 +126,8 @@ async def generate_skill_tree_ai(
     # Step 5: LLM呼び出し
     try:
         response_text = await invoke_llm(
-            prompt=prompt, temperature=0.1
-        )  # 0.1で決定論的＆高速化
+            prompt=prompt, temperature=0.2
+        )  # 0.2で高速＆プロンプト指示に従いやすく
         logger.debug(f"LLM Response: {response_text}")
     except Exception as e:
         logger.error(f"LLM invocation failed: {e}")
@@ -261,10 +261,11 @@ def _load_baseline_json(category: SkillCategory) -> dict[str, Any]:
 
 def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
     """
-    Few-shot promptingのため、ベースラインから重要ノード2個のみを抽出
+    Few-shot promptingのため、ベースラインから重要ノード3個を抽出
 
-    トークン数削減により生成時間を大幅短縮:
-    - 全ノード（20-30個）→ サンプル2個
+    トークン数削減しつつ、階層構造を明確に示す:
+    - 全ノード（20-30個）→ サンプル3個（基礎・中級・応用）
+    - prerequisitesを保持して依存関係の構造を示す
     - エッジは削除（構造例のみ示せば十分）
 
     Args:
@@ -277,11 +278,13 @@ def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
     if not nodes:
         return "[]"
 
-    # 重要ノードを2個のみ抽出（初級・上級から1個ずつ）
+    # 重要ノードを3個抽出（基礎・中級・応用）
     sample_nodes = []
-    if len(nodes) > 0:
-        # 初級ノード（最初）
-        node = nodes[0]
+
+    # 基礎ノード: prerequisites が空のものから選択
+    basic_nodes = [n for n in nodes if not n.get("prerequisites", [])]
+    if basic_nodes:
+        node = basic_nodes[0]
         sample_nodes.append(
             {
                 "id": node.get("id"),
@@ -291,15 +294,31 @@ def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
                 "estimated_hours": node.get("estimated_hours", 0),
             }
         )
-    if len(nodes) > len(nodes) // 2:
-        # 中級ノード（中間）
-        node = nodes[len(nodes) // 2]
+
+    # 中級ノード: prerequisites が1個のものから選択
+    intermediate_nodes = [n for n in nodes if len(n.get("prerequisites", [])) == 1]
+    if intermediate_nodes:
+        node = intermediate_nodes[0]
         sample_nodes.append(
             {
                 "id": node.get("id"),
                 "name": node.get("name"),
                 "description": node.get("description", "")[:40] + "...",
-                "prerequisites": node.get("prerequisites", [])[:1],  # 1個のみ
+                "prerequisites": node.get("prerequisites", []),
+                "estimated_hours": node.get("estimated_hours", 0),
+            }
+        )
+
+    # 応用ノード: prerequisites が2個以上のものから選択
+    advanced_nodes = [n for n in nodes if len(n.get("prerequisites", [])) >= 2]
+    if advanced_nodes:
+        node = advanced_nodes[0]
+        sample_nodes.append(
+            {
+                "id": node.get("id"),
+                "name": node.get("name"),
+                "description": node.get("description", "")[:40] + "...",
+                "prerequisites": node.get("prerequisites", [])[:2],  # 最大2個まで
                 "estimated_hours": node.get("estimated_hours", 0),
             }
         )
