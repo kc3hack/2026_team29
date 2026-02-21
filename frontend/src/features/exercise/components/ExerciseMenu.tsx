@@ -23,12 +23,24 @@ export function ExerciseMenu() {
   const exercises = [
     { title: "Web", image: "/images/exercises/Web.png", slug: "web" },
     { title: "Mobile", image: "/images/exercises/Mobile.png", slug: "mobile" },
-    { title: "Network", image: "/images/exercises/Network.png", slug: "network" },
+    {
+      title: "Network",
+      image: "/images/exercises/Network.png",
+      slug: "network",
+    },
     { title: "Game", image: "/images/exercises/Game.png", slug: "game" },
     { title: "Design", image: "/images/exercises/Design.png", slug: "design" },
-    { title: "Infrastructure", image: "/images/exercises/Infrastructure.png", slug: "infrastructure" },
+    {
+      title: "Infrastructure",
+      image: "/images/exercises/Infrastructure.png",
+      slug: "infrastructure",
+    },
     { title: "AI", image: "/images/exercises/ai.png", slug: "ai" },
-    { title: "Security", image: "/images/exercises/Security.png", slug: "security" },
+    {
+      title: "Security",
+      image: "/images/exercises/Security.png",
+      slug: "security",
+    },
     { title: "Coming Soon...", image: null, slug: null },
   ];
 
