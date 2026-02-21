@@ -2,19 +2,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface RankAnalysisRequest {
   github_username: string;
-  repository_count: number;
-  total_commits: number;
-  primary_languages: string[];
-  years_of_experience: number;
+  portfolio_text?: string;
+  qiita_id?: string;
+  other_info?: string;
 }
 
 export interface RankAnalysisResponse {
-  user_id: number;
+  percentile: number;
   rank: number;
-  rank_label: string;
+  rank_name: string;
   reasoning: string;
-  recommended_learning_paths: string[];
-  analyzed_at: string;
 }
 
 export async function analyzeRank(

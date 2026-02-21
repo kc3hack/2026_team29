@@ -16,10 +16,9 @@ export function useRankAnalysis(githubUsername?: string) {
       try {
         const mockData = {
           github_username: githubUsername,
-          repository_count: 15,
-          total_commits: 350,
-          primary_languages: ["TypeScript", "Python"],
-          years_of_experience: 2,
+          portfolio_text: "個人サイト: https://example.com",
+          qiita_id: "",
+          other_info: "エンジニアコミュニティ活動",
         };
 
         const result = await analyzeRank(mockData);
@@ -27,12 +26,10 @@ export function useRankAnalysis(githubUsername?: string) {
       } catch (err) {
         setError(err as Error);
         setRank({
-          user_id: 1,
+          percentile: 0,
           rank: 0,
-          rank_label: "初心者",
+          rank_name: "種子",
           reasoning: "ランク判定に失敗しました",
-          recommended_learning_paths: [],
-          analyzed_at: new Date().toISOString(),
         });
       } finally {
         setLoading(false);
