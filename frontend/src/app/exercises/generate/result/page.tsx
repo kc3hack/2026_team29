@@ -15,16 +15,24 @@ function ExerciseGenerateResultPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("questGenerationResult");
-    if (!raw) {
-      setError("生成結果が見つかりません。演習生成ページからやり直してください。");
-      return;
-    }
-    try {
-      setQuest(JSON.parse(raw) as QuestGenerationResponse);
-    } catch {
-      setError("データの読み込みに失敗しました。演習生成ページからやり直してください。");
-    }
+    const loadQuest = () => {
+      const raw = sessionStorage.getItem("questGenerationResult");
+      if (!raw) {
+        setError(
+          "生成結果が見つかりません。演習生成ページからやり直してください。",
+        );
+        return;
+      }
+      try {
+        setQuest(JSON.parse(raw) as QuestGenerationResponse);
+      } catch {
+        setError(
+          "データの読み込みに失敗しました。演習生成ページからやり直してください。",
+        );
+      }
+    };
+
+    loadQuest();
   }, []);
 
   // エラー状態
