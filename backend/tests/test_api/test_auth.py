@@ -7,7 +7,7 @@
 カバレッジ:
   GET /auth/github/login        → GitHub 認可ページへのリダイレクト
   GET /auth/github/callback     → 新規登録 / 既存ログイン / エラー系
-  GET /auth/logout              → Cookie クリア
+  POST /auth/logout             → Cookie クリア
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -217,7 +217,7 @@ def test_callback_github_token_exchange_fails(client):
 
 
 # ---------------------------------------------------------------------------
-# GET /auth/logout
+# POST /auth/logout
 # ---------------------------------------------------------------------------
 
 
@@ -230,7 +230,7 @@ def test_logout_clears_cookie(client):
     with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
         client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
 
-    res = client.get("/api/v1/auth/logout")
+    res = client.post("/api/v1/auth/logout")
     assert res.status_code == 200
     assert res.json() == {"message": "ログアウトしました"}
     # Cookie が削除されている（max-age=0 または空値）
@@ -241,7 +241,7 @@ def test_logout_clears_cookie(client):
 
 def test_logout_without_cookie_still_200(client):
     """Cookie なしでもログアウトは 200 を返す。"""
-    res = client.get("/api/v1/auth/logout")
+    res = client.post("/api/v1/auth/logout")
     assert res.status_code == 200
 
 

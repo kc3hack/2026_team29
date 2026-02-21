@@ -4,8 +4,8 @@
 認証統合方針は ADR 014 / ADR 015 参照。
 rank 管理方針は ADR 010 参照。
 
-/users/me   → 認証済みユーザー自身の操作 (ADR 015)
-/users/{id} → 管理者用として別 Issue で管理 API に移行予定（現在は未公開）
+/users/me  → 認証済みユーザー自身の操作のみ提供（ADR 015）
+/users/{id} 系の管理者向けエンドポイントは、別途管理 API モジュール／Issue で扱う。
 """
 
 from fastapi import APIRouter, Depends, HTTPException

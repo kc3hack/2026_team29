@@ -4,7 +4,7 @@
   GET /auth/github/login      → GitHub 認可ページへリダイレクト
   GET /auth/github/callback   → code 交換 → User 作成/取得
                                 → JWT を httpOnly Cookie にセット → フロントへリダイレクト
-  GET /auth/logout             → Cookie をクリアして返す
+  POST /auth/logout            → Cookie をクリアして返す
 
 セッション管理方針 (ADR 014 更新):
   JWT (HS256, 有効期限 24h) を httpOnly; Secure; SameSite=Lax Cookie で発行する。
@@ -104,7 +104,7 @@ def _sign_state(raw_state: str) -> str:
 
 
 def _verify_state(signed_state: str) -> bool:
-    """state の HMAC 署名を検証する（現在 ± 先の10分ウィンドウを許容）。"""
+    """state の HMAC 署名を検証する（現在および直前の10分ウィンドウを許容）。"""
     if not settings.JWT_SECRET_KEY:
         return False
     try:
@@ -140,6 +140,15 @@ def github_login() -> RedirectResponse:
     if not settings.GITHUB_CLIENT_ID:
         raise HTTPException(
             status_code=503, detail="GitHub OAuth は設定されていません (GITHUB_CLIENT_ID)"
+        )
+    # JWT 署名用設定が未整備の場合は HMAC を安全に生成できないため早期に失敗させる
+    if not getattr(settings, "JWT_SECRET_KEY", None) or not settings.JWT_SECRET_KEY.strip():
+        raise HTTPException(
+            status_code=503, detail="JWT 設定が正しくありません (JWT_SECRET_KEY)"
+        )
+    if not getattr(settings, "JWT_ALGORITHM", None):
+        raise HTTPException(
+            status_code=503, detail="JWT 設定が正しくありません (JWT_ALGORITHM)"
         )
     state = _sign_state(secrets.token_urlsafe(24))
     # scope=read:user のみ要求（最小権限の原則）
@@ -192,13 +201,26 @@ async def github_callback(
         raise HTTPException(status_code=400, detail="Invalid or expired state parameter")
 
     # --- 2. GitHub アクセストークン取得 ---
+    # 環境変数未設定時は外部 API を呼ばずに早期に 503 を返す（運用上の切り分け用）
+    github_client_id = settings.GITHUB_CLIENT_ID
+    github_client_secret = settings.GITHUB_CLIENT_SECRET
+    if (
+        not github_client_id
+        or not str(github_client_id).strip()
+        or not github_client_secret
+        or not str(github_client_secret).strip()
+    ):
+        raise HTTPException(
+            status_code=503,
+            detail="GitHub OAuth は設定されていません (GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET)",
+        )
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             token_resp = await client.post(
                 GITHUB_TOKEN_URL,
                 json={
-                    "client_id": settings.GITHUB_CLIENT_ID,
-                    "client_secret": settings.GITHUB_CLIENT_SECRET,
+                    "client_id": github_client_id,
+                    "client_secret": github_client_secret,
                     "code": code,
                 },
                 headers={"Accept": "application/json"},
@@ -300,7 +322,7 @@ async def github_callback(
     return redirect
 
 
-@router.get("/logout", summary="ログアウト（Cookie クリア）")
+@router.post("/logout", summary="ログアウト（Cookie クリア）")
 def logout(response: Response) -> dict:
     """httpOnly Cookie を削除してログアウトする。
 
@@ -363,7 +385,7 @@ def login_by_username(
     """username + password で既存アカウントを認証し JWT Cookie を返す。
 
     - username が存在しない場合は 401（ユーザー列挙防止のため「存在しない」とは返さない）。
-    - GitHub OAuth 経由で登録したユーザー（hashed_password=NULL）は 403。
+    - GitHub OAuth 経由で登録したユーザー（hashed_password=NULL）も 401（登録方法を含めたユーザー列挙防止のため）。
     """
     _INVALID = HTTPException(
         status_code=401,

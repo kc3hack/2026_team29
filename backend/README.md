@@ -64,11 +64,11 @@ open http://localhost:8000/api/v1/auth/github/login
 # → 認可後 /api/v1/auth/github/callback が呼ばれる
 # → JWT が httpOnly Cookie にセットされ http://localhost:3000 へリダイレクト
 
-# 2. 認証確認（Cookie が自動送信される）
-curl -b cookies.txt http://localhost:8000/api/v1/users/me | jq
+# 2. 認証確認（Cookie を保存しつつ送信）
+curl -b cookies.txt -c cookies.txt http://localhost:8000/api/v1/users/me | jq
 
-# 3. ログアウト
-curl -c cookies.txt http://localhost:8000/api/v1/auth/logout
+# 3. ログアウト（POST に変更、保存した Cookie を送信）
+curl -b cookies.txt -c cookies.txt -X POST http://localhost:8000/api/v1/auth/logout
 ```
 
 **テスト・API クライアントから呼ぶ場合（Bearer トークン）:**

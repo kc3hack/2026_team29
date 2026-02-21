@@ -1,7 +1,7 @@
 """User API エンドポイントテスト（Issue #51, #61）
 
-/users/me   系 → JWT Bearer ヘッダー必須（ADR 014 / ADR 015）
-/users/{id} 系 → 後方互換 Read-Only（認証不要）
+/users/me 系 → JWT Bearer ヘッダーまたは Cookie 必須（ADR 014 / ADR 015）
+/users/{id} 系管理者向けエンドポイントは別途管理 API で扱う。
 """
 
 import pytest

@@ -2,7 +2,7 @@
 
 ID入力ログイン (Spec 2.1) のためにパスワードカラムを追加する。
 - GitHub OAuth ユーザーは NULL のまま運用（nullable=True）。
-- ID入力で登録したユーザーのみ bcrypt ハッシュを格納する。
+- ID入力で登録したユーザーのみ PBKDF2-HMAC-SHA256 でハッシュ化したパスワードを格納する。
 
 Revision ID: 0003_add_hashed_password
 Revises: 0002_change_tree_data_to_jsonb
