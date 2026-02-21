@@ -59,10 +59,10 @@ export function AIGeneration() {
 
       {/* PDFアップロードエリア */}
       <div
-        className={`relative border-4 border-dashed rounded-lg p-12 text-center transition-all ${
+        className={`relative border-8 border-dashed p-12 text-center transition-all ${
           isDragging
-            ? "border-[#4ADE80] bg-[#4ADE80]/10 scale-105 shadow-lg"
-            : "border-[#14532D] bg-white hover:border-[#559C71] hover:shadow-md"
+            ? "border-[#4ADE80] bg-[#4ADE80]/20 scale-105 shadow-[12px_12px_0_rgba(0,0,0,0.4)]"
+            : "border-[#14532D] bg-white hover:border-[#4ADE80] shadow-[8px_8px_0_rgba(0,0,0,0.2)] hover:shadow-[10px_10px_0_rgba(0,0,0,0.25)]"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -99,7 +99,7 @@ export function AIGeneration() {
       </div>
 
       {/* URL入力 */}
-      <div className="bg-white border-4 border-[#14532D] rounded-lg p-4 shadow-md">
+      <div className="bg-white border-8 border-[#14532D] p-4 shadow-[4px_4px_0_rgba(0,0,0,0.15)]">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-2xl">🔗</span>
           <span className="font-bold text-[#14532D] text-lg">URLから生成</span>
@@ -119,7 +119,7 @@ export function AIGeneration() {
           />
           <button
             onClick={handleUrlSubmit}
-            className="px-8 py-3 bg-[#4ADE80] border-4 border-[#14532D] text-[#14532D] font-bold hover:bg-[#86EFAC] transition-all shadow-[4px_4px_0_black] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] flex items-center gap-2"
+            className="px-8 py-3 bg-[#4ADE80] border-4 border-[#14532D] text-[#14532D] font-bold hover:bg-[#86EFAC] transition-all shadow-[4px_4px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] flex items-center gap-2"
           >
             <span className="text-lg">生成</span>
             <span className="text-xl">🚀</span>
