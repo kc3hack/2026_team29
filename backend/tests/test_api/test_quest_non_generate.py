@@ -96,11 +96,12 @@ def test_list_quests_pagination(client, db):
 
 
 def test_list_quests_response_schema(client, db):
+    """GET /quests は QuestSummary を返す（description 除外）。"""
     _make_quest(db, title="Schema Check")
     data = client.get("/api/v1/quest").json()[0]
     assert "id" in data
     assert "title" in data
-    assert "description" in data
+    assert "description" not in data  # ADR 012: 一覧では description を返さない
     assert "difficulty" in data
     assert "category" in data
     assert "is_generated" in data

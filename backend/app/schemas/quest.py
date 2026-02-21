@@ -22,7 +22,26 @@ class QuestCreate(BaseModel):
         return v
 
 
+class QuestSummary(BaseModel):
+    """クエスト一覧用スキーマ（description 除外）。
+
+    一覧表示時にMarkdown本文全体を転送しないための軽量スキーマ。
+    演習内容は GET /quests/{quest_id} の Quest スキーマで取得する（ADR 012）。
+    """
+
+    id: int
+    title: str
+    difficulty: int
+    category: QuestCategory
+    is_generated: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Quest(BaseModel):
+    """クエスト詳細スキーマ（description 含む）。"""
+
     id: int
     title: str
     description: str
