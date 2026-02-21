@@ -7,12 +7,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { AIGeneration } from './AIGeneration';
 
 type TabType = 'regular' | 'book' | 'terminal';
 
 const TAB_ITEMS = [
   { id: 'regular' as TabType, label: '通常演習', icon: '🎓' },
-  { id: 'book' as TabType, label: '', icon: '📖' },
+  { id: 'book' as TabType, label: '問題生成', icon: '📖' },
   { id: 'terminal' as TabType, label: '', icon: '💻' }, // terminal icon approximation
 ];
 
@@ -55,14 +56,14 @@ export function ExerciseMenu() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`mr-1 flex items-center rounded-t-lg px-6 py-2 transition-colors ${
+              className={`mr-1 flex items-center rounded-t-lg px-6 py-2 transition-all ${
                 isActive
-                  ? 'bg-[#FDFEF0] text-[#559C71]' // Active styling (matches bg)
+                  ? 'bg-[#FDFEF0] text-[#559C71] shadow-[0_-4px_8px_rgba(0,0,0,0.1)]' // Active styling (matches bg)
                   : 'bg-[#6AB085] text-white hover:bg-[#7BC196]' // Inactive styling
               }`}
             >
               <span className="text-xl">{tab.icon}</span>
-              {tab.label && <span className="ml-2 font-bold">{tab.label}</span>}
+              {isActive && tab.label && <span className="ml-2 font-bold">{tab.label}</span>}
             </button>
           );
         })}
@@ -72,8 +73,9 @@ export function ExerciseMenu() {
 
       {/* Main Content Area */}
       <div className="flex-1 bg-[#FDFEF0] p-8">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-          {items.map((item) => (
+        {activeTab === 'regular' ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+            {items.map((item) => (
             <button
               key={item.id}
               onClick={() => handleCardClick(item.slug)}
@@ -104,8 +106,18 @@ export function ExerciseMenu() {
                   {item.title}
               </h3>
             </button>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : activeTab === 'book' ? (
+          <AIGeneration />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-[#14532D] mb-4">準備中...</p>
+              <p className="text-[#14532D]">このタブは現在開発中です</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
