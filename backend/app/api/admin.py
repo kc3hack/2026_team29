@@ -167,7 +167,7 @@ def _steps_to_markdown(result: dict) -> str:
 
     objectives: list[str] = result.get("learning_objectives", [])
     if objectives:
-        lines.append("## 学習目標\n")
+        lines.append("## 学習目標")
         for obj in objectives:
             lines.append(f"- {obj}")
         lines.append("")
@@ -175,7 +175,7 @@ def _steps_to_markdown(result: dict) -> str:
     for step in result.get("steps", []):
         step_num = step.get("step_number", 0)
         step_title = step.get("title", "Untitled")
-        lines.append(f"## Step {step_num}: {step_title}\n")
+        lines.append(f"## Step {step_num}: {step_title}")
         lines.append(step.get("description", ""))
         code: str = step.get("code_example", "")
         if code:
@@ -189,7 +189,7 @@ def _steps_to_markdown(result: dict) -> str:
 
     resources: list[str] = result.get("resources", [])
     if resources:
-        lines.append("## 参考リソース\n")
+        lines.append("## 参考リソース")
         for r in resources:
             lines.append(f"- {r}")
 
