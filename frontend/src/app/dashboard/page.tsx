@@ -1,10 +1,15 @@
+"use client";
+
 /**
  * Dashboard Page
- * ダッシュボード機能のメインページ
+ * ダッシュボード機能のメインページ（認証必須）
  */
 
-import { DashboardContainer } from '@/features/dashboard/components/DashboardContainer';
+import { withAuth } from "@/lib/auth/withAuth";
+import { DashboardContainer } from "@/features/dashboard/components/DashboardContainer";
 
-export default function DashboardPage() {
-  return <DashboardContainer userId="user-123" />;
+function DashboardPage() {
+  return <DashboardContainer />;
 }
+
+export default withAuth(DashboardPage);

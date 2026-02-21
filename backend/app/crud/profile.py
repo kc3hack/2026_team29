@@ -11,24 +11,35 @@ def get_profile_by_user_id(db: Session, user_id: int) -> Profile | None:
     return db.query(Profile).filter(Profile.user_id == user_id).first()
 
 
-def create_profile(db: Session, profile_in: ProfileCreate) -> Profile:
+def create_profile(
+    db: Session, profile_in: ProfileCreate, commit: bool = True
+) -> Profile:
     data = profile_in.model_dump()
     # HttpUrlをstrに変換
     if data.get("portfolio_url"):
         data["portfolio_url"] = str(data["portfolio_url"])
     db_profile = Profile(**data)
     db.add(db_profile)
-    try:
-        db.commit()
-    except IntegrityError as e:
-        db.rollback()
-        raise ValueError(
-            f"Profile for user_id={profile_in.user_id} already exists"
-        ) from e
-    except Exception:
-        db.rollback()
-        raise
-    db.refresh(db_profile)
+    if commit:
+        try:
+            db.commit()
+        except IntegrityError as e:
+            db.rollback()
+            raise ValueError(
+                f"Profile for user_id={profile_in.user_id} already exists"
+            ) from e
+        except Exception:
+            db.rollback()
+            raise
+        db.refresh(db_profile)
+    else:
+        try:
+            db.flush()
+        except IntegrityError as e:
+            db.rollback()
+            raise ValueError(
+                f"Profile for user_id={profile_in.user_id} already exists"
+            ) from e
     return db_profile
 
 

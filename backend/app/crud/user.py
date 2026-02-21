@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from app.core.password import hash_password
 from app.crud.skill_tree import initialize_skill_trees_for_user
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
@@ -13,17 +14,26 @@ def get_user_by_username(db: Session, username: str) -> User | None:
     return db.query(User).filter(User.username == username).first()
 
 
-def create_user(db: Session, user: UserCreate) -> User:
-    db_user = User(username=user.username)
+def create_user(db: Session, user: UserCreate, commit: bool = True) -> User:
+    """ユーザーを作成し、6カテゴリの SkillTree を初期化する。
+
+    commit=True (デフォルト): User + SkillTree を 1 回の commit で確定させる。
+    commit=False: flush のみ行い commit は呼び出し元に委ねる。
+    GitHub OAuth コールバックのように OAuthAccount 作成と同一トランザクションで
+    確定させたい場合に commit=False を使用する（ゾンビ User 防止）。
+    """
+    hashed = hash_password(user.password) if user.password else None
+    db_user = User(username=user.username, hashed_password=hashed)
     db.add(db_user)
     try:
         # user.id を確定させるが、まだトランザクションはコミットしない
         db.flush()
-        # ユーザー作成時に6カテゴリのSkillTreeを自動初期化
+        # ユーザー作成時に6カテゴリのSkillTreeを自動初期化（session.add のみ）
         initialize_skill_trees_for_user(db, db_user.id)
-        # ユーザーと SkillTree 初期化をまとめて 1 回の commit で確定させる
-        db.commit()
-        db.refresh(db_user)
+        if commit:
+            # User + SkillTree をまとめて 1 回の commit で確定させる
+            db.commit()
+            db.refresh(db_user)
     except Exception:
         db.rollback()
         raise

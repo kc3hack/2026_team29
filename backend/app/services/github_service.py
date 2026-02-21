@@ -53,10 +53,27 @@ async def analyze_github_profile(username: str | None) -> dict[str, Any]:
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = _get_github_headers()
+            is_authenticated = "Authorization" in headers
+
+            # 認証されている場合、認証ユーザー情報を取得
+            authenticated_username = None
+            if is_authenticated:
+                try:
+                    auth_user_response = await client.get(
+                        "https://api.github.com/user",
+                        headers=headers,
+                    )
+                    if auth_user_response.status_code == 200:
+                        authenticated_username = auth_user_response.json().get("login")
+                        logger.info(f"Authenticated as: {authenticated_username}")
+                except Exception as e:
+                    logger.warning(f"Failed to get authenticated user info: {e}")
+
             # ユーザー情報取得
             user_response = await client.get(
                 f"https://api.github.com/users/{username}",
-                headers=_get_github_headers(),
+                headers=headers,
             )
 
             if user_response.status_code == 404:
@@ -70,26 +87,57 @@ async def analyze_github_profile(username: str | None) -> dict[str, Any]:
             user_response.raise_for_status()
             user_data = user_response.json()
 
-            # リポジトリ一覧取得（最大100件）
-            repos_response = await client.get(
-                f"https://api.github.com/users/{username}/repos",
-                params={"sort": "updated", "per_page": 100},
-                headers=_get_github_headers(),
-            )
+            # リポジトリ一覧取得
+            # 認証ユーザーと一致する場合はプライベートリポジトリも取得
+            if (
+                is_authenticated
+                and authenticated_username
+                and authenticated_username.lower() == username.lower()
+            ):
+                logger.info(
+                    f"Fetching private repos for authenticated user: {username}"
+                )
+                repos_response = await client.get(
+                    "https://api.github.com/user/repos",
+                    params={
+                        "affiliation": "owner",
+                        "visibility": "all",
+                        "sort": "updated",
+                        "per_page": 100,
+                    },
+                    headers=headers,
+                )
+            else:
+                logger.info(f"Fetching public repos only for user: {username}")
+                repos_response = await client.get(
+                    f"https://api.github.com/users/{username}/repos",
+                    params={"sort": "updated", "per_page": 100},
+                    headers=headers,
+                )
+
             repos_response.raise_for_status()
             repos = repos_response.json()
 
+            logger.info(f"Fetched {len(repos)} repositories for {username}")
+
             # 言語分析
             languages = _analyze_languages(repos)
+            logger.info(f"Detected languages: {languages}")
 
             # 技術スタック検出
             tech_stack = await _detect_tech_stack(client, username, repos)
+            logger.info(f"Detected tech stack: {tech_stack}")
 
             # 最近の活動（簡易版）
             recent_activity = _analyze_recent_activity(user_data, repos)
 
             # スキル完了シグナル
-            completion_signals = _generate_completion_signals(languages, tech_stack)
+            completion_signals = _generate_completion_signals(
+                languages, tech_stack, repos
+            )
+            logger.info(
+                f"Generated {len(completion_signals)} completion signals: {list(completion_signals.keys())}"
+            )
 
             return {
                 "languages": languages,
@@ -160,33 +208,61 @@ async def _detect_tech_stack(
     """
     tech_stack = set()
 
-    # 主要リポジトリ（スター数順、最大10件）から検出
-    sorted_repos = sorted(
-        repos, key=lambda r: r.get("stargazers_count", 0), reverse=True
-    )[:10]
+    # 主要リポジトリ（更新日時順、最大20件）から検出
+    sorted_repos = sorted(repos, key=lambda r: r.get("updated_at", ""), reverse=True)[
+        :20
+    ]
 
     for repo in sorted_repos:
         repo_name = repo.get("name", "")
         description = repo.get("description", "") or ""
+        language = repo.get("language", "") or ""
 
-        # リポジトリ名・説明文から技術スタックを推定
+        # リポジトリ名・説明文・言語から技術スタックを推定
         tech_keywords = {
-            "FastAPI": ["fastapi"],
+            # Web Backend
+            "FastAPI": ["fastapi", "fast-api"],
             "Django": ["django"],
             "Flask": ["flask"],
+            "Express": ["express", "expressjs"],
+            "NestJS": ["nestjs"],
+            # Web Frontend
             "React": ["react", "reactjs"],
-            "Next.js": ["nextjs", "next.js"],
+            "Next.js": ["nextjs", "next.js", "next-js"],
             "Vue": ["vue", "vuejs"],
+            "Nuxt": ["nuxt", "nuxtjs"],
             "Angular": ["angular"],
-            "TypeScript": ["typescript", "ts"],
-            "Docker": ["docker", "dockerfile"],
+            "Svelte": ["svelte"],
+            # CSS/UI
+            "Tailwind": ["tailwind"],
+            "Bootstrap": ["bootstrap"],
+            "Material-UI": ["material-ui", "mui"],
+            # TypeScript
+            "TypeScript": ["typescript"],
+            # Infrastructure
+            "Docker": ["docker", "dockerfile", "container"],
             "Kubernetes": ["kubernetes", "k8s"],
+            "AWS": ["aws", "lambda", "ec2", "s3"],
+            "GCP": ["gcp", "google cloud"],
+            "Terraform": ["terraform"],
+            # Database
+            "PostgreSQL": ["postgres", "postgresql"],
+            "MySQL": ["mysql"],
+            "MongoDB": ["mongodb", "mongo"],
+            "Redis": ["redis"],
+            # AI/ML
             "TensorFlow": ["tensorflow"],
             "PyTorch": ["pytorch"],
             "Scikit-learn": ["scikit", "sklearn"],
+            "Keras": ["keras"],
+            "OpenAI": ["openai", "gpt"],
+            # Testing
+            "Jest": ["jest"],
+            "Pytest": ["pytest"],
+            "Vitest": ["vitest"],
         }
 
-        combined_text = f"{repo_name} {description}".lower()
+        combined_text = f"{repo_name} {description} {language}".lower()
 
         for tech, keywords in tech_keywords.items():
             if any(keyword in combined_text for keyword in keywords):
@@ -235,7 +311,7 @@ def _analyze_recent_activity(
 
 
 def _generate_completion_signals(
-    languages: list[str], tech_stack: list[str]
+    languages: list[str], tech_stack: list[str], repos: list[dict[str, Any]]
 ) -> dict[str, bool]:
     """
     習得済みスキルのシグナルを生成
@@ -243,25 +319,30 @@ def _generate_completion_signals(
     Args:
         languages: 使用言語リスト
         tech_stack: 技術スタックリスト
+        repos: リポジトリリスト
 
     Returns:
         スキルID: 完了フラグのマッピング
     """
     signals = {}
 
-    # 言語ベースのシグナル
+    # 言語ベースのシグナル（大幅に拡張）
     language_mapping = {
-        "HTML": ["web_html_css"],
-        "CSS": ["web_html_css"],
-        "JavaScript": ["web_js_basics"],
-        "TypeScript": ["web_typescript"],
-        "Python": ["ai_python_basics", "infrastructure_linux_basics"],
-        "Java": ["infrastructure_container"],
-        "Go": ["infrastructure_container"],
-        "Rust": ["infrastructure_container"],
-        "C": ["game_math"],
-        "C++": ["game_math", "game_engine"],
-        "C#": ["game_engine"],
+        "HTML": ["web_html_css", "web_a11y_basics"],
+        "CSS": ["web_html_css", "web_css_fw"],
+        "JavaScript": ["web_js_basics", "web_js_advanced"],
+        "TypeScript": ["web_typescript", "web_js_advanced"],
+        "Python": ["ai_python_basics", "ai_data_processing", "infra_shell_scripting"],
+        "Java": ["infra_virt_basics"],
+        "Go": ["infra_docker", "infra_kubernetes"],
+        "Rust": ["infra_linux_admin"],
+        "C": ["game_math_basics", "game_physics_basics"],
+        "C++": ["game_math_basics", "game_engine_basics"],
+        "C#": ["game_engine_basics", "game_scripting"],
+        "Ruby": ["web_backend_api"],
+        "PHP": ["web_backend_api"],
+        "Shell": ["infra_shell_scripting", "infra_linux_admin"],
+        "Dockerfile": ["infra_docker"],
     }
 
     for lang in languages:
@@ -269,25 +350,116 @@ def _generate_completion_signals(
             for skill_id in language_mapping[lang]:
                 signals[skill_id] = True
 
-    # 技術スタックベースのシグナル
+    # 技術スタックベースのシグナル（大幅に拡張）
     tech_mapping = {
-        "React": ["web_react"],
-        "Next.js": ["web_nextjs"],
-        "Vue": ["web_vue"],
-        "Angular": ["web_angular"],
-        "FastAPI": ["web_api_design"],
-        "Django": ["web_api_design"],
-        "Flask": ["web_api_design"],
-        "Docker": ["infrastructure_docker"],
-        "Kubernetes": ["infrastructure_kubernetes"],
-        "TensorFlow": ["ai_deep_learning"],
-        "PyTorch": ["ai_deep_learning"],
-        "Scikit-learn": ["ai_ml"],
+        # Web Frontend
+        "React": ["web_spa_fw", "web_js_advanced"],
+        "Next.js": ["web_ssr_ssg", "web_spa_fw", "web_build_tools"],
+        "Vue": ["web_spa_fw"],
+        "Nuxt": ["web_ssr_ssg", "web_spa_fw"],
+        "Angular": ["web_spa_fw"],
+        "Svelte": ["web_spa_fw"],
+        # Web Backend
+        "FastAPI": ["web_backend_api", "web_http_basics"],
+        "Django": ["web_backend_api", "web_db_orm"],
+        "Flask": ["web_backend_api"],
+        "Express": ["web_backend_api"],
+        "NestJS": ["web_backend_api"],
+        # CSS/UI
+        "Tailwind": ["web_css_fw"],
+        "Bootstrap": ["web_css_fw"],
+        "Material-UI": ["web_css_fw"],
+        # Infrastructure
+        "Docker": ["infra_docker", "infra_virt_basics"],
+        "Kubernetes": ["infra_kubernetes", "infra_docker"],
+        "AWS": ["infra_cloud", "infra_cicd"],
+        "GCP": ["infra_cloud"],
+        "Terraform": ["infra_iac", "infra_cloud"],
+        # Database
+        "PostgreSQL": ["web_db_orm"],
+        "MySQL": ["web_db_orm"],
+        "MongoDB": ["web_db_orm"],
+        "Redis": ["web_cache"],
+        # AI/ML
+        "TensorFlow": ["ai_deep_learning", "ai_ml_basics"],
+        "PyTorch": ["ai_deep_learning", "ai_ml_basics"],
+        "Scikit-learn": ["ai_ml_basics", "ai_statistics"],
+        "Keras": ["ai_deep_learning"],
+        "OpenAI": ["ai_llm", "ai_ml_basics"],
+        # Testing
+        "Jest": ["web_testing"],
+        "Pytest": ["ai_python_basics"],
+        "Vitest": ["web_testing"],
     }
 
     for tech in tech_stack:
         if tech in tech_mapping:
             for skill_id in tech_mapping[tech]:
                 signals[skill_id] = True
+
+    # リポジトリ名・説明からセキュリティ関連を検出
+    security_keywords = [
+        "security",
+        "vulnerability",
+        "pentest",
+        "penetration",
+        "ctf",
+        "exploit",
+        "hacking",
+        "cryptography",
+        "crypto",
+        "ssl",
+        "tls",
+        "authentication",
+        "authorization",
+        "oauth",
+        "jwt",
+        "xss",
+        "csrf",
+        "sql injection",
+        "injection",
+        "firewall",
+        "ids",
+        "ips",
+        "siem",
+        "malware",
+        "reverse",
+        "forensics",
+        "audit",
+        "compliance",
+    ]
+
+    has_security_work = False
+    for repo in repos:
+        repo_name = repo.get("name", "").lower()
+        description = (repo.get("description") or "").lower()
+        combined = f"{repo_name} {description}"
+
+        if any(keyword in combined for keyword in security_keywords):
+            has_security_work = True
+            break
+
+    if has_security_work:
+        signals["sec_net_os_basics"] = True
+        signals["sec_web_vuln_basics"] = True
+        logger.info("Security-related work detected in repositories")
+
+    # HTTPサーバー・API開発の形跡があればHTTP基礎はクリア
+    if any(tech in tech_stack for tech in ["FastAPI", "Django", "Flask"]):
+        signals["web_http_basics"] = True
+
+    # フロントエンド + バックエンドの両方があれば全体的な理解があると判断
+    has_frontend = any(
+        tech in tech_stack for tech in ["React", "Next.js", "Vue", "Angular"]
+    )
+    has_backend = any(tech in tech_stack for tech in ["FastAPI", "Django", "Flask"])
+
+    if has_frontend and has_backend:
+        signals["web_build_tools"] = True
+
+    # Dockerがあればインフラ基礎もクリア
+    if "Docker" in tech_stack:
+        signals["infra_linux_admin"] = True
+        signals["infra_net_routing"] = True
 
     return signals

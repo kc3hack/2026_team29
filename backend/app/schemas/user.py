@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class UserBase(BaseModel):
@@ -8,7 +8,17 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    pass
+    password: str | None = None  # ID入力ログイン用。GitHub OAuth経由の作成時はNone
+
+    @field_validator("password")
+    @classmethod
+    def password_must_not_be_empty(cls, v: str | None) -> str | None:
+        if v is not None:
+            if not v.strip():
+                raise ValueError("password must not be empty string")
+            if len(v) > 128:
+                raise ValueError("password must be at most 128 characters")
+        return v
 
 
 class UserUpdate(BaseModel):

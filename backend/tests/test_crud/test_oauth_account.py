@@ -5,6 +5,7 @@ import pytest
 from app.core.encryption import decrypt_token
 from app.crud.oauth_account import (
     create_oauth_account,
+    get_by_provider_user_id,
     get_oauth_account_by_user_provider,
     update_oauth_tokens,
 )
@@ -169,6 +170,54 @@ def test_get_oauth_account_wrong_provider(db):
     )
 
     result = get_oauth_account_by_user_provider(db, user.id, "google")
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# get_by_provider_user_id (W-3: GitHub OAuthコールバックでの既存ユーザー照合の核心関数)
+# ---------------------------------------------------------------------------
+
+
+def test_get_by_provider_user_id_found(db):
+    """プロバイダー + provider_user_id で正しく OAuthAccount を取得できる"""
+    user = create_user(db, UserCreate(username="oauth_gbupi_user"))
+    create_oauth_account(
+        db,
+        OAuthAccountCreate(
+            user_id=user.id,
+            provider="github",
+            provider_user_id="gh_12345",
+            access_token="ghp_token",
+        ),
+    )
+
+    found = get_by_provider_user_id(db, "github", "gh_12345")
+    assert found is not None
+    assert found.provider_user_id == "gh_12345"
+    assert found.user_id == user.id
+
+
+def test_get_by_provider_user_id_not_found(db):
+    """存在しない provider_user_id は None を返す"""
+    result = get_by_provider_user_id(db, "github", "nonexistent_id")
+    assert result is None
+
+
+def test_get_by_provider_user_id_provider_mismatch(db):
+    """同じ provider_user_id でも provider が異なる場合は None を返す"""
+    user = create_user(db, UserCreate(username="oauth_provider_mismatch_user"))
+    create_oauth_account(
+        db,
+        OAuthAccountCreate(
+            user_id=user.id,
+            provider="github",
+            provider_user_id="pm_12345",
+            access_token="ghp_token",
+        ),
+    )
+
+    # 別プロバイダー(同じ ID)で検索 → ヒットしないことを確認
+    result = get_by_provider_user_id(db, "google", "pm_12345")
     assert result is None
 
 

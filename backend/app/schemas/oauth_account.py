@@ -29,6 +29,14 @@ class OAuthTokenUpdate(BaseModel):
     refresh_token: str | None = None
     expires_at: datetime | None = None
 
+    @field_validator("access_token", "refresh_token")
+    @classmethod
+    def token_must_not_be_empty(cls, v: str | None) -> str | None:
+        """C-5: 空文字トークンの暗号化保存を防ぐ。"""
+        if v is not None and not v.strip():
+            raise ValueError("token must not be empty string")
+        return v
+
 
 class OAuthAccount(BaseModel):
     """レスポンス用（トークン値は含めない）"""

@@ -28,6 +28,8 @@ from app.services.rank_service import analyze_user_rank
 from app.services.skill_tree_service import generate_skill_tree_ai
 from app.services.quest_service import generate_handson_quest
 from app.crud.user import get_user
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 from app.db.session import get_db
 
 router = APIRouter()
@@ -78,28 +80,30 @@ async def analyze_rank(request: RankAnalysisRequest) -> RankAnalysisResponse:
 
 @router.post("/skill-tree", response_model=SkillTreeResponse)
 async def generate_skill_tree(
-    request: SkillTreeRequest, db: Session = Depends(get_db)
+    request: SkillTreeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> SkillTreeResponse:
     """
-    スキルツリー生成（LLM実装 - Issue #54）
+    スキルツリー生成（LLM実装 - Issue #54, 認証必須 - Issue #61）
 
     Args:
-        request: スキルツリー生成リクエスト（user_id, category）
+        request: スキルツリー生成リクエスト（category）
+        current_user: 認証済みユーザー（Cookieから自動取得）
         db: DBセッション
 
     Returns:
         SkillTreeResponse: パーソナライズされたスキルツリーデータ
 
     Note:
-        - user_id から Profile と SkillTree テーブルを参照
+        - 認証済みユーザーのProfile と SkillTree テーブルを参照
         - GitHub APIでリポジトリを分析（習得済みスキル推定）
         - LLMでパーソナライズされたロードマップを生成
-        - キャッシュ機能（7日間）: generated_atが新しければDBから返却
+        - キャッシュ機能（10分）: generated_atが新しければDBから返却
 
     Example:
         Request:
             {
-                "user_id": 1,
                 "category": "web"
             }
 
@@ -116,7 +120,7 @@ async def generate_skill_tree(
     """
     try:
         result = await generate_skill_tree_ai(
-            user_id=request.user_id, category=request.category, db=db
+            user_id=current_user.id, category=request.category, db=db
         )
         return result
     except HTTPException:
