@@ -1,17 +1,20 @@
-'use client';
+"use client";
 
 /**
  * Grade Page
- * 成績を表示するページ
+ * 成績を表示するページ（認証必須）
  */
 
-import React from 'react';
-import { GradesContainer } from '@/features/grades/components/GradesContainer';
+import React from "react";
+import { withAuth } from "@/lib/auth/withAuth";
+import { GradesContainer } from "@/features/grades/components/GradesContainer";
 
-export default function GradePage() {
+function GradePage() {
   return (
     <div className="h-full w-full">
       <GradesContainer />
     </div>
   );
 }
+
+export default withAuth(GradePage);

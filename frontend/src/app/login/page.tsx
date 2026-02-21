@@ -39,16 +39,6 @@ export default function LoginPage() {
     window.location.href = `${apiBaseUrl}/api/v1/auth/github/login`;
   };
 
-  // テストユーザー情報
-  const testUsers = [
-    { username: "test_beginner", info: "初心者 (rank=2, GitHub: beginner123)" },
-    {
-      username: "test_intermediate",
-      info: "中級者 (rank=5, GitHub: Inlet-back)",
-    },
-    { username: "test_advanced", info: "上級者 (rank=8, GitHub: torvalds)" },
-  ];
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#97C88C] via-[#A8D5A1] to-[#8BC880] p-4">
       <div className="w-full max-w-md rounded-lg border-4 border-[#2C5F2D] bg-[#F5F5DC] p-8 shadow-[8px_8px_0_0_#2C5F2D] animate-[slideUp_0.3s_ease-out]">
@@ -167,39 +157,6 @@ export default function LoginPage() {
               : "新規登録はこちら"}
           </button>
         </div>
-
-        {/* テストユーザー情報（折りたたみ可能） */}
-        <details className="mt-8 group">
-          <summary className="cursor-pointer rounded border-2 border-[#2C5F2D] bg-white p-3 font-mono text-sm font-bold text-[#2C5F2D] hover:bg-gray-50 transition-colors list-none flex items-center justify-between">
-            <span>🔧 テストユーザー情報</span>
-            <span className="transform transition-transform group-open:rotate-180">
-              ▼
-            </span>
-          </summary>
-          <div className="mt-2 rounded border-2 border-[#2C5F2D] bg-white p-4 animate-[slideDown_0.2s_ease-out]">
-            <p className="mb-2 font-mono text-xs text-gray-600">
-              パスワード:{" "}
-              <code className="bg-gray-100 px-2 py-1 rounded">testpass123</code>
-            </p>
-            <ul className="space-y-2 text-xs">
-              {testUsers.map((user) => (
-                <li
-                  key={user.username}
-                  className="font-mono text-gray-700 border-l-2 border-[#2C5F2D] pl-2"
-                >
-                  <span className="font-bold text-[#2C5F2D]">
-                    {user.username}
-                  </span>
-                  <br />
-                  <span className="text-gray-600">{user.info}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-gray-500 italic">
-              ※ テストユーザーは手動設定されたGitHubユーザー名を使用
-            </p>
-          </div>
-        </details>
       </div>
 
       {/* CSS Animations */}
@@ -224,16 +181,6 @@ export default function LoginPage() {
           }
           75% {
             transform: translateX(5px);
-          }
-        }
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
           }
         }
       `}</style>

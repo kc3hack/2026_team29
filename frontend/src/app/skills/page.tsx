@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { withAuth } from "@/lib/auth/withAuth";
 import { SkillTreeCanvas } from "../../features/skill-tree/components/SkillTreeCanvas";
 import { SkillNodePanel } from "../../features/skill-tree/components/SkillNodePanel";
 import { RankBar } from "../../features/skill-tree/components/RankBar";
@@ -8,7 +9,7 @@ import { SkillLegend } from "../../features/skill-tree/components/SkillLegend";
 import { ZoomControls } from "../../features/skill-tree/components/ZoomControls";
 import type { SkillNode } from "../../features/skill-tree/types/data";
 
-export default function SkillTreePage() {
+function SkillTreePage() {
   const [selectedNode, setSelectedNode] = useState<SkillNode | null>(null);
   const [zoomAction, setZoomAction] = useState<{
     type: string;
@@ -72,3 +73,5 @@ export default function SkillTreePage() {
     </div>
   );
 }
+
+export default withAuth(SkillTreePage);

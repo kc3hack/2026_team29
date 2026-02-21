@@ -37,13 +37,7 @@ const SkillTreeCanvas = dynamic(
   },
 );
 
-interface DashboardContainerProps {
-  userId?: string;
-}
-
-export function DashboardContainer({
-  userId = "default-user",
-}: DashboardContainerProps) {
+export function DashboardContainer() {
   // カテゴリ選択状態
   const [category, setCategory] = useState<string>("web");
 
@@ -81,7 +75,7 @@ export function DashboardContainer({
 
         // ユーザー基本情報とスキルツリーを並行取得
         const [statusData, treeData] = await Promise.all([
-          fetchUserDashboard(userId), // バッジ、ランク等（既存のmock API）
+          fetchUserDashboard("me"), // バッジ、ランク等（認証済みユーザー）
           fetchSkillTree(category), // スキルツリー（バックエンドAPI、認証済みユーザー）
         ]);
 
@@ -106,7 +100,7 @@ export function DashboardContainer({
     };
 
     loadDashboard();
-  }, [userId, category]);
+  }, [category]);
 
   if (loading) {
     return (
