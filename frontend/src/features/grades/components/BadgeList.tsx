@@ -82,7 +82,7 @@ export const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
                     {badge.name}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {new Date(badge.unlockedAt!).toLocaleDateString('ja-JP')}
+                    {new Date(badge.earnedAt!).toLocaleDateString('ja-JP')}
                   </span>
                 </div>
               );
