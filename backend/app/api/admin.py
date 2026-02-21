@@ -9,7 +9,6 @@ import secrets
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -20,7 +19,6 @@ from app.models.enums import QuestCategory
 from app.models.user import User
 from app.schemas.quest import Quest as QuestSchema
 from app.schemas.quest import QuestCreate, QuestSummary
-from app.services.quest_service import generate_handson_quest
 
 # limit 値の上限（運用上大量取得を防ぐ）
 _ADMIN_LIST_MAX = 200
@@ -152,87 +150,3 @@ def admin_delete_quest(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quest not found")
 
 
-class AdminQuestGenerateRequest(BaseModel):
-    """管理者向けクエスト生成リクエスト"""
-
-    document_content: str = Field(..., min_length=10, max_length=10000, description="学習対象ドキュメント")
-    user_rank: int = Field(..., ge=0, le=9, description="難易度（ランク 0-9: 種子〜世界樹）")
-    user_skills: str = Field(default="", max_length=500, description="得意分野（オプション）")
-    category: QuestCategory = Field(..., description="クエストカテゴリ")
-
-
-def _steps_to_markdown(result: dict) -> str:
-    """LLM 生成結果を Markdown 形式の description に変換する（ADR 012）。"""
-    lines: list[str] = []
-
-    objectives: list[str] = result.get("learning_objectives", [])
-    if objectives:
-        lines.append("## 学習目標")
-        for obj in objectives:
-            lines.append(f"- {obj}")
-        lines.append("")
-
-    for step in result.get("steps", []):
-        step_num = step.get("step_number", 0)
-        step_title = step.get("title", "Untitled")
-        lines.append(f"## Step {step_num}: {step_title}")
-        lines.append(step.get("description", ""))
-        code: str = step.get("code_example", "")
-        if code:
-            lines.append(f"\n```\n{code}\n```")
-        checkpoints: list[str] = step.get("checkpoints", [])
-        if checkpoints:
-            lines.append("\n**確認ポイント:**")
-            for cp in checkpoints:
-                lines.append(f"- {cp}")
-        lines.append("")
-
-    resources: list[str] = result.get("resources", [])
-    if resources:
-        lines.append("## 参考リソース")
-        for r in resources:
-            lines.append(f"- {r}")
-
-    return "\n".join(lines)
-
-
-@admin_app.post("/quests/generate", response_model=QuestSchema, status_code=201)
-async def admin_generate_and_save_quest(
-    request: AdminQuestGenerateRequest,
-    db: Session = Depends(get_db),
-    _: None = Depends(verify_admin_key),
-) -> QuestSchema:
-    """LLM でクエストを生成し DB に保存する。
-
-    認証: X-Admin-Key ヘッダーが必要
-
-    - LLM が生成したタイトル・ステップを Markdown に変換して description に保存（ADR 012）
-    - difficulty はリクエストの user_rank をそのまま使用（0-9）
-    - is_generated=True で保存（通常クエストと区別可能）
-    """
-    try:
-        result = await generate_handson_quest(
-            document_content=request.document_content,
-            user_rank=request.user_rank,
-            user_skills=request.user_skills,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Quest generation failed: {str(e)}",
-        )
-
-    quest_in = QuestCreate(
-        title=result["title"],
-        description=_steps_to_markdown(result),
-        difficulty=request.user_rank,
-        category=request.category,
-        is_generated=True,
-    )
-    try:
-        return crud_quest.create_quest(db, quest_in)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save quest: {str(e)}",
-        )

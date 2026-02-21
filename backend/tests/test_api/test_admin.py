@@ -4,44 +4,16 @@ Note: APIキー認証のテストはE2Eテストで実施。
 このファイルでは、ランク修正ロジックに加えてクエスト生成・保存など管理API全般の挙動をテストする。
 """
 
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.admin import _steps_to_markdown, admin_app, fix_user_ranks
+from app.api.admin import admin_app, fix_user_ranks
 from app.crud.user import create_user
 from app.db.session import get_db
-from app.models.enums import QuestCategory
 from app.schemas.user import UserCreate
 
 TEST_ADMIN_KEY = "test-admin-key-for-testing-only"  # conftest.py の ADMIN_API_KEY と一致
 ADMIN_HEADERS = {"X-Admin-Key": TEST_ADMIN_KEY}
-
-_MOCK_LLM_RESULT = {
-    "title": "テスト: React カウンターアプリ",
-    "difficulty": "beginner",
-    "estimated_time_minutes": 30,
-    "learning_objectives": ["State の理解", "イベントハンドリング"],
-    "steps": [
-        {
-            "step_number": 1,
-            "title": "セットアップ",
-            "description": "プロジェクトを作成する",
-            "code_example": "npx create-react-app my-app",
-            "checkpoints": ["起動確認"],
-        },
-        {
-            "step_number": 2,
-            "title": "カウンター実装",
-            "description": "useState で状態管理",
-            "code_example": "",
-            "checkpoints": [],
-        },
-    ],
-    "resources": ["https://react.dev/"],
-}
-
 
 @pytest.fixture()
 def admin_client(db):
@@ -80,163 +52,6 @@ def test_fix_user_ranks_logic(db):
     db.refresh(user2)
     assert user1.rank == 1
     assert user2.rank == 4
-
-
-# ---------------------------------------------------------------------------
-# Quest 生成 & 保存エンドポイント (Issue #77)
-# ---------------------------------------------------------------------------
-
-
-def test_steps_to_markdown_unit():
-    """_steps_to_markdown が期待通りの Markdown を生成する（ADR 012）。"""
-    md = _steps_to_markdown(_MOCK_LLM_RESULT)
-
-    assert "## 学習目標" in md
-    assert "- State の理解" in md
-    assert "## Step 1: セットアップ" in md
-    assert "npx create-react-app my-app" in md
-    assert "- 起動確認" in md
-    assert "## Step 2: カウンター実装" in md
-    assert "## 参考リソース" in md
-    assert "https://react.dev/" in md
-
-
-def test_admin_generate_quest_success(admin_client, db):
-    """LLM 生成 → DB 保存が成功し 201 + Quest レスポンスが返る。"""
-    with patch(
-        "app.api.admin.generate_handson_quest",
-        new=AsyncMock(return_value=_MOCK_LLM_RESULT),
-    ):
-        res = admin_client.post(
-            "/quests/generate",
-            json={
-                "document_content": "React の基本を学ぶドキュメントです。コンポーネント、State、Props について説明します。",
-                "user_rank": 2,
-                "user_skills": "JavaScript",
-                "category": "web",
-            },
-            headers=ADMIN_HEADERS,
-        )
-
-    assert res.status_code == 201
-    data = res.json()
-    assert data["title"] == "テスト: React カウンターアプリ"
-    assert data["difficulty"] == 2
-    assert data["category"] == QuestCategory.WEB.value
-    assert data["is_generated"] is True
-    assert "## 学習目標" in data["description"]
-    assert "id" in data
-
-
-def test_admin_generate_quest_is_persisted(admin_client, db):
-    """生成されたクエストが DB に実際に保存される。"""
-    with patch(
-        "app.api.admin.generate_handson_quest",
-        new=AsyncMock(return_value=_MOCK_LLM_RESULT),
-    ):
-        res = admin_client.post(
-            "/quests/generate",
-            json={
-                "document_content": "Python の基本を学ぶドキュメントです。変数、関数、クラスについて詳しく説明します。",
-                "user_rank": 1,
-                "user_skills": "",
-                "category": "ai",
-            },
-            headers=ADMIN_HEADERS,
-        )
-
-    assert res.status_code == 201
-    quest_id = res.json()["id"]
-
-    from app.crud.quest import get_quest
-    saved = get_quest(db, quest_id)
-    assert saved is not None
-    assert saved.is_generated is True
-    assert saved.category == QuestCategory.AI.value
-
-
-def test_admin_generate_quest_llm_failure_returns_502(admin_client):
-    """LLM 呼び出しが例外を出した場合 502 を返す。"""
-    with patch(
-        "app.api.admin.generate_handson_quest",
-        new=AsyncMock(side_effect=RuntimeError("LLM timeout")),
-    ):
-        res = admin_client.post(
-            "/quests/generate",
-            json={
-                "document_content": "テスト用ドキュメントの内容です。学習内容について詳しく解説します。",
-                "user_rank": 0,
-                "user_skills": "",
-                "category": "web",
-            },
-            headers=ADMIN_HEADERS,
-        )
-
-    assert res.status_code == 502
-    assert "Quest generation failed" in res.json()["detail"]
-
-
-def test_admin_generate_quest_missing_api_key_returns_401(admin_client):
-    """X-Admin-Key ヘッダーがない場合 401 を返す。"""
-    res = admin_client.post(
-        "/quests/generate",
-        json={
-            "document_content": "テスト用ドキュメントの内容です。",
-            "user_rank": 0,
-            "user_skills": "",
-            "category": "web",
-        },
-    )
-    assert res.status_code == 401
-
-
-def test_admin_generate_quest_wrong_api_key_returns_401(admin_client):
-    """不正な X-Admin-Key の場合 401 を返す。"""
-    res = admin_client.post(
-        "/quests/generate",
-        json={
-            "document_content": "テスト用ドキュメントの内容です。",
-            "user_rank": 0,
-            "user_skills": "",
-            "category": "web",
-        },
-        headers={"X-Admin-Key": "wrong-key"},
-    )
-    assert res.status_code == 401
-
-
-def test_admin_generate_quest_invalid_category_returns_422(admin_client):
-    """存在しない category を渡した場合 422 を返す。"""
-    with patch(
-        "app.api.admin.generate_handson_quest",
-        new=AsyncMock(return_value=_MOCK_LLM_RESULT),
-    ):
-        res = admin_client.post(
-            "/quests/generate",
-            json={
-                "document_content": "テスト用ドキュメントの内容です。",
-                "user_rank": 0,
-                "user_skills": "",
-                "category": "invalid_category",
-            },
-            headers=ADMIN_HEADERS,
-        )
-    assert res.status_code == 422
-
-
-def test_admin_generate_quest_invalid_rank_returns_422(admin_client):
-    """user_rank が範囲外（10以上）の場合 422 を返す。"""
-    res = admin_client.post(
-        "/quests/generate",
-        json={
-            "document_content": "テスト用ドキュメントの内容です。",
-            "user_rank": 10,
-            "user_skills": "",
-            "category": "web",
-        },
-        headers=ADMIN_HEADERS,
-    )
-    assert res.status_code == 422
 
 
 # ---------------------------------------------------------------------------
