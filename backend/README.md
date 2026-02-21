@@ -57,6 +57,18 @@ curl http://localhost:8000/health
 
 ### 認証フロー (Issue #59, ADR 014)
 
+> **必須環境変数** (未設定の場合起動時エラーまたは 503):
+>
+> | 変数名 | 用途 | 生成方法 |
+> |------------|------|----------|
+> | `ENCRYPTION_KEY` | OAuth トークンの暗号化 | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+> | `JWT_SECRET_KEY` | JWT 署名・検証 | `python -c "import secrets; print(secrets.token_hex(32))"` |
+> | `FRONTEND_URL` | OAuth リダイレクト先 | `http://localhost:3000`（デフォルト） |
+> | `GITHUB_CLIENT_ID` | GitHub OAuth（任意） | GitHub アプリ設定画面で取得 |
+> | `GITHUB_CLIENT_SECRET` | GitHub OAuth（任意） | 同上 |
+>
+> `ENCRYPTION_KEY` と `JWT_SECRET_KEY` は **起動時にプロセスを即座停止**する。`.env.example` をコピーして必ず設定すること。
+
 ```bash
 # 1. ブラウザで GitHub ログイン開始
 open http://localhost:8000/api/v1/auth/github/login

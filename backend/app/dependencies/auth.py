@@ -30,6 +30,13 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 
 def _decode_token(token: str) -> int:
     """JWT を検証して user_id を返す。失敗時は HTTPException 401。"""
+    # 二重防衛: 起動時検証（validate_jwt_config）を通過していても念のためここでも確認する。
+    # 空キーで HS256 検証が通ってしまう脆弱性を防ぐ（ADR 014）。
+    if not settings.JWT_SECRET_KEY or not settings.JWT_SECRET_KEY.strip():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="JWT_SECRET_KEY が設定されていません。サーバー管理者に連絡してください。",
+        )
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="認証トークンが無効または期限切れです",

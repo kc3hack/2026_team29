@@ -24,7 +24,7 @@ import httpx
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -346,10 +346,16 @@ def logout(response: Response) -> dict:
 
 
 class LoginRequest(BaseModel):
-    """username + password リクエストボディ。"""
+    """username + password リクエストボディ。
 
-    username: str
-    password: str
+    バリデーション:
+    - username: 1〜72文字（空文字不可・ADR 017）
+    - password: 1〜128文字（空文字不可・PBKDF2 DoS 対策・ADR 017）
+    いずれも超過・未満の場合は自動的に 422 Unprocessable Entity を返す。
+    """
+
+    username: str = Field(min_length=1, max_length=72)
+    password: str = Field(min_length=1, max_length=128)
 
 
 @router.post("/register", summary="username + password 新規登録", status_code=201)
@@ -370,7 +376,14 @@ def register_by_username(
     except IntegrityError:
         raise HTTPException(status_code=409, detail="username が既に使用されています")
 
-    token = create_access_token(db_user.id)
+    try:
+        token = create_access_token(db_user.id)
+    except ValueError:
+        # 二重防衛: validate_jwt_config() を通過していれば通常ここには来ない
+        raise HTTPException(
+            status_code=503,
+            detail="JWT_SECRET_KEY が設定されていません。サーバー管理者に連絡してください。",
+        )
     set_auth_cookie(response, token)
     return {"message": "登録しました", "user_id": db_user.id}
 
@@ -406,7 +419,14 @@ def login_by_username(
         if not verify_password(body.password, db_user.hashed_password):
             raise _INVALID
 
-    token = create_access_token(db_user.id)
+    try:
+        token = create_access_token(db_user.id)
+    except ValueError:
+        # 二重防衛: validate_jwt_config() を通過していれば通常ここには来ない
+        raise HTTPException(
+            status_code=503,
+            detail="JWT_SECRET_KEY が設定されていません。サーバー管理者に連絡してください。",
+        )
     set_auth_cookie(response, token)
     return {"message": "ログインしました", "user_id": db_user.id}
 

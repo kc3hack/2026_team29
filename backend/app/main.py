@@ -3,15 +3,16 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.api import api_router
-from app.core.config import settings, validate_encryption_key
+from app.core.config import settings, validate_encryption_key, validate_jwt_config
 from app.api.admin import admin_app
 from app.db import base  # noqa: F401  # SQLAlchemyモデルの登録
 
 logger = logging.getLogger(__name__)
 
-# 起動時に ENCRYPTION_KEY の設定・形式を検証する。
-# 未設定なら ValueError で起動を止める（テストは conftest.py でダミーキーを注入済み）。
+# 起動時に必須設定を検証する。未設定なら ValueError で起動を止める。
+# テストは conftest.py でダミーキーを注入済み。
 validate_encryption_key()
+validate_jwt_config()
 
 app = FastAPI(
     title="Team29 Backend API",

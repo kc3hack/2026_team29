@@ -77,8 +77,15 @@ def start_quest(
         raise HTTPException(status_code=404, detail="Quest not found")
     try:
         return crud_quest_progress.start_quest(db, current_user.id, quest_id)
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError:
+        # 内部実装（user_id/quest_id 等）をクライアントに露出しないよう固定文言にマッピング
+        progress = crud_quest_progress.get_quest_progress(db, current_user.id, quest_id)
+        if progress is not None:
+            if progress.status == QuestStatus.IN_PROGRESS.value:
+                raise HTTPException(status_code=409, detail="Quest already started")
+            if progress.status == QuestStatus.COMPLETED.value:
+                raise HTTPException(status_code=409, detail="Quest already completed")
+        raise HTTPException(status_code=409, detail="Could not start quest")
 
 
 @router.post("/{quest_id}/complete", response_model=QuestProgressSchema)

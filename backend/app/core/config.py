@@ -76,6 +76,21 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
+# JWT設定の検証（アプリ起動時にチェック）
+def validate_jwt_config() -> None:
+    """JWT_SECRET_KEY が設定されており、空文字でないことを検証する。
+
+    未設定のまま起動すると空キーで JWT が署名・検証されるため、
+    任意トークンを受理する脆弱性になりえる（ADR 014 参照）。
+    テスト環境では conftest.py でダミー値を設定すること。
+    """
+    if not settings.JWT_SECRET_KEY or not settings.JWT_SECRET_KEY.strip():
+        raise ValueError(
+            "JWT_SECRET_KEY is not set. "
+            'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
+        )
+
+
 # ENCRYPTION_KEYの検証（アプリ起動時にチェック）
 def validate_encryption_key() -> None:
     """ENCRYPTION_KEYが設定されており、かつ形式が正しいかを検証する。
