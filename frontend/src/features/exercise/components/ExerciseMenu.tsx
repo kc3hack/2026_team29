@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type TabType = 'regular' | 'book' | 'terminal';
 
@@ -16,25 +17,33 @@ const TAB_ITEMS = [
 ];
 
 export function ExerciseMenu() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('regular');
 
   const exercises = [
-    { title: 'Web', image: '/images/exercises/Web.png' },
-    { title: 'Mobile', image: '/images/exercises/Mobile.png' },
-    { title: 'Network', image: '/images/exercises/Network.png' },
-    { title: 'Game', image: '/images/exercises/Game.png' },
-    { title: 'Design', image: '/images/exercises/Design.png' },
-    { title: 'Infrastructure', image: '/images/exercises/Infrastructure.png' },
-    { title: 'AI', image: '/images/exercises/ai.png' },
-    { title: 'Security', image: '/images/exercises/Security.png' },
-    { title: 'Coming Soon...', image: null },
+    { title: 'Web', image: '/images/exercises/Web.png', slug: 'web' },
+    { title: 'Mobile', image: '/images/exercises/Mobile.png', slug: 'mobile' },
+    { title: 'Network', image: '/images/exercises/Network.png', slug: 'network' },
+    { title: 'Game', image: '/images/exercises/Game.png', slug: 'game' },
+    { title: 'Design', image: '/images/exercises/Design.png', slug: 'design' },
+    { title: 'Infrastructure', image: '/images/exercises/Infrastructure.png', slug: 'infrastructure' },
+    { title: 'AI', image: '/images/exercises/ai.png', slug: 'ai' },
+    { title: 'Security', image: '/images/exercises/Security.png', slug: 'security' },
+    { title: 'Coming Soon...', image: null, slug: null },
   ];
 
   const items = exercises.map((exercise, i) => ({
     id: i,
     title: exercise.title,
     image: exercise.image,
+    slug: exercise.slug,
   }));
+
+  const handleCardClick = (slug: string | null) => {
+    if (slug) {
+      router.push(`/exercises/${slug}`);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -67,8 +76,9 @@ export function ExerciseMenu() {
           {items.map((item) => (
             <button
               key={item.id}
-              onClick={() => console.log(`Clicked ${item.title}`)}
-              className="flex aspect-square w-full flex-col items-center justify-center rounded-3xl border-2 border-[#3A7E56] bg-white p-4 shadow-sm transition-transform hover:scale-105 hover:shadow-md cursor-pointer overflow-hidden"
+              onClick={() => handleCardClick(item.slug)}
+              disabled={!item.slug}
+              className="flex aspect-square w-full flex-col items-center justify-center rounded-3xl border-2 border-[#3A7E56] bg-white p-4 shadow-sm transition-transform hover:scale-105 hover:shadow-md cursor-pointer overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <div className="relative -mt-4 flex h-4/5 w-full items-center justify-center">
                  {/* Placeholder for the badge image */}
