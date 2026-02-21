@@ -1,7 +1,7 @@
 """管理API（/admin）のテスト
 
 Note: APIキー認証のテストはE2Eテストで実施。
-ここではランク修正ロジックのみをテストする。
+このファイルでは、ランク修正ロジックに加えてクエスト生成・保存など管理API全般の挙動をテストする。
 """
 
 from unittest.mock import AsyncMock, patch
