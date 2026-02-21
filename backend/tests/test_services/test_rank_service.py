@@ -144,7 +144,8 @@ async def test_analyze_user_rank_from_github_with_profile():
     mock_profile = Mock()
     mock_profile.portfolio_text = "個人サイト: https://example.com"
     mock_profile.qiita_id = "test_qiita"
-    mock_profile.other_info = "コミュニティ活動あり"
+    mock_profile.connpass_id = "test_user"
+    mock_profile.portfolio_url = "https://portfolio.example.com"
 
     mock_llm_response = {
         "percentile": 60.0,

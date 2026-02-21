@@ -39,6 +39,7 @@ from app.schemas.oauth_account import OAuthAccountCreate, OAuthTokenUpdate
 from app.schemas.user import UserCreate
 from app.schemas.profile import ProfileCreate
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
@@ -159,11 +160,12 @@ def github_login() -> RedirectResponse:
             status_code=503, detail="JWT 設定が正しくありません (JWT_ALGORITHM)"
         )
     state = _sign_state(secrets.token_urlsafe(24))
-    # scope=read:user のみ要求（最小権限の原則）
+    # scope: read:user (ユーザー情報) + repo (プライベートリポジトリ含む全リポジトリ情報)
+    # ランク判定にGitHub統計情報が必要なため、repoスコープを要求
     redirect_url = (
         f"{GITHUB_AUTHORIZE_URL}"
         f"?client_id={settings.GITHUB_CLIENT_ID}"
-        f"&scope=read:user"
+        f"&scope=read:user repo"
         f"&state={state}"
     )
     resp = RedirectResponse(url=redirect_url)
@@ -302,7 +304,6 @@ async def github_callback(
                 )
             except Exception as e:
                 # Profileの作成に失敗してもログインは継続（Warning のみ）
-                logger = logging.getLogger(__name__)
                 logger.warning(
                     f"Failed to create profile for user_id={db_user.id}: {e}"
                 )
@@ -342,8 +343,11 @@ async def github_callback(
             db.commit()
         except Exception as e:
             db.rollback()
+            logger.error(
+                f"User registration failed: {type(e).__name__}: {e}", exc_info=True
+            )
             raise HTTPException(
-                status_code=500, detail="ユーザー登録に失敗しました"
+                status_code=500, detail=f"ユーザー登録に失敗しました: {str(e)}"
             ) from e
         db.refresh(db_user)  # commit 後に refresh（rollback 対象外）
 
@@ -351,6 +355,8 @@ async def github_callback(
         raise HTTPException(
             status_code=500, detail="User lookup failed after OAuth flow"
         )
+
+    logger.info(f"[DEBUG] About to start rank analysis for user {db_user.id}")
 
     # --- 4.5. GitHub統計情報を取得してランク判定を実行 (Issue #105) ---
     # OAuth完了時に自動でランク判定を実行し、ユーザーのrankとexpを更新する。
@@ -384,8 +390,13 @@ async def github_callback(
         )
     except Exception as e:
         # ランク判定失敗してもOAuthログインは継続（デフォルト値で運用）
-        logger.warning(f"Auto rank analysis failed for user {db_user.id}: {e}")
+        logger.warning(
+            f"Auto rank analysis failed for user {db_user.id}: {e}",
+            exc_info=True,  # スタックトレースを出力
+        )
         # デフォルト値はモデルの初期値（rank=0: 種子）を使用
+
+    logger.info(f"[DEBUG] Rank analysis section completed for user {db_user.id}")
 
     # --- 5. JWT を httpOnly Cookie にセットしてフロントへリダイレクト ---
     # JWT を URL パラメータに含めない（ブラウザ履歴・Referer への漏洩防止）
