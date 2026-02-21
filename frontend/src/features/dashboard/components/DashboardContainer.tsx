@@ -9,8 +9,10 @@ import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import type { UserStatus } from "../types";
 import { fetchUserDashboard } from "../api/mock";
+import { getCurrentUser } from "@/lib/api/auth";
 import { AcquiredBadges } from "./AcquiredBadges";
 import { CategorySelector } from "./CategorySelector";
+import { RankMeasurement } from "./RankMeasurement";
 import { SkillNodePanel } from "../../skill-tree/components/SkillNodePanel";
 import { RankBar } from "../../skill-tree/components/RankBar";
 import { SkillLegend } from "../../skill-tree/components/SkillLegend";
@@ -56,6 +58,9 @@ export function DashboardContainer() {
   const [streamProgress, setStreamProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // ランク測定モーダル表示フラグ
+  const [showRankMeasurement, setShowRankMeasurement] = useState(false);
+
   // Skill Tree States
   const [selectedNode, setSelectedNode] = useState<TreeSkillNode | null>(null);
   const [zoomAction, setZoomAction] = useState<{
@@ -84,6 +89,22 @@ export function DashboardContainer() {
         if (!isMounted) return; // アンマウント済みなら中断
 
         setUserStatus(statusData);
+        
+        // 初回アクセス判定（localStorageを使用）
+        // ユーザーIDを取得してユーザーごとに判定
+        try {
+          const userInfo = await getCurrentUser();
+          const storageKey = `rank_animation_viewed_${userInfo.id}`;
+          const hasViewed = localStorage.getItem(storageKey);
+          
+          if (!hasViewed) {
+            // 初回アクセスの場合、ランク測定モーダルを表示
+            setShowRankMeasurement(true);
+          }
+        } catch (err) {
+          console.error("ユーザー情報取得エラー:", err);
+        }
+
         setLoading(false);
 
         // スキルツリーはストリーミングで取得
@@ -182,6 +203,19 @@ export function DashboardContainer() {
       }
     };
   }, [category]);
+
+  // ランク測定完了時のハンドラー
+  const handleRankMeasurementComplete = async () => {
+    try {
+      const userInfo = await getCurrentUser();
+      const storageKey = `rank_animation_viewed_${userInfo.id}`;
+      localStorage.setItem(storageKey, "true");
+      setShowRankMeasurement(false);
+    } catch (err) {
+      console.error("ランク測定完了処理エラー:", err);
+      setShowRankMeasurement(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -325,6 +359,15 @@ export function DashboardContainer() {
           </div>
         </section>
       </div>
+
+      {/* ランク測定モーダル（初回アクセス時のみ表示） */}
+      {showRankMeasurement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full h-full overflow-auto">
+            <RankMeasurement onComplete={handleRankMeasurementComplete} />
+          </div>
+        </div>
+      )}
     </main>
   );
 }

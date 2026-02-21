@@ -1,8 +1,38 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { analyzeRank, RankAnalysisResponse } from '../api/rankApi';
+import { getCurrentUser } from '@/lib/api/auth';
 import { generateSkillTree } from '@/lib/api/skillTree';
+
+// ランク名マッピング（rank番号からランク名を取得）
+const RANK_NAMES = [
+  '種子', // rank 0
+  '芽', // rank 1
+  '若木', // rank 2
+  '樹', // rank 3
+  '母樹', // rank 4
+  '賢樹', // rank 5
+  '神樹', // rank 6
+  '世界樹', // rank 7
+];
+
+// UserInfo型定義（getCurrentUserの戻り値に合わせる）
+interface UserInfo {
+  id: number;
+  username: string;
+  rank: number;
+  exp: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// RankAnalysisResponse互換の型（既存コードとの互換性のため）
+export interface RankAnalysisResponse {
+  percentile: number;
+  rank: number;
+  rank_name: string;
+  reasoning: string;
+}
 
 type MeasurementState = 
   | 'idle' 
@@ -16,11 +46,10 @@ type MeasurementState =
   | 'error';
 
 interface RankMeasurementProps {
-  githubUsername?: string;
   onComplete?: (rank: RankAnalysisResponse) => void;
 }
 
-export function RankMeasurement({ githubUsername, onComplete }: RankMeasurementProps) {
+export function RankMeasurement({ onComplete }: RankMeasurementProps) {
   const [state, setState] = useState<MeasurementState>('idle');
   const [chargeProgress, setChargeProgress] = useState(0);
   const [rankResult, setRankResult] = useState<RankAnalysisResponse | null>(null);
@@ -162,13 +191,16 @@ export function RankMeasurement({ githubUsername, onComplete }: RankMeasurementP
     await new Promise(resolve => setTimeout(resolve, FINALIZING_DURATION));
     
     try {
-      // 実際のランク判定API呼び出し
-      const result = await analyzeRank({
-        github_username: githubUsername || 'default-user',
-        portfolio_text: 'ポートフォリオ情報',
-        qiita_id: '',
-        other_info: 'コミュニティ活動',
-      });
+      // OAuth完了時にバックエンドで既に判定されたランク情報を取得
+      const userInfo = await getCurrentUser();
+
+      // RankAnalysisResponse形式に変換
+      const result: RankAnalysisResponse = {
+        rank: userInfo.rank,
+        rank_name: RANK_NAMES[userInfo.rank] || '不明',
+        percentile: (userInfo.rank / 7) * 100, // 暫定: rank0-7を0-100%に変換
+        reasoning: `GitHub統計情報に基づいて自動判定されました。あなたのランクは「${RANK_NAMES[userInfo.rank] || '不明'}」です。`,
+      };
 
       setRankResult(result);
       setState('revealing');

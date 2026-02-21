@@ -98,3 +98,35 @@ export async function logout(): Promise<{ message: string }> {
 
   return response.json();
 }
+
+/**
+ * 現在のユーザー情報を取得
+ *
+ * @returns ユーザー情報（id, username, rank, exp等）
+ * @throws 認証失敗時のエラー
+ */
+export async function getCurrentUser(): Promise<{
+  id: number;
+  username: string;
+  rank: number;
+  exp: number;
+  created_at: string;
+  updated_at: string;
+}> {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/api/v1/users/me`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `ユーザー情報の取得に失敗しました: ${response.status} ${errorText}`,
+    );
+  }
+
+  return response.json();
+}
