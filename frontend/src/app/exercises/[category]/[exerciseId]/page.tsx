@@ -50,8 +50,20 @@ export default function ExerciseDetailPage({ params }: PageProps) {
   if (!exercise) {
     return (
       <div className="min-h-screen bg-[#FDFEF0] flex items-center justify-center">
-        <div className="text-[#14532D] text-2xl font-bold">
-          演習が見つかりません
+        <div className="text-center">
+          <div className="text-[#14532D] text-2xl font-bold mb-8">
+            演習が見つかりません
+          </div>
+          <Link
+            href={`/exercises/${resolvedParams.category}`}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#FDFEF0] border-4 border-[#14532D] text-[#14532D] font-bold hover:bg-[#4ADE80] transition-colors"
+            style={{
+              boxShadow: "4px 4px 0 #000",
+            }}
+          >
+            <span className="text-xl">←</span>
+            <span>演習一覧に戻る</span>
+          </Link>
         </div>
       </div>
     );
