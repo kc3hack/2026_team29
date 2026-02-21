@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from "react";
-import Image from "next/image";
 import { RANK_COLORS, RankLevel } from "../constants/rankColors";
 
 interface RankBadgeProps {
@@ -51,17 +50,15 @@ export function RankBadge({
 
     return (
       <div className={`relative inline-flex items-center ${sizeConfig[size].containerClass}`}>
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={imagePath}
           alt={altText}
-          width={80}
-          height={80}
           className="h-full w-auto object-contain"
           onError={() => {
             console.warn(`Failed to load rank image: ${imagePath}. Falling back to color mode.`);
             setImageError(true);
           }}
-          priority={size === "lg"}
         />
         {/* スクリーンリーダー用のテキスト */}
         <span className="sr-only">{altText}</span>
