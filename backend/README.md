@@ -55,6 +55,56 @@ docker-compose up -d backend
 curl http://localhost:8000/health
 ```
 
+### 認証フロー (Issue #59, ADR 014)
+
+> **必須環境変数** (未設定の場合起動時エラーまたは 503):
+>
+> | 変数名 | 用途 | 生成方法 |
+> |------------|------|----------|
+> | `ENCRYPTION_KEY` | OAuth トークンの暗号化 | `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+> | `JWT_SECRET_KEY` | JWT 署名・検証 | `python -c "import secrets; print(secrets.token_hex(32))"` |
+> | `FRONTEND_URL` | OAuth リダイレクト先 | `http://localhost:3000`（デフォルト） |
+> | `GITHUB_CLIENT_ID` | GitHub OAuth（任意） | GitHub アプリ設定画面で取得 |
+> | `GITHUB_CLIENT_SECRET` | GitHub OAuth（任意） | 同上 |
+>
+> `ENCRYPTION_KEY` と `JWT_SECRET_KEY` は **起動時にプロセスを即座停止**する。`.env.example` をコピーして必ず設定すること。
+
+```bash
+# 1. ブラウザで GitHub ログイン開始
+open http://localhost:8000/api/v1/auth/github/login
+# → GitHub 認可ページへリダイレクト
+# → 認可後 /api/v1/auth/github/callback が呼ばれる
+# → JWT が httpOnly Cookie にセットされ http://localhost:3000 へリダイレクト
+
+# 2. 認証確認（Cookie を保存しつつ送信）
+curl -b cookies.txt -c cookies.txt http://localhost:8000/api/v1/users/me | jq
+
+# 3. ログアウト（POST に変更、保存した Cookie を送信）
+curl -b cookies.txt -c cookies.txt -X POST http://localhost:8000/api/v1/auth/logout
+```
+
+**テスト・API クライアントから呼ぶ場合（Bearer トークン）:**
+```bash
+# JWT を直接取得する方法（テスト用: conftest.py の fixture を参照）
+curl -H "Authorization: Bearer <jwt>" http://localhost:8000/api/v1/users/me | jq
+```
+
+> **Note**: フロントエンドから fetch する場合は `credentials: 'include'` が必要。
+> Cookie を使うため `BACKEND_CORS_ORIGINS` に `FRONTEND_URL` を含めること。
+
+### ユーザー情報取得 (ADR 015)
+
+```bash
+# 自分の情報
+curl -b cookies.txt http://localhost:8000/api/v1/users/me | jq
+
+# 自分のスキルツリー
+curl -b cookies.txt http://localhost:8000/api/v1/users/me/skill-trees | jq
+
+# 自分のクエスト進捗
+curl -b cookies.txt http://localhost:8000/api/v1/users/me/quest-progress | jq
+```
+
 ### スキルツリー生成 (Issue #54)
 
 ```bash

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # CORS設定
-    BACKEND_CORS_ORIGINS: list[str] = ["*"]  # 本番環境では具体的なオリジンを指定
+    BACKEND_CORS_ORIGINS: list[str] = []  # 本番環境では必ず具体的なオリジンを.envで設定すること（"*"は許可しない）
 
     # プロジェクト情報
     PROJECT_NAME: str = "Team29 Backend"
@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./test.db"
 
     # 暗号化（OAuthトークン保護用）
-    ENCRYPTION_KEY: str = ""  # 本番では必ず.envで設定すること
+    # 必ず .env で設定すること。未設定のまま起動すると validate_encryption_key() が ValueError を送出する。
+    # 生成: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    ENCRYPTION_KEY: str = ""
 
     # ランク計算（product-spec 4.1 準拠）
     # ランクn に到達するために必要な累積経験値（仕様確定後に調整）
@@ -57,8 +59,36 @@ class Settings(BaseSettings):
     # GitHub API（スキルツリー生成で使用）
     GITHUB_API_TOKEN: str = ""  # オプション: Rate Limit緩和のため推奨
 
+    # GitHub OAuth アプリ設定（Issue #59, ADR 014）
+    GITHUB_CLIENT_ID: str = ""  # 本番では必ず .env で設定すること
+    GITHUB_CLIENT_SECRET: str = ""  # 本番では必ず .env で設定すること
+
+    # JWT 設定（ADR 014: Bearer Token 認証）
+    # 必ず .env で設定すること。未設定の場合 /auth/github/login は 503 を返す。
+    JWT_SECRET_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_HOURS: int = 24  # MVP: 24h（本番では短縮 + リフレッシュトークン化）
+
+    # フロントエンドURL（OAuth コールバック後のリダイレクト先）
+    FRONTEND_URL: str = "http://localhost:3000"
+
 
 settings = Settings()
+
+
+# JWT設定の検証（アプリ起動時にチェック）
+def validate_jwt_config() -> None:
+    """JWT_SECRET_KEY が設定されており、空文字でないことを検証する。
+
+    未設定のまま起動すると空キーで JWT が署名・検証されるため、
+    任意トークンを受理する脆弱性になりえる（ADR 014 参照）。
+    テスト環境では conftest.py でダミー値を設定すること。
+    """
+    if not settings.JWT_SECRET_KEY or not settings.JWT_SECRET_KEY.strip():
+        raise ValueError(
+            "JWT_SECRET_KEY is not set. "
+            'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
+        )
 
 
 # ENCRYPTION_KEYの検証（アプリ起動時にチェック）

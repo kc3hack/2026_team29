@@ -15,6 +15,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=True)  # ID入力ログイン用 (GitHub OAuthユーザーはNULL)
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)
     rank = Column(Integer, default=0)  # 0-9: 種子〜世界樹

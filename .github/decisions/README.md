@@ -76,12 +76,25 @@ ADRは以下のステータスを持ちます：
 
 ## 📖 既存のADR
 
-| ID  | タイトル                                           | ステータス | 日付       |
-| --- | -------------------------------------------------- | ---------- | ---------- |
-| 001 | [CI Strategy & Tool Selection](001-ci-strategy.md) | 決定       | 2026-02-17 |
-| 002 | [DB接続基盤とORM選定](002-database-orm-selection.md) | 決定       | 2026-02-19 |
-| 003 | [CRUD実装パターン](003-crud-pattern.md) | 決定       | 2026-02-19 |
-| 004 | [AI基盤とLLM統合戦略](004-ai-infrastructure-langchain.md) | 決定       | 2026-02-19 |
+| ID    | タイトル                                           | ステータス | 日付       |
+| ----- | -------------------------------------------------- | ---------- | ---------- |
+| 001   | [CI Strategy & Tool Selection](001-ci-strategy.md) | 決定       | 2026-02-17 |
+| 002   | [DB接続基盤とORM選定](002-database-orm-selection.md) | 決定       | 2026-02-19 |
+| 003   | [CRUD実装パターン](003-crud-pattern.md) | 決定       | 2026-02-19 |
+| 004   | [AI基盤とLLM統合戦略](004-ai-infrastructure-langchain.md) | 決定       | 2026-02-19 |
+| 005-a | [APEXスタイルランク分布の採用](005-apex-legends-rank-distribution.md) | 決定       | 2026-02-19 |
+| 005-b | [OAuth トークン暗号化戦略（Fernet + スレッドセーフ）](005-oauth-token-encryption.md) | 決定       | 2026-02-19 |
+| 006   | [管理用API認証設計（API Key）](006-admin-api-authentication.md) | 決定       | 2026-02-19 |
+| 007   | [SkillTree初期化タイミング（ユーザー作成時 vs 遅延初期化）](007-skilltree-initialization-timing.md) | 決定       | 2026-02-19 |
+| 008   | [Alembicマイグレーション粒度](008-alembic-migration-granularity.md) | 決定       | 2026-02-19 |
+| 009   | [DB設計方針（正規化・型選択・外部キー戦略）](009-database-design-strategy.md) | 決定       | 2026-02-19 |
+| 010-a | [User API設計 - rankフィールドの管理方針](010-user-api-rank-management.md) | 決定       | 2026-02-19 |
+| 010-b | [スキルツリーAPI実装後のテスト戦略 - モック vs 統合テスト](010-skill-tree-test-strategy-after-ai-migration.md) | 決定       | 2026-02-20 |
+| 011   | [User API エンドポイント設計](011-user-api-endpoint-design.md) | 決定（ADR 015 により /users/me 移行）| 2026-02-20 |
+| 013   | [Quest API エンドポイント設計](013-quest-api-endpoint-design.md) | 決定       | 2026-02-21 |
+| 014   | [認証セッション管理方針（JWT + httpOnly Cookie）](014-auth-session-strategy.md) | 決定（httpOnly Cookie に更新）| 2026-02-21 |
+| 015   | [/users/me エンドポイント移行方針](015-users-me-endpoint-migration.md) | 決定       | 2026-02-21 |
+| 016   | [GitHub OAuth 認証テスト戦略（外部API モック方針）](016-auth-test-strategy.md) | 決定       | 2026-02-21 |
 
 ## 🎯 ADRの目的
 

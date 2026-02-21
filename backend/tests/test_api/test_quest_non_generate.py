@@ -14,6 +14,7 @@ from app.main import app
 from app.models.enums import QuestCategory
 from app.schemas.quest import QuestCreate
 from app.schemas.user import UserCreate
+from tests.conftest import auth_headers
 
 
 @pytest.fixture()
@@ -138,7 +139,7 @@ def test_get_quest_not_found(client):
 def test_start_quest_success(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    res = client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
+    res = client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
     assert res.status_code == 201
     data = res.json()
     assert data["status"] == "in_progress"
@@ -148,28 +149,28 @@ def test_start_quest_success(client, db):
 
 def test_start_quest_not_found(client, db):
     user = _make_user(db)
-    res = client.post("/api/v1/quest/9999/start", json={"user_id": user.id})
+    res = client.post("/api/v1/quest/9999/start", headers=auth_headers(user.id))
     assert res.status_code == 404
 
 
 def test_start_quest_already_started(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
-    res = client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
     assert res.status_code == 409
 
 
 # ---------------------------------------------------------------------------
-# POST /quests/{quest_id}/complete
+# POST /quest/{quest_id}/complete
 # ---------------------------------------------------------------------------
 
 
 def test_complete_quest_success(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
-    res = client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", headers=auth_headers(user.id))
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "completed"
@@ -178,21 +179,21 @@ def test_complete_quest_success(client, db):
 
 def test_complete_quest_not_found(client, db):
     user = _make_user(db)
-    res = client.post("/api/v1/quest/9999/complete", json={"user_id": user.id})
+    res = client.post("/api/v1/quest/9999/complete", headers=auth_headers(user.id))
     assert res.status_code == 404
 
 
 def test_complete_quest_not_started(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    res = client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
-    assert res.status_code == 400
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", headers=auth_headers(user.id))
+    assert res.status_code == 404
 
 
 def test_complete_quest_already_completed(client, db):
     quest = _make_quest(db)
     user = _make_user(db)
-    client.post(f"/api/v1/quest/{quest.id}/start", json={"user_id": user.id})
-    client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
-    res = client.post(f"/api/v1/quest/{quest.id}/complete", json={"user_id": user.id})
+    client.post(f"/api/v1/quest/{quest.id}/start", headers=auth_headers(user.id))
+    client.post(f"/api/v1/quest/{quest.id}/complete", headers=auth_headers(user.id))
+    res = client.post(f"/api/v1/quest/{quest.id}/complete", headers=auth_headers(user.id))
     assert res.status_code == 400

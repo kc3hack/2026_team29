@@ -1,13 +1,15 @@
-"""Quest API エンドポイント（Issue #53, #57）
+"""Quest API エンドポイント（Issue #53, #57, #65）
 
-エンドポイント仕様は ADR 013 参照。
-Markdown 保存方針は ADR 012 参照。
+エンドポイント仕様は ADR 013 参照。Markdown 保存方針は ADR 012 参照。
 
-GET    /api/v1/quest                      - クエスト一覧
-GET    /api/v1/quest/{quest_id}           - クエスト詳細
-POST   /api/v1/quest/{quest_id}/start     - クエスト開始
-POST   /api/v1/quest/{quest_id}/complete  - クエスト完了
-POST   /api/v1/quest/generate             - ドキュメントからハンズオン演習を生成
+認証不要（コンテンツ提供）:
+  GET    /api/v1/quest                      - クエスト一覧
+  GET    /api/v1/quest/{quest_id}           - クエスト詳細
+  POST   /api/v1/quest/generate             - ドキュメントからハンズオン演習を生成
+
+認証必須（JWT Cookie / Bearer, ADR 015）:
+  POST   /api/v1/quest/{quest_id}/start     - クエスト開始（user_id は JWT から取得）
+  POST   /api/v1/quest/{quest_id}/complete  - クエスト完了（user_id は JWT から取得）
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,13 +17,13 @@ from sqlalchemy.orm import Session
 
 from app.crud import quest as crud_quest
 from app.crud import quest_progress as crud_quest_progress
-from app.crud import user as crud_user
 from app.db.session import get_db
+from app.dependencies.auth import get_current_user
 from app.models.enums import QuestCategory, QuestStatus
+from app.models.user import User
 from app.schemas.quest import Quest as QuestSchema
 from app.schemas.quest import QuestGenerationRequest, QuestGenerationResponse
 from app.schemas.quest_progress import QuestProgress as QuestProgressSchema
-from app.schemas.quest_progress import QuestProgressComplete, QuestProgressStart
 from app.services.quest_service import generate_handson_quest
 
 router = APIRouter()
@@ -56,53 +58,61 @@ def get_quest(quest_id: int, db: Session = Depends(get_db)) -> QuestSchema:
 
 
 # ---------------------------------------------------------------------------
-# QuestProgress
+# QuestProgress（認証必須: user_id は JWT から取得, ADR 015, #65）
 # ---------------------------------------------------------------------------
 
 
 @router.post("/{quest_id}/start", response_model=QuestProgressSchema, status_code=201)
 def start_quest(
     quest_id: int,
-    progress_in: QuestProgressStart,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> QuestProgressSchema:
-    """クエスト開始。既に開始済み/完了済みの場合は 409。"""
+    """クエスト開始。user_id は認証トークンから取得（ADR 015, Issue #65）。
+
+    - 404: クエストが存在しない
+    - 409: 既に開始済み（UniqueConstraint 違反）
+    """
     if crud_quest.get_quest(db, quest_id) is None:
         raise HTTPException(status_code=404, detail="Quest not found")
-    if crud_user.get_user(db, progress_in.user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
     try:
-        return crud_quest_progress.start_quest(
-            db, user_id=progress_in.user_id, quest_id=quest_id
-        )
+        return crud_quest_progress.start_quest(db, current_user.id, quest_id)
     except ValueError:
-        progress = crud_quest_progress.get_quest_progress(
-            db, user_id=progress_in.user_id, quest_id=quest_id
-        )
-        if progress is not None and progress.status == QuestStatus.COMPLETED:
-            detail = "Quest already completed"
-        else:
-            detail = "Quest already started"
-        raise HTTPException(status_code=409, detail=detail)
+        # 内部実装（user_id/quest_id 等）をクライアントに露出しないよう固定文言にマッピング
+        progress = crud_quest_progress.get_quest_progress(db, current_user.id, quest_id)
+        if progress is not None:
+            if progress.status == QuestStatus.IN_PROGRESS.value:
+                raise HTTPException(status_code=409, detail="Quest already started")
+            if progress.status == QuestStatus.COMPLETED.value:
+                raise HTTPException(status_code=409, detail="Quest already completed")
+        raise HTTPException(status_code=409, detail="Could not start quest")
 
 
 @router.post("/{quest_id}/complete", response_model=QuestProgressSchema)
 def complete_quest(
     quest_id: int,
-    progress_in: QuestProgressComplete,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> QuestProgressSchema:
-    """クエスト完了。IN_PROGRESS でない場合は 400。"""
+    """クエスト完了。user_id は認証トークンから取得（ADR 015, Issue #65）。
+
+    - 404: クエストが存在しない / 進捗が存在しない
+    - 400: ステータスが IN_PROGRESS でない（未開始または既に完了済み）
+    """
     if crud_quest.get_quest(db, quest_id) is None:
         raise HTTPException(status_code=404, detail="Quest not found")
-    progress = crud_quest_progress.get_quest_progress(
-        db, user_id=progress_in.user_id, quest_id=quest_id
-    )
-    if progress is None or progress.status != QuestStatus.IN_PROGRESS:
-        raise HTTPException(status_code=400, detail="Quest not in progress")
-    return crud_quest_progress.complete_quest(
-        db, user_id=progress_in.user_id, quest_id=quest_id
-    )
+    progress = crud_quest_progress.get_quest_progress(db, current_user.id, quest_id)
+    if progress is None:
+        raise HTTPException(status_code=404, detail="Quest progress not found (not started)")
+    if progress.status != QuestStatus.IN_PROGRESS.value:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Quest is not in progress (current status: {progress.status})",
+        )
+    try:
+        return crud_quest_progress.complete_quest(db, current_user.id, quest_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ---------------------------------------------------------------------------

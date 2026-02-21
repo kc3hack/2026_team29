@@ -18,7 +18,32 @@ def get_oauth_account_by_user_provider(
     )
 
 
-def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAccount:
+def get_by_provider_user_id(
+    db: Session, provider: str, provider_user_id: str
+) -> OAuthAccount | None:
+    """プロバイダーとプロバイダー側ユーザーIDで OAuthAccount を取得する。
+
+    GitHub OAuth コールバック時の既存ユーザー照合に使用。
+    """
+    return (
+        db.query(OAuthAccount)
+        .filter(
+            OAuthAccount.provider == provider,
+            OAuthAccount.provider_user_id == provider_user_id,
+        )
+        .first()
+    )
+
+
+def create_oauth_account(
+    db: Session, oauth_in: OAuthAccountCreate, commit: bool = True
+) -> OAuthAccount:
+    """OAuthAccount を作成する。
+
+    commit=True (デフォルト): 作成後に commit する。
+    commit=False: flush のみ行い commit は呼び出し元に委ねる。
+    User 作成と同一トランザクションで確定させたい場合に commit=False を使用する。
+    """
     db_account = OAuthAccount(
         user_id=oauth_in.user_id,
         provider=oauth_in.provider,
@@ -31,7 +56,11 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
     )
     db.add(db_account)
     try:
-        db.commit()
+        if commit:
+            db.commit()
+            db.refresh(db_account)
+        else:
+            db.flush()
     except IntegrityError as e:
         db.rollback()
         raise ValueError(
@@ -40,7 +69,6 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
     except Exception:
         db.rollback()
         raise
-    db.refresh(db_account)
     return db_account
 
 
