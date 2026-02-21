@@ -1,6 +1,7 @@
 'use client';
 
-import { RANKS, SKILL_NODES } from "../types/data"
+import Image from "next/image";
+import { RANKS, SKILL_NODES } from "../types/data";
 
 export function RankBar() {
   const completedCount = SKILL_NODES.filter((n) => n.status === "completed").length
@@ -26,17 +27,23 @@ export function RankBar() {
         imageRendering: "pixelated",
       }}
     >
-      {/* Tier badge */}
+      {/* Tier badge - ランク画像を表示 */}
       <div
-        className="w-8 h-8 flex items-center justify-center text-xs font-bold shrink-0 bg-[#111827]"
+        className="w-8 h-8 flex items-center justify-center shrink-0 bg-[#111827] relative overflow-hidden"
         style={{
           border: "2px solid",
           borderColor: colors.text,
-          color: colors.text,
           boxShadow: `0 0 4px ${colors.text}44`
         }}
       >
-        {currentRank.tier}
+        <Image
+          src={`/images/ranks/rank_tree_${tierIndex}.png`}
+          alt={`Rank ${tierIndex} - ${currentRank.nameJa}`}
+          width={32}
+          height={32}
+          className="object-contain"
+          style={{ imageRendering: "pixelated" }}
+        />
       </div>
 
       <div className="flex flex-col gap-1">
