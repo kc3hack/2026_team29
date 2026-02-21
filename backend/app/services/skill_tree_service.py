@@ -125,7 +125,9 @@ async def generate_skill_tree_ai(
 
     # Step 5: LLM呼び出し
     try:
-        response_text = await invoke_llm(prompt=prompt, temperature=0.3)
+        response_text = await invoke_llm(
+            prompt=prompt, temperature=0.2
+        )  # 0.2で高速＆プロンプト指示に従いやすく
         logger.debug(f"LLM Response: {response_text}")
     except Exception as e:
         logger.error(f"LLM invocation failed: {e}")
@@ -257,6 +259,73 @@ def _load_baseline_json(category: SkillCategory) -> dict[str, Any]:
         )
 
 
+def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
+    """
+    Few-shot promptingのため、ベースラインから重要ノード3個を抽出
+
+    トークン数削減しつつ、階層構造を明確に示す:
+    - 全ノード（20-30個）→ サンプル3個（基礎・中級・応用）
+    - prerequisitesを保持して依存関係の構造を示す
+    - エッジは削除（構造例のみ示せば十分）
+
+    Args:
+        baseline_data: ベースラインJSON（全ノード・エッジ含む）
+
+    Returns:
+        簡略化されたJSON文字列（Few-shot example用）
+    """
+    nodes = baseline_data.get("nodes", [])
+    if not nodes:
+        return "[]"
+
+    # 重要ノードを3個抽出（基礎・中級・応用）
+    sample_nodes = []
+
+    # 基礎ノード: prerequisites が空のものから選択
+    basic_nodes = [n for n in nodes if not n.get("prerequisites", [])]
+    if basic_nodes:
+        node = basic_nodes[0]
+        sample_nodes.append(
+            {
+                "id": node.get("id"),
+                "name": node.get("name"),
+                "desc": node.get("description", node.get("desc", ""))[:30] + "...",
+                "prerequisites": [],
+                "hours": node.get("estimated_hours", node.get("hours", 0)),
+            }
+        )
+
+    # 中級ノード: prerequisites が1個のものから選択
+    intermediate_nodes = [n for n in nodes if len(n.get("prerequisites", [])) == 1]
+    if intermediate_nodes:
+        node = intermediate_nodes[0]
+        sample_nodes.append(
+            {
+                "id": node.get("id"),
+                "name": node.get("name"),
+                "desc": node.get("description", node.get("desc", ""))[:30] + "...",
+                "prerequisites": node.get("prerequisites", []),
+                "hours": node.get("estimated_hours", node.get("hours", 0)),
+            }
+        )
+
+    # 応用ノード: prerequisites が2個以上のものから選択
+    advanced_nodes = [n for n in nodes if len(n.get("prerequisites", [])) >= 2]
+    if advanced_nodes:
+        node = advanced_nodes[0]
+        sample_nodes.append(
+            {
+                "id": node.get("id"),
+                "name": node.get("name"),
+                "desc": node.get("description", node.get("desc", ""))[:30] + "...",
+                "prerequisites": node.get("prerequisites", [])[:2],  # 最大2個まで
+                "hours": node.get("estimated_hours", node.get("hours", 0)),
+            }
+        )
+
+    return json.dumps(sample_nodes, ensure_ascii=False)
+
+
 def _build_skill_tree_prompt(
     profile: Any,
     category: SkillCategory,
@@ -265,7 +334,7 @@ def _build_skill_tree_prompt(
     baseline_data: dict[str, Any],
 ) -> str:
     """
-    LLMプロンプトを生成
+    LLMプロンプトを生成（Few-shot形式で簡潔化）
 
     Args:
         profile: Profileモデルインスタンス
@@ -288,19 +357,18 @@ def _build_skill_tree_prompt(
     user_rank = profile.user.rank if profile.user else 0
     rank_name = RANK_NAMES.get(user_rank, "不明")
 
+    # ベースライン簡略化（Few-shot用に3-5ノードのみ）
+    simplified_baseline = _simplify_baseline_for_prompt(baseline_data)
+
     # プロンプトテンプレートに埋め込み
     prompt = SKILL_TREE_ANALYSIS_TEMPLATE.format(
         rank=user_rank,
         rank_name=rank_name,
         github_username=profile.github_username or "未設定",
-        languages=", ".join(github_analysis.get("languages", [])) or "なし",
-        repo_count=github_analysis.get("repo_count", 0),
         tech_stack=", ".join(github_analysis.get("tech_stack", [])) or "なし",
-        recent_activity=github_analysis.get("recent_activity", "不明"),
         acquired_skills=", ".join(acquired_skills) or "なし",
-        completed_quests=", ".join(completed_quests) or "なし",
         category=category.value,
-        baseline_json=json.dumps(baseline_data, ensure_ascii=False, indent=2),
+        baseline_json=simplified_baseline,  # 簡略化版を使用
     )
 
     return prompt

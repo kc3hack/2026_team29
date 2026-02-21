@@ -431,8 +431,7 @@ class TestSkillTreeService:
 
         # Assert: プロンプトに必要な情報が含まれているか
         assert "testuser" in prompt
-        assert "Python" in prompt
-        assert "FastAPI" in prompt
-        assert "web_js_basics" in prompt
-        assert "HTML基礎演習" in prompt
+        assert "FastAPI" in prompt  # tech_stackが含まれている
+        assert "React" in prompt  # tech_stackが含まれている
+        assert "web_js_basics" in prompt  # completion_signalsが含まれている
         assert "母樹" in prompt  # rank 4 = 母樹

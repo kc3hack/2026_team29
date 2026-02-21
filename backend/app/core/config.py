@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # CORS設定
-    BACKEND_CORS_ORIGINS: list[str] = []  # 本番環境では必ず具体的なオリジンを.envで設定すること（"*"は許可しない）
+    BACKEND_CORS_ORIGINS: list[str] = (
+        []
+    )  # 本番環境では必ず具体的なオリジンを.envで設定すること（"*"は許可しない）
 
     # プロジェクト情報
     PROJECT_NAME: str = "Team29 Backend"
@@ -52,7 +54,7 @@ class Settings(BaseSettings):
 
     # OpenAI
     OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_MODEL: str = "gpt-3.5-turbo-0125"  # 速度優先: gpt-4o-miniより2-3倍高速
 
     # Anthropic
     ANTHROPIC_API_KEY: str = ""

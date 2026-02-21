@@ -18,7 +18,10 @@ import { ZoomControls } from "../../skill-tree/components/ZoomControls";
 import { LoadingSpinner } from "../../skill-tree/components/LoadingSpinner";
 import { ErrorMessage } from "../../skill-tree/components/ErrorMessage";
 import type { SkillNode as TreeSkillNode } from "../../skill-tree/types/data";
-import { fetchSkillTree } from "@/lib/api/skillTree";
+import {
+  streamSkillTreeBuffered,
+  type SkillTreeNode as ApiSkillTreeNode,
+} from "@/lib/api/skillTree";
 import { convertApiNodesToCanvasNodes } from "../../skill-tree/utils/converter";
 
 // Canvas component を動的インポート（SSR無効化でパフォーマンス改善）
@@ -49,6 +52,8 @@ export function DashboardContainer() {
   // ユーザーステータス（バッジ、ランク等）
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamProgress, setStreamProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   // Skill Tree States
@@ -57,49 +62,125 @@ export function DashboardContainer() {
     type: string;
     ts: number;
   } | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSelectNode = useCallback((node: TreeSkillNode | null) => {
     setSelectedNode(node);
   }, []);
 
   useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let progressInterval: NodeJS.Timeout | null = null;
+    const receivedNodes: ApiSkillTreeNode[] = [];
+    let isCompleted = false;
+    let isMounted = true; // マウント状態を追跡
+
     const loadDashboard = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // ユーザー基本情報とスキルツリーを並行取得
-        const [statusData, treeData] = await Promise.all([
-          fetchUserDashboard("me"), // バッジ、ランク等（認証済みユーザー）
-          fetchSkillTree(category), // スキルツリー（バックエンドAPI、認証済みユーザー）
-        ]);
+        // ユーザー基本情報のみ取得
+        const statusData = await fetchUserDashboard("me");
+        if (!isMounted) return; // アンマウント済みなら中断
 
         setUserStatus(statusData);
+        setLoading(false);
 
-        // APIデータをキャンバス用のデータ構造に変換
-        const canvasNodes = convertApiNodesToCanvasNodes(
-          treeData.tree_data.nodes,
+        // スキルツリーはストリーミングで取得
+        setIsStreaming(true);
+        setStreamProgress(0);
+        setSkillTreeNodes([]); // 初期化
+
+        // 疑似プログレスバー: 0-95%まで徐々に進める（LLM生成待ち用に余裕を持たせる）
+        let currentProgress = 0;
+        progressInterval = setInterval(() => {
+          if (isCompleted || !isMounted) return;
+
+          // 進捗速度を段階的に調整（最初は速く、後半はかなり遅く）
+          const increment =
+            currentProgress < 40
+              ? 1.5
+              : currentProgress < 70
+                ? 0.8
+                : currentProgress < 90
+                  ? 0.3
+                  : 0.1;
+          currentProgress = Math.min(currentProgress + increment, 95); // 95%で止める
+          setStreamProgress(currentProgress);
+        }, 200); // 200msごとに更新（より長い待ち時間）
+
+        eventSource = streamSkillTreeBuffered(
           category,
+          // 進捗コールバック（無視 - 疑似プログレスを使用）
+          () => {
+            // バックエンドの進捗は使わない
+          },
+          // ソート済みノード受信コールバック（バッファに溜めるのみ）
+          (node) => {
+            receivedNodes.push(node);
+            // 途中では座標計算せず、最後に一度だけ変換
+          },
+          // メタデータコールバック
+          (_metadata) => {
+            // メタデータ受信（必要に応じて処理を追加）
+          },
+          // 完了コールバック（ここで一度だけ変換）
+          () => {
+            if (isCompleted || !isMounted) {
+              return; // 既に完了済み、またはアンマウント済みなら何もしない
+            }
+
+            isCompleted = true;
+            if (progressInterval) clearInterval(progressInterval);
+
+            // 全ノード受信完了 → 座標計算して表示
+            const canvasNodes = convertApiNodesToCanvasNodes(
+              receivedNodes,
+              category,
+            );
+
+            setSkillTreeNodes(canvasNodes);
+            setStreamProgress(100);
+
+            // 0.5秒後にプログレスバーを非表示
+            setTimeout(() => {
+              if (!isMounted) return;
+              setIsStreaming(false);
+            }, 500);
+          },
+          // エラーコールバック
+          (err) => {
+            if (!isMounted) return;
+            if (progressInterval) clearInterval(progressInterval);
+            setIsStreaming(false);
+            setError(err.message);
+          },
         );
-        setSkillTreeNodes(canvasNodes);
       } catch (err) {
+        if (!isMounted) return;
         const errorMessage =
           err instanceof Error
             ? err.message
             : "ダッシュボードの読み込みに失敗しました";
         setError(errorMessage);
         console.error("Dashboard load error:", err);
-      } finally {
         setLoading(false);
+        setIsStreaming(false);
       }
     };
 
     loadDashboard();
+
+    // クリーンアップ: カテゴリ変更時にストリーミング停止
+    return () => {
+      isMounted = false; // アンマウント状態を記録
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
   }, [category]);
 
   if (loading) {
@@ -107,7 +188,7 @@ export function DashboardContainer() {
       <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
         <div className="text-center">
           <div className="mb-4 inline-flex h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-[#559C71]" />
-          <p className="text-[#559C71] tracking-widest">LOADING...</p>
+          <p className="text-[#559C71] tracking-widest">LOADING USER DATA...</p>
         </div>
       </div>
     );
@@ -159,6 +240,37 @@ export function DashboardContainer() {
           <div className="relative w-full h-150 overflow-hidden border-4 border-[#2C5F2D] bg-[#0a0f08] shadow-[8px_8px_0_0_#2C5F2D]">
             <div className="absolute inset-0 bg-[linear-gradient(rgba(74,222,128,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(74,222,128,0.03)_1px,transparent_1px)] bg-[size:20px_20px]" />
             <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-[#0a0f08]/80" />
+
+            {/* Streaming Progress Indicator (Center) */}
+            {isStreaming && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-96">
+                <div className="rounded-none border-4 border-[#559C71] bg-[#0a0f08]/95 px-8 py-6 shadow-[8px_8px_0px_0px_rgba(85,156,113,1)] backdrop-blur-sm">
+                  <div className="flex items-center justify-center gap-4 mb-4">
+                    <div className="h-4 w-4 animate-spin rounded-full border-3 border-[#559C71] border-t-transparent" />
+                    <span className="text-xl font-bold text-[#4ade80] tracking-widest">
+                      GENERATING SKILL TREE
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-[#4ade80] tracking-wide">
+                        Progress
+                      </span>
+                      <span className="text-2xl font-bold text-[#fcd34d] tracking-wider">
+                        {Math.round(streamProgress)}%
+                      </span>
+                    </div>
+                    <div className="h-3 w-full border-2 border-[#559C71] bg-[#0a0f08]">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#559C71] to-[#4ade80] transition-all duration-300 ease-out"
+                        style={{ width: `${streamProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <LoadingSpinner />
             ) : error ? (
