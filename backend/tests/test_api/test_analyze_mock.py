@@ -1,12 +1,12 @@
 """
-モックAPIエンドポイントのテスト - Issue #35, #54
+モックAPIエンドポイントのテスト - Issue #35, #54, #74
 
 Test Coverage:
-1. スキルツリー生成エンドポイント（/analyze/skill-tree）
+1. スキルツリー生成エンドポイント（GET /users/me/skill-trees）
    - 全6カテゴリのデータ存在確認
    - tree_data JSON構造の検証（nodes, edges, metadata）
    - バリデーションエラー処理
-   - Note: Issue #54でAI実装に移行、モック化してテスト
+   - Note: Issue #74で認証必須エンドポイントに変更
 
 2. 演習生成エンドポイント（/analyze/quest）
    - カテゴリ別レスポンス確認
@@ -22,8 +22,29 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models.enums import QuestCategory, SkillCategory
 from app.schemas.analyze import SkillTreeResponse
+from app.db.session import get_db
 
 client = TestClient(app)
+
+
+def _get_authenticated_client(db):
+    """認証済みのテストクライアントを返す"""
+    from app.crud.user import create_user
+    from app.schemas.user import UserCreate
+
+    # テストユーザー作成
+    test_user = create_user(
+        db, UserCreate(username="test_skill_tree_user", password="testpass123")
+    )
+
+    # ログインしてCookieを取得
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "test_skill_tree_user", "password": "testpass123"},
+    )
+    assert response.status_code == 200
+
+    return test_user
 
 
 # ====================================
@@ -32,7 +53,7 @@ client = TestClient(app)
 
 
 class TestSkillTreeGeneration:
-    """スキルツリー生成API（/analyze/skill-tree）のテスト"""
+    """スキルツリー生成API（GET /users/me/skill-trees）のテスト"""
 
     @pytest.mark.parametrize(
         "category",
@@ -45,8 +66,11 @@ class TestSkillTreeGeneration:
             SkillCategory.GAME,
         ],
     )
-    def test_generate_skill_tree_all_categories(self, category: SkillCategory):
+    def test_generate_skill_tree_all_categories(self, db, category: SkillCategory):
         """全6カテゴリでスキルツリーが正常に生成されることを確認（AI実装モック）"""
+        # 認証済みユーザーを準備
+        test_user = _get_authenticated_client(db)
+
         # Mock: AI実装をモック化
         mock_tree_data = {
             "nodes": [
@@ -75,16 +99,12 @@ class TestSkillTreeGeneration:
         )
 
         with patch(
-            "app.api.endpoints.analyze.generate_skill_tree_ai",
+            "app.api.endpoints.user_skill_tree.generate_skill_tree_ai",
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            response = client.post(
-                "/api/v1/analyze/skill-tree",
-                json={
-                    "user_id": 1,
-                    "category": category.value,
-                },
+            response = client.get(
+                f"/api/v1/users/me/skill-trees?category={category.value}",
             )
 
         assert response.status_code == 200
@@ -134,41 +154,34 @@ class TestSkillTreeGeneration:
         assert isinstance(metadata["next_recommended"], list)
         assert metadata["total_nodes"] == len(tree_data["nodes"])
 
-    def test_skill_tree_invalid_user_id(self):
-        """user_idが無効な場合のバリデーションエラー"""
-        response = client.post(
-            "/api/v1/analyze/skill-tree",
-            json={
-                "user_id": 0,  # 0は無効（gt=0）
-                "category": "web",
-            },
-        )
-
-        assert response.status_code == 422  # Unprocessable Entity
-
-    def test_skill_tree_invalid_category(self):
+    def test_skill_tree_invalid_category(self, db):
         """categoryが無効な場合のバリデーションエラー"""
-        response = client.post(
-            "/api/v1/analyze/skill-tree",
-            json={
-                "user_id": 1,
-                "category": "invalid_category",  # 存在しないカテゴリ
-            },
-        )
+        # 認証済みユーザーを準備
+        _get_authenticated_client(db)
+
+        response = client.get("/api/v1/users/me/skill-trees?category=invalid_category")
 
         assert response.status_code == 422  # Unprocessable Entity
 
-    def test_skill_tree_missing_required_fields(self):
-        """必須フィールドが欠けている場合のエラー"""
-        response = client.post(
-            "/api/v1/analyze/skill-tree",
-            json={
-                "user_id": 1,
-                # category が欠けている
-            },
-        )
+    def test_skill_tree_missing_required_fields(self, db):
+        """必須フィールド（category）が欠けている場合のエラー"""
+        # 認証済みユーザーを準備
+        _get_authenticated_client(db)
+
+        response = client.get("/api/v1/users/me/skill-trees")
 
         assert response.status_code == 422  # Unprocessable Entity
+
+    def test_skill_tree_without_authentication(self):
+        """認証なしでアクセスした場合は401エラー"""
+        # 新しいクライアント（認証なし）
+        unauthenticated_client = TestClient(app)
+
+        response = unauthenticated_client.get(
+            "/api/v1/users/me/skill-trees?category=web"
+        )
+
+        assert response.status_code == 401  # Unauthorized
 
 
 # ====================================
@@ -193,8 +206,8 @@ class TestQuestGeneration:
     def test_generate_quest_all_categories(self, category: QuestCategory):
         """全6カテゴリで演習が正常に生成されることを確認"""
         # Mock: ユーザー情報
-        mock_user = type('User', (), {'rank': 3})()
-        
+        mock_user = type("User", (), {"rank": 3})()
+
         # Mock: LLM実装をモック化
         mock_llm_result = {
             "title": f"{category.value.capitalize()} Quest",
@@ -215,9 +228,12 @@ class TestQuestGeneration:
             "estimated_time_minutes": 60,
             "resources": [{"title": "Resource 1", "url": "https://example.com"}],
         }
-        
-        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), \
-             patch("app.api.endpoints.analyze.generate_handson_quest", new_callable=AsyncMock, return_value=mock_llm_result):
+
+        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), patch(
+            "app.api.endpoints.analyze.generate_handson_quest",
+            new_callable=AsyncMock,
+            return_value=mock_llm_result,
+        ):
             response = client.post(
                 "/api/v1/analyze/quest",
                 json={
@@ -272,7 +288,7 @@ class TestQuestGeneration:
     def test_generate_quest_valid_difficulty_range(self, difficulty: int):
         """difficulty範囲（0-9）が正しいことを確認"""
         # Mock: ユーザー情報とLLM実装
-        mock_user = type('User', (), {'rank': 3})()
+        mock_user = type("User", (), {"rank": 3})()
         mock_llm_result = {
             "title": "Test Quest",
             "difficulty": "intermediate",
@@ -281,9 +297,12 @@ class TestQuestGeneration:
             "estimated_time_minutes": 60,
             "resources": [{"title": "Resource", "url": "https://example.com"}],
         }
-        
-        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), \
-             patch("app.api.endpoints.analyze.generate_handson_quest", new_callable=AsyncMock, return_value=mock_llm_result):
+
+        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), patch(
+            "app.api.endpoints.analyze.generate_handson_quest",
+            new_callable=AsyncMock,
+            return_value=mock_llm_result,
+        ):
             response = client.post(
                 "/api/v1/analyze/quest",
                 json={
@@ -317,7 +336,7 @@ class TestQuestGeneration:
     def test_generate_quest_document_text_size_limit(self):
         """document_textのサイズ制限（100KB）を確認"""
         # Mock: ユーザー情報とLLM実装
-        mock_user = type('User', (), {'rank': 3})()
+        mock_user = type("User", (), {"rank": 3})()
         mock_llm_result = {
             "title": "Test Quest",
             "difficulty": "intermediate",
@@ -326,11 +345,14 @@ class TestQuestGeneration:
             "estimated_time_minutes": 60,
             "resources": [{"title": "Resource", "url": "https://example.com"}],
         }
-        
+
         # 100KB以下のテキスト（正常）
         small_text = "A" * 50000  # 50KB
-        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), \
-             patch("app.api.endpoints.analyze.generate_handson_quest", new_callable=AsyncMock, return_value=mock_llm_result):
+        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), patch(
+            "app.api.endpoints.analyze.generate_handson_quest",
+            new_callable=AsyncMock,
+            return_value=mock_llm_result,
+        ):
             response = client.post(
                 "/api/v1/analyze/quest",
                 json={
@@ -385,7 +407,7 @@ class TestQuestGeneration:
     def test_generate_quest_optional_document_text(self):
         """document_textは省略可能であることを確認"""
         # Mock: ユーザー情報とLLM実装
-        mock_user = type('User', (), {'rank': 3})()
+        mock_user = type("User", (), {"rank": 3})()
         mock_llm_result = {
             "title": "Test Quest",
             "difficulty": "intermediate",
@@ -394,9 +416,12 @@ class TestQuestGeneration:
             "estimated_time_minutes": 60,
             "resources": [{"title": "Resource", "url": "https://example.com"}],
         }
-        
-        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), \
-             patch("app.api.endpoints.analyze.generate_handson_quest", new_callable=AsyncMock, return_value=mock_llm_result):
+
+        with patch("app.api.endpoints.analyze.get_user", return_value=mock_user), patch(
+            "app.api.endpoints.analyze.generate_handson_quest",
+            new_callable=AsyncMock,
+            return_value=mock_llm_result,
+        ):
             response = client.post(
                 "/api/v1/analyze/quest",
                 json={

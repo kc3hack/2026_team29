@@ -217,10 +217,10 @@ def test_generate_skill_tree_real_api(db: Session):
     """
     実際のGitHub API + LLM APIを使用したスキルツリー生成テスト
 
-    Issue #64: スキルツリー生成の統合テスト
+    Issue #64, #74: スキルツリー生成の統合テスト（認証必須）
 
     検証項目:
-    - POST /api/v1/analyze/skill-tree が正常に動作する
+    - GET /api/v1/users/me/skill-trees が正常に動作する
     - GitHub APIでユーザー情報を取得できる
     - LLMでパーソナライズされたスキルツリーが生成される
     - GitHub分析結果でcompletedフラグが更新される
@@ -255,10 +255,13 @@ def test_generate_skill_tree_real_api(db: Session):
     app.dependency_overrides[get_db] = override_get_db
 
     try:
-        # テストユーザー作成
-        test_user = User(username="test_skill_tree_user", rank=3)
-        db.add(test_user)
-        db.flush()
+        # テストユーザー作成とログイン
+        from app.crud.user import create_user
+        from app.schemas.user import UserCreate
+
+        test_user = create_user(
+            db, UserCreate(username="test_skill_tree_api_user", password="testpass123")
+        )
 
         test_profile = Profile(
             user_id=test_user.id,
@@ -271,11 +274,15 @@ def test_generate_skill_tree_real_api(db: Session):
         # スキルツリー初期化
         initialize_skill_trees_for_user(db, test_user.id)
 
-        # スキルツリー生成リクエスト（WEBカテゴリ）
-        response = client.post(
-            "/api/v1/analyze/skill-tree",
-            json={"user_id": test_user.id, "category": "web"},
+        # ログインしてCookieを取得
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"username": "test_skill_tree_api_user", "password": "testpass123"},
         )
+        assert login_response.status_code == 200
+
+        # スキルツリー生成リクエスト（WEBカテゴリ）
+        response = client.get("/api/v1/users/me/skill-trees?category=web")
 
         # レスポンス検証
         assert (
@@ -374,10 +381,13 @@ def test_generate_skill_tree_custom_github(db: Session):
     app.dependency_overrides[get_db] = override_get_db
 
     try:
-        # テストユーザー作成
-        test_user = User(username=f"test_{github_username}", rank=3)
-        db.add(test_user)
-        db.flush()
+        # テストユーザー作成とログイン
+        from app.crud.user import create_user
+        from app.schemas.user import UserCreate
+
+        test_user = create_user(
+            db, UserCreate(username=f"test_{github_username}", password="testpass123")
+        )
 
         test_profile = Profile(
             user_id=test_user.id,
@@ -390,6 +400,13 @@ def test_generate_skill_tree_custom_github(db: Session):
         # スキルツリー初期化
         initialize_skill_trees_for_user(db, test_user.id)
 
+        # ログインしてCookieを取得
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"username": f"test_{github_username}", "password": "testpass123"},
+        )
+        assert login_response.status_code == 200
+
         # 全カテゴリでスキルツリー生成
         categories = ["web", "ai", "security", "infrastructure", "design", "game"]
 
@@ -398,10 +415,7 @@ def test_generate_skill_tree_custom_github(db: Session):
             print(f"カテゴリ: {category.upper()}")
             print("=" * 50)
 
-            response = client.post(
-                "/api/v1/analyze/skill-tree",
-                json={"user_id": test_user.id, "category": category},
-            )
+            response = client.get(f"/api/v1/users/me/skill-trees?category={category}")
 
             assert (
                 response.status_code == 200

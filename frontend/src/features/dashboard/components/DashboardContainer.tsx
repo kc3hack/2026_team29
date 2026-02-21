@@ -45,6 +45,31 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
         const data = await fetchUserDashboard(userId);
         setUserStatus(data);
         setError(null);
+<<<<<<< Updated upstream
+=======
+
+        // ユーザー基本情報とスキルツリーを並行取得
+        const [statusData, treeData] = await Promise.all([
+          fetchUserDashboard(userId), // バッジ、ランク等（既存のmock API）
+          fetchSkillTree(category), // スキルツリー（バックエンドAPI、認証済みユーザー）
+        ]);
+
+        setUserStatus(statusData);
+
+        // console.log("=== Dashboard API Response Debug ===");
+        // console.log("Category:", category);
+        // console.log("Tree Data:", treeData);
+        // console.log("API Nodes count:", treeData?.tree_data?.nodes?.length);
+
+        // APIデータをキャンバス用のデータ構造に変換
+        const canvasNodes = convertApiNodesToCanvasNodes(
+          treeData.tree_data.nodes,
+          category,
+        );
+        // console.log("Canvas Nodes count:", canvasNodes.length);
+        // console.log("Canvas Nodes:", canvasNodes);
+        setSkillTreeNodes(canvasNodes);
+>>>>>>> Stashed changes
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'ダッシュボードの読み込みに失敗しました'

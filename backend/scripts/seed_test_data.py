@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.models.profile import Profile
+from app.crud import user as crud_user
+from app.schemas.user import UserCreate
 
 
 def seed_test_users():
@@ -50,12 +52,13 @@ def seed_test_users():
             print("既存データを削除しました。\n")
 
         # User 1: 初心者（rank=2）
-        user1 = User(
-            username="test_beginner",
-            rank=2,
-            exp=100,
+        user1 = crud_user.create_user(
+            db,
+            UserCreate(username="test_beginner", password="testpass123"),
+            commit=False,
         )
-        db.add(user1)
+        user1.rank = 2
+        user1.exp = 100
         db.flush()
 
         profile1 = Profile(
@@ -65,12 +68,13 @@ def seed_test_users():
         db.add(profile1)
 
         # User 2: 中級者（rank=5）
-        user2 = User(
-            username="test_intermediate",
-            rank=5,
-            exp=1000,
+        user2 = crud_user.create_user(
+            db,
+            UserCreate(username="test_intermediate", password="testpass123"),
+            commit=False,
         )
-        db.add(user2)
+        user2.rank = 5
+        user2.exp = 1000
         db.flush()
 
         profile2 = Profile(
@@ -80,12 +84,13 @@ def seed_test_users():
         db.add(profile2)
 
         # User 3: 上級者（rank=8）
-        user3 = User(
-            username="test_advanced",
-            rank=8,
-            exp=5000,
+        user3 = crud_user.create_user(
+            db,
+            UserCreate(username="test_advanced", password="testpass123"),
+            commit=False,
         )
-        db.add(user3)
+        user3.rank = 8
+        user3.exp = 5000
         db.flush()
 
         profile3 = Profile(
