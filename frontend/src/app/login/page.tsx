@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, register } from "@/lib/api/auth";
+import { RankMeasurement } from "@/features/dashboard/components/RankMeasurement";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showRankMeasurement, setShowRankMeasurement] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,14 +35,19 @@ export default function LoginPage() {
   };
 
   const handleGitHubLogin = () => {
-    // GitHub OAuth フローを開始（バックエンドへリダイレクト）
+    // ランク測定UIを表示
+    setShowRankMeasurement(true);
+  };
+
+  const handleRankMeasurementComplete = () => {
+    // ランク測定完了後、GitHub OAuth フローを開始
     const apiBaseUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     window.location.href = `${apiBaseUrl}/api/v1/auth/github/login`;
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#97C88C] via-[#A8D5A1] to-[#8BC880] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-[#97C88C] via-[#A8D5A1] to-[#8BC880] p-4">
       <div className="w-full max-w-md rounded-lg border-4 border-[#2C5F2D] bg-[#F5F5DC] p-8 shadow-[8px_8px_0_0_#2C5F2D] animate-[slideUp_0.3s_ease-out]">
         {/* Header with Icon */}
         <div className="mb-6 text-center">
@@ -65,12 +72,12 @@ export default function LoginPage() {
             type="button"
             onClick={handleGitHubLogin}
             disabled={loading}
-            className="group relative w-full overflow-hidden rounded border-2 border-[#2C5F2D] bg-[#2C5F2D] p-4 font-mono font-bold tracking-widest text-white shadow-[4px_4px_0_0_#1F4521] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_0_#1F4521] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative w-full overflow-hidden rounded border-2 border-[#2C5F2D] bg-[#2C5F2D] p-4 font-mono font-bold tracking-widest text-white shadow-[4px_4px_0_0_#1F4521] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_#1F4521] active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
               🚀 GitHub でログイン（推奨）
             </span>
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
+            <div className="absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700" />
           </button>
           <p className="mt-3 text-center text-xs text-gray-600 leading-relaxed">
             💡 GitHubリポジトリを分析して
@@ -184,6 +191,17 @@ export default function LoginPage() {
           }
         }
       `}</style>
+
+      {/* ランク測定モーダル */}
+      {showRankMeasurement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full h-full overflow-auto">
+            <RankMeasurement 
+              onComplete={handleRankMeasurementComplete}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
