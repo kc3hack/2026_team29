@@ -6,7 +6,7 @@ Swagger UI: /admin/docs（認証必須）
 
 import secrets
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -106,8 +106,8 @@ def fix_user_ranks(
 def admin_list_quests(
     category: QuestCategory | None = None,
     difficulty: int | None = None,
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0, description="スキップ件数（0以上）"),
+    limit: int = Query(50, ge=1, le=_ADMIN_LIST_MAX, description=f"取得件数（1〜{_ADMIN_LIST_MAX}）"),
     db: Session = Depends(get_db),
     _: None = Depends(verify_admin_key),
 ) -> list[QuestSummary]:
@@ -115,11 +115,6 @@ def admin_list_quests(
 
     認証: X-Admin-Key ヘッダーが必要
     """
-    if limit > _ADMIN_LIST_MAX:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"limit は {_ADMIN_LIST_MAX} 以下にしてください",
-        )
     return crud_quest.list_quests(db, skip=skip, limit=limit, category=category, difficulty=difficulty)
 
 
@@ -178,8 +173,10 @@ def _steps_to_markdown(result: dict) -> str:
         lines.append("")
 
     for step in result.get("steps", []):
-        lines.append(f"## Step {step['step_number']}: {step['title']}\n")
-        lines.append(step["description"])
+        step_num = step.get("step_number", 0)
+        step_title = step.get("title", "Untitled")
+        lines.append(f"## Step {step_num}: {step_title}\n")
+        lines.append(step.get("description", ""))
         code: str = step.get("code_example", "")
         if code:
             lines.append(f"\n```\n{code}\n```")
