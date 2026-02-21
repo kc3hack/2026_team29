@@ -104,7 +104,9 @@ export default function ExerciseDetailPage({ params }: PageProps) {
             testId={exercise.confirmationTest.id}
             title={exercise.confirmationTest.title}
             description={exercise.confirmationTest.description}
+            type={exercise.confirmationTest.type}
             problem={exercise.confirmationTest.problem}
+            choices={exercise.confirmationTest.choices}
             placeholder={exercise.confirmationTest.placeholder}
             onSubmit={handleTestSubmit}
           />
