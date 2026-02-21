@@ -44,88 +44,84 @@ export function SkillNodePanel({ node, onClose }: Props) {
     <div
       className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-[360px] max-w-[calc(100vw-2rem)] p-4 font-sans animate-in slide-in-from-bottom-4 duration-200"
       style={{
-        background: "#1a1a2e",
+        background: "rgba(31, 41, 55, 0.95)",
         border: "4px solid #e8b849",
-        boxShadow: "inset 2px 2px 0 #f5d97a, inset -2px -2px 0 #a67c20, 0 4px 0 #0a0a1a",
+        boxShadow: "inset 2px 2px 0 #fcd34d, inset -2px -2px 0 #b45309, 0 4px 0 #000",
         imageRendering: "pixelated",
       }}
     >
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-2 right-3 text-sm font-bold"
-        style={{ color: "#8888aa" }}
+        className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center border-2 border-[#e8b849] bg-[#1f2937] text-sm text-[#e8b849] hover:bg-[#e8b849] hover:text-[#1f2937]"
         aria-label="Close panel"
       >
-        {"x"}
+        {"X"}
       </button>
 
       {/* Header */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-4">
         {/* Pixel icon box */}
         <div
-          className="w-10 h-10 flex items-center justify-center text-lg shrink-0"
+          className="w-12 h-12 flex items-center justify-center text-xl shrink-0 border-2 bg-gray-900"
           style={{
-            background: "#2a2a4e",
-            border: `3px solid ${statusColor}`,
-            boxShadow: `inset 1px 1px 0 ${statusColor}66`,
+            borderColor: statusColor,
             color: statusColor,
+            boxShadow: `0 0 10px ${statusColor}44`
           }}
         >
-          {node.status === "completed" ? "\u2713" : node.status === "available" ? "!" : "\u25A0"}
+          {node.status === "completed" ? "✔" : node.status === "available" ? "!" : "🔒"}
         </div>
         <div>
-          <h3 className="text-sm font-bold leading-tight" style={{ color: statusColor }}>
+          <h3 className="text-lg font-bold leading-tight" style={{ color: statusColor }}>
             {node.label}
           </h3>
-          {/* <p className="text-[9px]" style={{ color: "#8888aa" }}>
-            {node.labelEn}
-          </p> */}
         </div>
       </div>
 
       {/* Tags row */}
-      <div className="flex flex-wrap gap-1.5 mb-3">
+      <div className="flex flex-wrap gap-2 mb-4">
         <span
-          className="text-[9px] px-2 py-0.5"
-          style={{ background: `${catColor}22`, color: catColor, border: `2px solid ${catColor}44` }}
+          className="text-xs px-2 py-1 font-bold tracking-wide"
+          style={{ background: "#1f2937", color: catColor, border: `1px solid ${catColor}` }}
         >
           {CATEGORY_LABELS[node.category]}
         </span>
         <span
-          className="text-[9px] px-2 py-0.5"
-          style={{ background: `${statusColor}22`, color: statusColor, border: `2px solid ${statusColor}44` }}
+          className="text-xs px-2 py-1 font-bold tracking-wide"
+          style={{ background: "#1f2937", color: statusColor, border: `1px solid ${statusColor}` }}
         >
           {STATUS_LABELS[node.status]}
         </span>
         <span
-          className="text-[9px] px-2 py-0.5"
-          style={{ background: "#2a2a4e", color: "#8888aa", border: "2px solid #444466" }}
+          className="text-xs px-2 py-1 font-bold tracking-wide text-gray-400 border border-gray-600 bg-[#1f2937]"
         >
-          {"Tier " + node.tier + " " + rank.nameJa}
+          {"TIER " + node.tier}
         </span>
       </div>
 
       {/* Description */}
-      <p className="text-xs leading-relaxed" style={{ color: "#c0c0d0" }}>
-        {node.description}
-      </p>
+      <div className="bg-[#0a0f08] border border-gray-700 p-3 mb-3">
+        <p className="text-sm leading-relaxed text-gray-300">
+          {node.description}
+        </p>
+      </div>
 
       {/* Action hint */}
       {node.status === "available" && (
         <div
-          className="mt-3 text-[10px] text-center py-1.5"
-          style={{ background: "#1a2a1a", border: "2px solid #5abf5a44", color: "#5abf5a" }}
+          className="mt-2 text-xs text-center py-2 font-bold tracking-wider animate-pulse"
+          style={{ background: "#14532d", border: "1px solid #4ade80", color: "#4ade80" }}
         >
-          {"GitHub\u30EA\u30DD\u30B8\u30C8\u30EA\u3092\u5206\u6790\u3057\u3066\u30B9\u30AD\u30EB\u3092\u81EA\u52D5\u5224\u5B9A\u3057\u307E\u3059"}
+          {"AVAILABLE FOR ANALYSIS"}
         </div>
       )}
       {node.status === "locked" && (
         <div
-          className="mt-3 text-[10px] text-center py-1.5"
-          style={{ background: "#1a1a2a", border: "2px solid #44446644", color: "#8888aa" }}
+          className="mt-2 text-xs text-center py-2 font-bold tracking-wider"
+          style={{ background: "#374151", border: "1px solid #6b7280", color: "#9ca3af" }}
         >
-          {"\u524D\u63D0\u30B9\u30AD\u30EB\u3092\u30AF\u30EA\u30A2\u3059\u308B\u3068\u30A2\u30F3\u30ED\u30C3\u30AF\u3055\u308C\u307E\u3059"}
+          {"LOCKED - PREREQUISITES REQUIRED"}
         </div>
       )}
     </div>

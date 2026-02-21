@@ -59,11 +59,11 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
+      <div className="flex min-h-screen items-center justify-center bg-transparent">
         <div className="text-center">
           <div className="mb-4 inline-flex h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-[#559C71]" />
-          <p className="text-[#559C71]">
-            Loading...
+          <p className="text-[#559C71] tracking-widest">
+            LOADING...
           </p>
         </div>
       </div>
@@ -72,9 +72,9 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
   if (error || !userStatus) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDFEF0]">
-        <div className="rounded-lg bg-white p-8 text-center shadow-lg">
-          <p className="text-red-600">
+      <div className="flex min-h-screen items-center justify-center bg-transparent">
+        <div className="rounded-none border-2 border-red-500 bg-white p-8 text-center shadow-[4px_4px_0px_0px_rgba(239,68,68,1)]">
+          <p className="text-red-500">
             {error || 'Error loading dashboard'}
           </p>
         </div>
@@ -83,25 +83,31 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
   }
 
   return (
-    <main className="min-h-screen bg-[#FDFEF0] px-4 py-8">
-      <div className="mx-auto max-w-5xl space-y-12">
+    <main className="min-h-screen bg-transparent px-4 py-4 font-sans text-gray-900">
+      <div className="mx-auto max-w-6xl space-y-8">
         {/* Header Section */}
-        <div className="flex flex-col gap-4 relative z-10">
-            <h1 className="text-4xl font-bold tracking-tight text-[#2C5F2D]">こんにちは</h1>
+        <div className="flex flex-col gap-6 relative z-10 md:flex-row md:items-start md:justify-between">
+            <div className="relative pt-2">
+              <h1 className="text-5xl font-bold tracking-widest text-[#2C5F2D] [text-shadow:2px_2px_0_#a3e635]">
+                WELCOME BACK, PLAYER
+              </h1>
+            </div>
             
             {/* Continue Button aligned right */}
-            <div className="flex flex-col items-end self-end w-full max-w-xs">
-                 <span className="mb-2 text-sm font-bold text-[#2C5F2D]">前回の続きから</span>
-                 <button className="group flex w-full items-center justify-between rounded-full border-2 border-[#2C5F2D] bg-white px-6 py-3 text-lg font-bold text-[#2C5F2D] shadow-sm transition-colors hover:bg-gray-50">
-                    <span>演習タイトル</span>
-                    <span className="text-2xl">→</span>
+            <div className="flex flex-col items-end w-full max-w-sm mt-8 md:mt-12">
+                 <span className="mb-2 text-xs tracking-wider text-[#2C5F2D] animate-pulse">CONTINUE MISSION</span>
+                 <button className="group flex w-full items-center justify-between border-2 border-[#2C5F2D] bg-white px-6 py-4 text-lg font-bold text-[#2C5F2D] shadow-[4px_4px_0px_0px_#2C5F2D] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#2C5F2D] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+                    <span className="truncate mr-4">演習タイトル</span>
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
                  </button>
             </div>
         </div>
 
         {/* Skill Tree Section */}
         <section className="relative z-0">
-          <div className="relative w-full h-[600px] overflow-hidden rounded-xl border-4 border-[#2C5F2D] bg-[#0a0f08] shadow-lg">
+          <div className="relative w-full h-[600px] overflow-hidden border-4 border-[#2C5F2D] bg-[#0a0f08] shadow-[8px_8px_0_0_#2C5F2D]">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(74,222,128,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(74,222,128,0.03)_1px,transparent_1px)] bg-[size:20px_20px]" />
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-[#0a0f08]/80" />
             <SkillTreeCanvas
               onSelectNode={handleSelectNode}
               selectedNode={selectedNode}
@@ -116,21 +122,15 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
             />
             
             {/* Title Overlay */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none font-sans">
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none">
               <h3
-                className="text-2xl font-bold tracking-widest"
+                className="text-4xl font-bold tracking-[0.2em] text-[#fcd34d]"
                 style={{
-                  color: "#e8b849",
-                  textShadow: "2px 2px 0 #7a5a10, -1px -1px 0 #0a0a0a",
+                  textShadow: "4px 4px 0 #000, -2px -2px 0 #000",
                 }}
               >
                 SKILL TREE
               </h3>
-              {mounted && (
-                <p className="text-[10px] mt-1" style={{ color: "#666680" }} suppressHydrationWarning>
-                  スクロールでズーム / クリックで詳細
-                </p>
-              )}
             </div>
 
             {selectedNode && (
@@ -141,7 +141,9 @@ export function DashboardContainer({ userId = 'default-user' }: DashboardContain
 
         {/* Acquired Badges Section */}
         <section className="relative z-10 w-full">
-          <AcquiredBadges />
+          <div className="border-t-4 border-[#2C5F2D] pt-8">
+            <AcquiredBadges />
+          </div>
         </section>
       </div>
     </main>

@@ -7,10 +7,10 @@ interface Props {
 }
 
 const btnStyle = {
-  background: "#1a1a2e",
-  border: "3px solid #e8b849",
+  background: "rgba(31, 41, 55, 0.95)",
+  border: "2px solid #e8b849",
   color: "#e8b849",
-  boxShadow: "inset 1px 1px 0 #f5d97a, inset -1px -1px 0 #a67c20, 0 2px 0 #0a0a1a",
+  boxShadow: "2px 2px 0 #2C5F2D",
   imageRendering: "pixelated" as const,
 }
 
@@ -19,7 +19,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset }: Props) {
     <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2 font-sans">
       <button
         onClick={onZoomIn}
-        className="w-9 h-9 flex items-center justify-center text-base font-bold transition-transform active:translate-y-0.5"
+        className="w-10 h-10 flex items-center justify-center text-xl font-bold transition-all active:translate-y-[2px] active:shadow-none hover:bg-[#374151]"
         style={btnStyle}
         aria-label="Zoom in"
       >
@@ -27,7 +27,7 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset }: Props) {
       </button>
       <button
         onClick={onZoomOut}
-        className="w-9 h-9 flex items-center justify-center text-base font-bold transition-transform active:translate-y-0.5"
+        className="w-10 h-10 flex items-center justify-center text-xl font-bold transition-all active:translate-y-[2px] active:shadow-none hover:bg-[#374151]"
         style={btnStyle}
         aria-label="Zoom out"
       >
@@ -35,11 +35,11 @@ export function ZoomControls({ onZoomIn, onZoomOut, onReset }: Props) {
       </button>
       <button
         onClick={onReset}
-        className="w-9 h-9 flex items-center justify-center text-xs font-bold transition-transform active:translate-y-0.5"
+        className="w-10 h-10 flex items-center justify-center text-sm font-bold transition-all active:translate-y-[2px] active:shadow-none hover:bg-[#374151]"
         style={btnStyle}
         aria-label="Reset view"
       >
-        {"R"}
+        {"RES"}
       </button>
     </div>
   )
