@@ -390,18 +390,22 @@ def test_login_existing_user_wrong_password(client):
 
 
 def test_login_github_oauth_user_denied(client, db):
-    """GitHub OAuth 経由で登録したユーザー (hashed_password=NULL) は ID入力ログイン不可 → 403。"""
+    """GitHub OAuth 経由で登録したユーザー (hashed_password=NULL) は ID入力ログイン不可 → 401。
+
+    403 にするとユーザー名の存在・登録方法が確定してしまう（User Enumeration）ため、
+    401 に統一してユーザー名・登録方法を漏洩しない（最小情報開示の原則）。
+    """
     # コールバック経由ではなく DB 直接作成（hashed_password=None の GH OAuth ユーザーを模倣）
     from app.crud.user import create_user as db_create_user
     from app.schemas.user import UserCreate
     db_create_user(db, UserCreate(username=FAKE_GITHUB_USER["login"], password=None))
 
-    # 同じ username で ID入力ログインを試みる → 403
+    # 同じ username で ID入力ログインを試みる → 401（ユーザー名漏洩させない）
     res = client.post(
         "/api/v1/auth/login",
         json={"username": FAKE_GITHUB_USER["login"], "password": "anypassword"},
     )
-    assert res.status_code == 403
+    assert res.status_code == 401
 
 
 def test_login_cookie_enables_authenticated_request(client):

@@ -377,10 +377,9 @@ def login_by_username(
         raise _INVALID
     elif db_user.hashed_password is None:
         # GitHub OAuth 経由で登録したユーザー: ID入力ログイン不可
-        raise HTTPException(
-            status_code=403,
-            detail="アカウントは GitHub で登録されています。GitHub ログインを使用してください。",
-        )
+        # 403 にするとユーザー名の存在が確定してしまう（User Enumeration）ため
+        # 401 に統一してユーザー名・登録方法を漏洩しない（最小情報開示の原則）
+        raise _INVALID
     else:
         # 既存ユーザー: PBKDF2-SHA256 検証
         if not verify_password(body.password, db_user.hashed_password):

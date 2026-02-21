@@ -44,8 +44,19 @@ with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
 | `test_callback_invalid_state_returns_400` | state 改ざん検知 400 |
 | `test_callback_missing_state_returns_422` | state パラメータ欠落 422 |
 | `test_callback_github_token_exchange_fails` | GitHub が access_token を返さない 400 |
+| `test_callback_token_exchange_network_error` | ネットワーク障害でトークン交換失敗 502 |
+| `test_callback_user_info_network_error` | トークン取得後に GitHub ユーザー情報取得でネットワークエラー 502 |
+| `test_callback_token_exchange_http_status_error` | GitHub サーバーが 4xx/5xx を返す場合（`raise_for_status`）502 |
+| `test_callback_redirect_location_is_frontend_url` | コールバック成功時のリダイレクト先が `FRONTEND_URL` |
 | `test_logout_clears_cookie` | Cookie 削除（`max-age=0`）確認 |
 | `test_logout_without_cookie_still_200` | Cookie なしでも 200 |
+| `test_register_creates_account_and_sets_cookie` | 新規登録: 201 + JWT httpOnly Cookie 発行 |
+| `test_register_duplicate_username_returns_409` | 同一 username の再登録 409 Conflict |
+| `test_login_unknown_user_returns_401` | 存在しない username でログイン 401 |
+| `test_login_existing_user_correct_password` | 正しいパスワードでログイン 200 |
+| `test_login_existing_user_wrong_password` | 誤ったパスワードでログイン 401 |
+| `test_login_github_oauth_user_denied` | GitHub OAuth ユーザーへの ID入力ログイン試行 401 （User Enumeration 防止） |
+| `test_login_cookie_enables_authenticated_request` | ログイン Cookie で認証必須エンドポイントにアクセス可能 |
 
 ### モックテストで検証できないもの（手動確認が必要）
 
@@ -118,3 +129,6 @@ res = client.get("/api/v1/users/me", headers=auth_headers(user_id))
 ## 変更履歴
 
 - 2026-02-21: 初版決定（Issue #59 テスト実装）
+- 2026-02-21: **変更**—テストカバレッジ表を最新化（Issue #59 レビュー対応）
+  - ネットワークエラー系（502）・リダイレクト先検証・`register`/`login` 分離後のテストを追加
+  - `test_login_github_oauth_user_denied`: 期待値を 403 → 401 に変更（ADR 017 変更に追従）
