@@ -75,19 +75,26 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 参考:{baseline_json}
 
-## CRITICAL: スキルツリー構造の制約（必ず守ること）
+## CRITICAL: ノード数の配分（下に行くほど多く）
 
-**【Tier 0 基礎層】prerequisites:[] のノードは正確に1個**
-- カテゴリの最も根幹となる土台スキル
+**【必須】Tier 0からTier 5までのノード数配分:**
+- Tier 0（基礎）: 1-2個
+- Tier 1（初級）: 2-4個
+- Tier 2（中級）: 4-8個
+- Tier 3（応用）: 8-12個
+- Tier 4（高度）: 12-16個
+- Tier 5（極限）: 16-20個
 
-**【Tier 1 初級層】prerequisites:[1個] のノードは正確に3個**
-- 基礎から直接派生する基本技術スキル（各自が独立した技術領域を代表）
+**依存関係のルール:**
+- 各ノードのprerequisitesは、**必ず一つ前のTierのノード**のみを指定
+- Tier 0: prerequisites:[]
+- Tier 1: prerequisites:[Tier 0のノード]
+- Tier 2: prerequisites:[Tier 1のノード]
+- Tier 3: prerequisites:[Tier 2のノード]
+- Tier 4: prerequisites:[Tier 3のノード]
+- Tier 5: prerequisites:[Tier 4のノード]
 
-**【Tier 2 中級層】prerequisites:[1個] のノードは正確に8個**
-- 初級スキルから派生する実践的スキル（各初級から2-3個ずつ派生）
-
-**【Tier 3 応用層】prerequisites:[1-2個] のノードは正確に18個**
-- 中級スキルを組み合わせた高度で専門的なスキル
+**重要:** Tierが深くなるほど、ノード数を増やすこと。これにより下に行くほど横に広がる三角形△を形成する。
 
 ## スキル名の命名規則（必須）:
 - **キーワード中心、3-5単語以内**
@@ -102,7 +109,7 @@ GitHub:{github_username} | スタック:{tech_stack}
 - 何ができるようになるか、関連技術・ツール・パターン名を含める
 
 ## 出力ルール:
-1. **必ず正確に30ノード** (1+3+8+18)
+1. **合計50-60ノード程度**（Tier 0からTier 5まで、下層ほど多く）
 2. completed:trueは習得済みのみ
 3. prerequisitesを正確に設定
 
@@ -111,7 +118,7 @@ GitHub:{github_username} | スタック:{tech_stack}
 {{"nodes":[{{"id":"skill-id","name":"キーワード(3-5単語)","completed":true/false,"description":"最低60文字以上の詳細な説明。何ができるようになるか、関連技術・ツール・パターン名を含める","prerequisites":[],"estimated_hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":30,"completed_nodes":1,"progress_percentage":3.3,"next_recommended":["x","y","z"]}}}}
 ```
 
-**重要: Tier 0:1個、Tier 1:3個、Tier 2:8個、Tier 3:18個で段階的に広がる三角形△を形成（合計30ノード必須）**。JSON形式のみ出力してください（説明不要）。"""
+**重要: Tier 0からTier 5まで、下層ほどノード数を増やし、段階的に広がる三角形△を形成（合計50-60ノード程度）**。JSON形式のみ出力してください（説明不要）。"""
 
 
 SKILL_TREE_TEMPLATE = ChatPromptTemplate.from_messages(

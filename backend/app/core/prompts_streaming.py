@@ -9,19 +9,26 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 参考:{baseline_json}
 
-## CRITICAL: スキルツリー構造の制約（必ず守ること）
+## CRITICAL: ノード数の配分（下に行くほど多く）
 
-**【Tier 0 基礎層】prerequisites:[] のノードは正確に1個**
-- カテゴリの最も根幹となる土台スキル
+**【必須】Tier 0からTier 5までのノード数配分:**
+- Tier 0（基礎）: 1-2個
+- Tier 1（初級）: 2-4個
+- Tier 2（中級）: 4-8個
+- Tier 3（応用）: 8-12個
+- Tier 4（高度）: 12-16個
+- Tier 5（極限）: 16-20個
 
-**【Tier 1 初級層】prerequisites:[1個] のノードは正確に3個**
-- 基礎から直接派生する基本技術スキル（各自が独立した技術領域を代表）
+**依存関係のルール:**
+- 各ノードのprerequisitesは、**必ず一つ前のTierのノード**のみを指定
+- Tier 0: prerequisites:[]
+- Tier 1: prerequisites:[Tier 0のノード]
+- Tier 2: prerequisites:[Tier 1のノード]
+- Tier 3: prerequisites:[Tier 2のノード]
+- Tier 4: prerequisites:[Tier 3のノード]
+- Tier 5: prerequisites:[Tier 4のノード]
 
-**【Tier 2 中級層】prerequisites:[1個] のノードは正確に8個**
-- 初級スキルから派生する実践的スキル（各初級から2-3個ずつ派生）
-
-**【Tier 3 応用層】prerequisites:[1-2個] のノードは正確に18個**
-- 中級スキルを組み合わせた高度で専門的なスキル
+**重要:** Tierが深くなるほど、ノード数を増やすこと。これにより下に行くほど横に広がる三角形△を形成する。
 
 ## スキル名の命名規則（必須）:
 - **キーワード中心、3-5単語以内**
@@ -32,15 +39,21 @@ GitHub:{github_username} | スタック:{tech_stack}
 - 最低60文字以上の詳細な説明
 - 何ができるようになるか、関連技術・ツール・パターン名を含める
 
-## 生成手順:
-1. まず基礎ノード1個を出力 (prerequisites:[])
-2. 次に中級ノード11個を出力 (prerequisites:基礎1個)
-3. 最後に応用ノード18個を出力 (prerequisites:中級1-2個)
+## 生成手順（厳守）:
+1. Tier 0: 1-2個のノードを出力
+2. Tier 1: 2-4個のノードを出力
+3. Tier 2: 4-8個のノードを出力
+4. Tier 3: 8-12個のノードを出力
+5. Tier 4: 12-16個のノードを出力
+6. Tier 5: 16-20個のノードを出力
+
+**Tierが深くなるほど、ノード数を増やす**
+各ノードのprerequisites: [一つ前のTierのノード]
 
 ## 出力ルール:
-1. **必ず正確に30ノード** (基礎1 + 中級11 + 応用18)
+1. **合計50-60ノード程度**（Tier 0からTier 5まで、下層ほど多く）
 2. completed:trueは習得済みのみ
-3. **出力順序**: 基礎(prerequisites:[]) → 中級(prerequisites:1個) → 応用(prerequisites:2個以上)
+3. **出力順序**: Tier 0 → Tier 1 → Tier 2 → Tier 3 → Tier 4 → Tier 5
 4. JSON Lines形式: 1行1ノード、```jsonは不要
 
 ## 例(8ノード - 4層構造、キーワード中心の短い名前):
@@ -60,15 +73,22 @@ GitHub:{github_username} | スタック:{tech_stack}
 {{"type":"edge","from":"web_rest_api","to":"web_db_design"}}
 {{"type":"edge","from":"web_react","to":"web_nextjs"}}
 {{"type":"edge","from":"web_typescript","to":"web_nextjs"}}
-{{"type":"metadata","total_nodes":30,"completed_nodes":1,"progress_percentage":3.3,"next_recommended":["web_js_basic","web_rest_api"]}}
+{{"type":"metadata","total_nodes":50,"completed_nodes":1,"progress_percentage":2.0,"next_recommended":["web_js_basic","web_rest_api"]}}
 
-**確認: 必ず以下の構成で出力すること**
-- Tier 0 基礎(prerequisites:[]): 正確に1個
-- Tier 1 初級(prerequisites:[1個]): 正確に3個
-- Tier 2 中級(prerequisites:[1個]): 正確に8個
-- Tier 3 応用(prerequisites:[1-2個]): 正確に18個
+**【CRITICAL】Tier 0からTier 5まで、深くなるほどノード数を増やす:**
 
-**合計30ノード（必須）** - 名前は短く（3-5単語）、詳細はdescriptionで
+| Tier | ノード数 | prerequisites |
+|------|---------|---------------|
+| 0 | 1-2個 | [] |
+| 1 | 2-4個 | [Tier 0] |
+| 2 | 4-8個 | [Tier 1] |
+| 3 | 8-12個 | [Tier 2] |
+| 4 | 12-16個 | [Tier 3] |
+| 5 | 16-20個 | [Tier 4] |
+
+**合計50-60ノード** - 下に行くほど数を増やし、三角形△を形成
+
+名前は短く（3-5単語）、詳細はdescriptionで。
 
 説明や```json不要。上記の構成で1行1JSONを出力開始:
 """

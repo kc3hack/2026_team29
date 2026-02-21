@@ -62,9 +62,10 @@ export function convertApiNodesToCanvasNodes(
   // 全ノードの基本tierを計算
   apiNodes.forEach((node) => calculateBaseTier(node.id));
 
-  // Note: バランス調整は削除（依存関係ベースのtierで十分）
-  // プロンプト側で基礎2-3個、中級5-7個、応用8-10個と自然な分散を指定しているため、
-  // 再バランス処理は不要かつレイアウトのチラつきの原因となる
+  // Note: プロンプト側でTier 0からTier 5まで、下層ほどノード数を増やすよう指定
+  // Tier 0: 1-2個, Tier 1: 2-4個, Tier 2: 4-8個, Tier 3: 8-12個, Tier 4: 12-16個, Tier 5: 16-20個
+  // 各tierは必ず一つ前のtierのノードのみをprerequisitesに指定することで、
+  // 下に行くほどノード数が多くなり、自然に横幅が広がる三角形△を形成
 
   // Step 2: tierごとにノードをグループ化
   const nodesByTier = new Map<number, ApiSkillNode[]>();
@@ -89,10 +90,9 @@ export function convertApiNodesToCanvasNodes(
     const nodeCount = nodes.length;
 
     // X座標: ノード数に応じた幅で等間隔配置
-    // スカスカにならないよう、ノード数×150pxを基準にする
-    const minWidth = 200; // 最小幅
-    const nodeSpacing = 180; // ノード間の最小間隔
-    const tierWidth = Math.max(minWidth, (nodeCount - 1) * nodeSpacing);
+    // tierが深いほどノード数が多く、自然に横幅が広がる（三角形△）
+    const nodeSpacing = 180;
+    const tierWidth = nodeCount > 1 ? (nodeCount - 1) * nodeSpacing : 200;
     const spacing = nodeCount > 1 ? tierWidth / (nodeCount - 1) : 0;
     const startX = nodeCount > 1 ? -tierWidth / 2 : 0;
 
@@ -160,10 +160,6 @@ export function convertApiNodesToCanvasNodes(
         `Tier${tier}:${canvasNodes.filter((n) => n.tier === tier).length}`,
     )
     .join(", ");
-
-  console.log("🟦 convertApiNodesToCanvasNodes 完了");
-  console.log("  Output nodes:", canvasNodes.length);
-  console.log("  Tier distribution:", tierDistribution);
 
   return canvasNodes;
 }
