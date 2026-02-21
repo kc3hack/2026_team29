@@ -92,7 +92,9 @@ class QuestStep(BaseModel):
     """演習ステップ"""
 
     step_number: int = Field(..., ge=1, description="ステップ番号")
-    title: str = Field(..., min_length=1, max_length=200, description="ステップタイトル")
+    title: str = Field(
+        ..., min_length=1, max_length=200, description="ステップタイトル"
+    )
     description: str = Field(..., description="手順の詳細説明")
     code_example: str = Field(default="", description="コード例")
     checkpoints: list[str] = Field(default_factory=list, description="確認ポイント")
@@ -114,8 +116,12 @@ class QuestGenerationRequest(BaseModel):
     document_content: str = Field(
         ..., min_length=10, max_length=10000, description="学習対象ドキュメント"
     )
-    user_rank: int = Field(..., ge=0, le=9, description="ユーザーランク")
-    user_skills: str = Field(default="", max_length=500, description="得意分野（オプション）")
+    user_rank: int = Field(
+        default=0, ge=0, le=9, description="ユーザーランク（省略時は0=初心者）"
+    )
+    user_skills: str = Field(
+        default="", max_length=500, description="得意分野（オプション）"
+    )
 
 
 class QuestGenerationResponse(BaseModel):
@@ -148,4 +154,3 @@ class QuestGenerationResponse(BaseModel):
     learning_objectives: list[str] = Field(..., description="学習目標")
     steps: list[QuestStep] = Field(..., min_length=1, description="演習ステップ")
     resources: list[str] = Field(default_factory=list, description="参考リソース")
-

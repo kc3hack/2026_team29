@@ -11,7 +11,7 @@ from app.core.prompts import QUEST_GENERATION_TEMPLATE
 
 async def generate_handson_quest(
     document_content: str,
-    user_rank: int,
+    user_rank: int = 0,
     user_skills: str = "",
 ) -> dict:
     """
@@ -19,7 +19,7 @@ async def generate_handson_quest(
 
     Args:
         document_content: 学習対象のドキュメント
-        user_rank: ユーザーのランク（0-9）
+        user_rank: ユーザーのランク（0-9、デフォルト=0）
         user_skills: ユーザーの得意分野（オプション）
 
     Returns:
@@ -46,9 +46,19 @@ async def generate_handson_quest(
     # LLMに非同期で呼び出し (temperature=0.7で創造性を持たせる)
     response = await invoke_llm(prompt=prompt, temperature=0.7)
 
+    # Markdownコードブロックを除去（LLMが```json ... ```で囲む場合がある）
+    cleaned_response = response.strip()
+    if cleaned_response.startswith("```json"):
+        cleaned_response = cleaned_response[7:]  # "```json" を削除
+    elif cleaned_response.startswith("```"):
+        cleaned_response = cleaned_response[3:]  # "```" を削除
+    if cleaned_response.endswith("```"):
+        cleaned_response = cleaned_response[:-3]  # 末尾の "```" を削除
+    cleaned_response = cleaned_response.strip()
+
     # JSONパース（エラーハンドリング付き）
     try:
-        result = json.loads(response)
+        result = json.loads(cleaned_response)
         # 必須フィールドの存在確認
         required_fields = ["title", "difficulty", "steps"]
         if not all(k in result for k in required_fields):
@@ -56,7 +66,10 @@ async def generate_handson_quest(
         return result
     except (json.JSONDecodeError, ValueError) as e:
         # LLMがJSON以外を返した場合のフォールバック
-        print(f"JSON parse error: {e}. Returning fallback response.")
+        print(f"❌ JSON parse error: {e}")
+        print(f"📝 LLM Response (first 500 chars): {response[:500]}")
+        print(f"📝 LLM Response (last 500 chars): {response[-500:]}")
+        print("⚠️  Returning fallback response.")
         return {
             "title": "演習生成エラー",
             "difficulty": "beginner",

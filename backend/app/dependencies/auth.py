@@ -61,7 +61,14 @@ def _decode_token(token: str) -> int:
             detail="トークンの有効期限が切れています",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    except jwt.InvalidSignatureError:
+        # 署名検証失敗（改ざん検出）
+        raise credentials_exception
+    except jwt.DecodeError:
+        # デコード失敗（不正なフォーマット）
+        raise credentials_exception
     except jwt.PyJWTError:
+        # その他のJWTエラー
         raise credentials_exception
 
 
@@ -101,4 +108,3 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return db_user
-
