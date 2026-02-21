@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.enums import QuestCategory
 
@@ -22,7 +22,56 @@ class QuestCreate(BaseModel):
         return v
 
 
+class QuestUpdate(BaseModel):
+    """クエスト更新用スキーマ（全フィールド任意）。
+
+    指定したフィールドのみ更新する。description は Markdown 形式（ADR 012）。
+    フィールドを省略（未送信）= 更新しない。
+    フィールドを明示的に null で送信した場合は 422 を返す（DB の nullable=False 列を保護）。
+    """
+
+    title: str | None = None
+    description: str | None = None
+    difficulty: int | None = None
+    category: QuestCategory | None = None
+
+    @model_validator(mode="after")
+    def reject_explicit_null(self) -> "QuestUpdate":
+        """明示的に null が送られたフィールドを 422 で弾く。"""
+        non_nullable = ("title", "description", "difficulty", "category")
+        for field in non_nullable:
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
+
+    @field_validator("difficulty")
+    @classmethod
+    def validate_difficulty(cls, v: int | None) -> int | None:
+        if v is not None and (v < 0 or v > 9):
+            raise ValueError("difficulty must be 0-9 (rank: 種子〜世界樹)")
+        return v
+
+
+class QuestSummary(BaseModel):
+    """クエスト一覧用スキーマ（description 除外）。
+
+    一覧表示時にMarkdown本文全体を転送しないための軽量スキーマ。
+    演習内容は GET /api/v1/quest/{quest_id} の Quest スキーマで取得する（ADR 012）。
+    """
+
+    id: int
+    title: str
+    difficulty: int
+    category: QuestCategory
+    is_generated: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Quest(BaseModel):
+    """クエスト詳細スキーマ（description 含む）。"""
+
     id: int
     title: str
     description: str

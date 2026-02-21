@@ -22,7 +22,7 @@ from app.dependencies.auth import get_current_user
 from app.models.enums import QuestCategory, QuestStatus
 from app.models.user import User
 from app.schemas.quest import Quest as QuestSchema
-from app.schemas.quest import QuestGenerationRequest, QuestGenerationResponse
+from app.schemas.quest import QuestGenerationRequest, QuestGenerationResponse, QuestSummary
 from app.schemas.quest_progress import QuestProgress as QuestProgressSchema
 from app.services.quest_service import generate_handson_quest
 
@@ -34,15 +34,18 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 
-@router.get("", response_model=list[QuestSchema])
+@router.get("", response_model=list[QuestSummary])
 def list_quests(
     category: QuestCategory | None = None,
     difficulty: int | None = None,
     skip: int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-) -> list[QuestSchema]:
-    """クエスト一覧取得。category・difficulty でフィルタリング可能。"""
+) -> list[QuestSummary]:
+    """クエスト一覧取得。description は除外（ADR 012: 軽量化のため）。
+    演習詳細は GET /api/v1/quest/{quest_id} で取得すること。
+    category・difficulty でフィルタリング可能。
+    """
     return crud_quest.list_quests(
         db, skip=skip, limit=limit, category=category, difficulty=difficulty
     )
