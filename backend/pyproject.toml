@@ -23,6 +23,7 @@ langchain-openai = "^0.2.0"
 langchain-anthropic = "^0.3.0"
 httpx = "^0.28.0"
 PyJWT = "^2.10.0"  # GitHub OAuth コールバック後の JWT 発行 (ADR 014)
+psycopg2-binary = "^2.9.11"
 
 [tool.poetry.group.dev.dependencies]
 # Decision: Pin dev dependencies to prevent CI instability
