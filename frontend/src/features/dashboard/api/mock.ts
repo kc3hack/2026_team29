@@ -72,6 +72,7 @@ const mockRank: Rank = {
   title: 'Senior Developer',
   progress: 65,
   nextLevelExp: 5000,
+  rankNumber: 4, // 母樹
 };
 
 /**
