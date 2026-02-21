@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # 生成: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     ENCRYPTION_KEY: str = ""
 
+    # スキルツリー生成設定
+    SKIP_LLM_FOR_SKILL_TREE: bool = (
+        True  # True: ベースラインJSONを直接返す（開発用）, False: LLMを使用
+    )
+
     # ランク計算（product-spec 4.1 準拠）
     # ランクn に到達するために必要な累積経験値（仕様確定後に調整）
     RANK_THRESHOLDS: list[int] = [

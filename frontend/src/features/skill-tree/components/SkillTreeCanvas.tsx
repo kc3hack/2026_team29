@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
-import { SKILL_NODES, getNodeById, type SkillNode } from "../types/data";
+import { useRef, useEffect, useCallback, useMemo } from "react";
+import { SKILL_NODES, type SkillNode } from "../types/data";
 
 interface Props {
+  nodes?: SkillNode[]; // オプショナル: APIから取得した動的ノードデータ
   onSelectNode: (node: SkillNode | null) => void;
   selectedNode: SkillNode | null;
   zoomAction: { type: string; ts: number } | null;
@@ -58,6 +59,57 @@ function pxLine(
   }
 }
 
+/* ---- 滑らかな枝を描画（ベジェ曲線風） ---- */
+function drawSmoothBranch(
+  ctx: CanvasRenderingContext2D,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  const trunkColors = ["#5c3a1e", "#6b4226", "#7a4e30", "#6b4226"];
+
+  // ベジェ曲線の制御点（自然な曲線を作る）
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // 制御点を計算（中間点で少し下に垂れる）
+  const mx = (x0 + x1) / 2;
+  const my = (y0 + y1) / 2 + Math.abs(dx) * 0.1; // 横距離に応じて垂れる
+
+  // 曲線を分割して描画
+  const steps = Math.max(Math.ceil(dist / (PX * 2)), 10);
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+
+    // 二次ベジェ曲線: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+    const s = 1 - t;
+    const bx = s * s * x0 + 2 * s * t * mx + t * t * x1;
+    const by = s * s * y0 + 2 * s * t * my + t * t * y1;
+
+    // 太さを徐々に変化（根元太く、先細り）
+    const thickness = Math.max(2, Math.round(4 * (1 - t * 0.5)));
+
+    // 色を選択（位置に応じて）
+    const colorIndex = Math.floor((i / 3) % trunkColors.length);
+    ctx.fillStyle = trunkColors[colorIndex];
+
+    // ピクセル単位で描画
+    for (let dy = -thickness; dy <= thickness; dy++) {
+      for (let dx = -thickness; dx <= thickness; dx++) {
+        if (dx * dx + dy * dy > thickness * thickness) continue;
+        ctx.fillRect(
+          Math.round((bx + dx * PX) / PX) * PX,
+          Math.round((by + dy * PX) / PX) * PX,
+          PX,
+          PX,
+        );
+      }
+    }
+  }
+}
+
 /* ---- palettes ---- */
 const PAL = {
   completed: { fill: "#e8b849", hi: "#f7e8a0", lo: "#a67c20", rim: "#7a5a10" },
@@ -82,6 +134,7 @@ interface Sparkle {
 }
 
 export function SkillTreeCanvas({
+  nodes,
   onSelectNode,
   selectedNode,
   zoomAction,
@@ -93,6 +146,27 @@ export function SkillTreeCanvas({
   const sparks = useRef<Sparkle[]>([]);
   const raf = useRef(0);
   const tick = useRef(0);
+
+  // nodes が渡された場合は動的データを使用、そうでなければ既存のハードコードデータを使用（後方互換性）
+  const activeNodes = useMemo(() => nodes || SKILL_NODES, [nodes]);
+
+  // デバッグ: activeNodesの内容を確認 (プロダクションでは無効化)
+  // useEffect(() => {
+  //   console.log("=== SkillTreeCanvas Debug ===");
+  //   console.log("Active Nodes count:", activeNodes.length);
+  //   console.log(
+  //     "Nodes with children:",
+  //     activeNodes.filter((n) => n.children.length > 0).length,
+  //   );
+  //   activeNodes.forEach((n, i) => {
+  //     if (n.children.length > 0) {
+  //       console.log(
+  //         `Node ${i + 1}: ${n.label} has ${n.children.length} children:`,
+  //         n.children,
+  //       );
+  //     }
+  //   });
+  // }, [activeNodes]);
 
   // zoom actions
   useEffect(() => {
@@ -110,7 +184,7 @@ export function SkillTreeCanvas({
   // init sparkles
   useEffect(() => {
     const arr: Sparkle[] = [];
-    for (const n of SKILL_NODES) {
+    for (const n of activeNodes) {
       if (n.status === "locked") continue;
       for (let i = 0; i < 2; i++) {
         arr.push({
@@ -123,7 +197,7 @@ export function SkillTreeCanvas({
       }
     }
     sparks.current = arr;
-  }, []);
+  }, [activeNodes]);
 
   const toWorld = useCallback((sx: number, sy: number) => {
     const c = canvasRef.current;
@@ -135,13 +209,16 @@ export function SkillTreeCanvas({
     };
   }, []);
 
-  const hitNode = useCallback((wx: number, wy: number) => {
-    for (let i = SKILL_NODES.length - 1; i >= 0; i--) {
-      const n = SKILL_NODES[i];
-      if (Math.abs(wx - n.x) < 32 && Math.abs(wy - n.y) < 32) return n;
-    }
-    return null;
-  }, []);
+  const hitNode = useCallback(
+    (wx: number, wy: number) => {
+      for (let i = activeNodes.length - 1; i >= 0; i--) {
+        const n = activeNodes[i];
+        if (Math.abs(wx - n.x) < 32 && Math.abs(wy - n.y) < 32) return n;
+      }
+      return null;
+    },
+    [activeNodes],
+  );
 
   /* ============ DRAW ============ */
   useEffect(() => {
@@ -204,13 +281,15 @@ export function SkillTreeCanvas({
       const sway = Math.sin(tick.current * 0.015) * 1.5;
       const trunkC = ["#5c3a1e", "#6b4226", "#7a4e30", "#6b4226", "#5c3a1e"];
 
-      // Trunk: 地面(y=632) → Rootノード(y=400) まで。下が太く上（Root）が細い
-      const trunkTop = 400;
+      // Trunk: 地面(y=632) → ノード最上部まで伸びる主幹
+      const minNodeY = Math.min(...activeNodes.map((n) => n.y)) - 100;
+      const trunkTop = Math.min(minNodeY, -450); // ノード最上部を確実にカバー
       const trunkBot = 632;
-      const totalH = trunkBot - trunkTop; // 232px
-      for (let y = trunkBot; y >= trunkTop; y -= PX) {
-        const prog = (trunkBot - y) / totalH; // 0=地面（太い）, 1=Root（細い）
-        const w = Math.round(44 - prog * 32); // 44px → 12px
+      const totalH = trunkBot - trunkTop;
+      for (let y = trunkBot; y >= trunkTop; y -= PX * 4) {
+        // ステップ幅2倍で高速化
+        const prog = (trunkBot - y) / totalH; // 0=地面（太い）, 1=上部（細い）
+        const w = Math.round(44 - prog * 38); // 44px → 6px（より細く）
         const ci = Math.floor(
           ((Math.abs(y) + Math.floor(sway)) / (PX * 3)) % trunkC.length,
         );
@@ -219,54 +298,38 @@ export function SkillTreeCanvas({
         px(ctx, -w / 2 + xo, y, w, PX, trunkC[ci]);
       }
 
-      // Generic connection loop for all nodes
-      for (const nd of SKILL_NODES) {
+      // 滑らかな枝を描画（ベジェ曲線風）
+      for (const nd of activeNodes) {
         for (const cid of nd.children) {
-          const ch = getNodeById(cid);
-          if (!ch) continue;
+          const ch = activeNodes.find((n) => n.id === cid);
+          if (!ch) {
+            console.warn(`Child node not found: ${cid} for parent ${nd.id}`);
+            continue;
+          }
 
-          // Draw branches behind connections
-          pxLine(ctx, nd.x, nd.y - 20, ch.x, ch.y + 20, "#5c3a1e", 3);
+          // 滑らかな枝（曲線）を描画
+          drawSmoothBranch(ctx, nd.x, nd.y - 20, ch.x, ch.y + 20);
         }
       }
     }
 
-    /* ---- Pixel leaf clusters ---- */
+    /* ---- Pixel leaf clusters (静的・美しい配置) ---- */
     function drawLeaves(ctx: CanvasRenderingContext2D) {
-      // 下に末広がり: Root(y=400)が下部・Tier1(y=200)が最大幅→上へ小さくなる
-      const clusters = [
-        // Root (y=400) - 幹の先端・エンジニアの種
-        { x: 0, y: 400, rx: 70, ry: 42 },
+      // 各ノードの位置に葉っぱクラスターを配置
+      const clusters: Array<{ x: number; y: number; rx: number; ry: number }> =
+        [];
 
-        // Tier 1 (y=200) - span ±1100（最広）
-        { x: -1100, y: 200, rx: 118, ry: 64 },
-        { x: -550, y: 200, rx: 110, ry: 60 },
-        { x: 0, y: 200, rx: 110, ry: 60 },
-        { x: 550, y: 200, rx: 110, ry: 60 },
-        { x: 1100, y: 200, rx: 118, ry: 64 },
-
-        // Tier 2 (y=0) - span ±900
-        { x: -900, y: 0, rx: 95, ry: 52 },
-        { x: -460, y: 0, rx: 90, ry: 50 },
-        { x: 0, y: 0, rx: 90, ry: 50 },
-        { x: 460, y: 0, rx: 90, ry: 50 },
-        { x: 900, y: 0, rx: 95, ry: 52 },
-
-        // Tier 3 (y=-200) - span ±700
-        { x: -700, y: -200, rx: 90, ry: 50 },
-        { x: -390, y: -200, rx: 86, ry: 48 },
-        { x: -80, y: -200, rx: 86, ry: 48 },
-        { x: 80, y: -200, rx: 86, ry: 48 },
-        { x: 390, y: -200, rx: 86, ry: 48 },
-        { x: 700, y: -200, rx: 90, ry: 50 },
-
-        // Tier 4 (y=-400) - span ±400（最も狭い）
-        { x: -400, y: -400, rx: 78, ry: 44 },
-        { x: -200, y: -400, rx: 74, ry: 42 },
-        { x: 0, y: -400, rx: 74, ry: 42 },
-        { x: 200, y: -400, rx: 74, ry: 42 },
-        { x: 400, y: -400, rx: 78, ry: 44 },
-      ];
+      activeNodes.forEach((node) => {
+        const tier = node.tier ?? 0;
+        // ノード位置の少し上に葉っぱを配置
+        const baseRadius = 60 + tier * 5; // tierが深いほど少し大きく
+        clusters.push({
+          x: node.x,
+          y: node.y - 35, // ノードの上
+          rx: baseRadius,
+          ry: baseRadius * 0.65,
+        });
+      });
       const greens = [
         "#1a4a1a",
         "#255a25",
@@ -276,25 +339,24 @@ export function SkillTreeCanvas({
         "#3a7a3a",
       ];
 
+      // 葉っぱを静的に美しく描画（動きは最小限）
       for (const cl of clusters) {
-        const sw = Math.sin(tick.current * 0.01 + cl.x * 0.01) * 2;
-        const srx = cl.rx / PX,
-          sry = cl.ry / PX;
+        const sw = Math.sin(tick.current * 0.01 + cl.x * 0.002) * 1; // 動きを抑える
+        const srx = cl.rx / PX;
+        const sry = cl.ry / PX;
         for (let dy = -sry; dy <= sry; dy++) {
           for (let dx = -srx; dx <= srx; dx++) {
-            const ex = dx / srx,
-              ey = dy / sry;
+            const ex = dx / srx;
+            const ey = dy / sry;
             if (ex * ex + ey * ey > 1) continue;
-            const hash =
-              ((Math.abs(dx) * 7 +
-                Math.abs(dy) * 13 +
-                Math.floor(tick.current * 0.03)) *
-                31) &
-              255;
-            if (hash > 200 && ex * ex + ey * ey > 0.2) continue;
+
+            // より密度の高い葉っぱ（hash判定を緩和）
+            const hash = ((Math.abs(dx) * 7 + Math.abs(dy) * 13) * 31) & 255;
+            if (hash > 230 && ex * ex + ey * ey > 0.3) continue; // 200→230で密度up
+
+            // 静的な色配置
             const ci =
-              (Math.abs(dx * 3 + dy * 5) + Math.floor(tick.current * 0.01)) %
-              greens.length;
+              Math.abs(Math.floor(dx * 3) + Math.floor(dy * 5)) % greens.length;
             ctx.fillStyle = greens[ci];
             ctx.fillRect(
               Math.round((cl.x + dx * PX + sw) / PX) * PX,
@@ -309,12 +371,13 @@ export function SkillTreeCanvas({
 
     /* ---- Connection lines (on top of branches, colored by status) ---- */
     function drawConnections(ctx: CanvasRenderingContext2D) {
-      for (const nd of SKILL_NODES) {
+      for (const nd of activeNodes) {
         for (const cid of nd.children) {
-          const ch = getNodeById(cid);
+          const ch = activeNodes.find((n) => n.id === cid);
           if (!ch) continue;
           const both = nd.status === "completed" && ch.status === "completed";
           const avail = nd.status === "completed" && ch.status === "available";
+
           if (both) {
             pxLine(ctx, nd.x, nd.y, ch.x, ch.y, "#e8b849", 2);
             // animated dot
@@ -478,7 +541,7 @@ export function SkillTreeCanvas({
       for (const s of sparks.current) {
         s.t++;
         if (s.t > s.max) {
-          const pool = SKILL_NODES.filter((n) => n.status !== "locked");
+          const pool = activeNodes.filter((n) => n.status !== "locked");
           const nd = pool[Math.floor(Math.random() * pool.length)];
           if (nd) {
             s.x = nd.x + (Math.random() - 0.5) * 80;
@@ -533,7 +596,7 @@ export function SkillTreeCanvas({
       drawConnections(ctx);
       drawSparkles(ctx);
 
-      const sorted = [...SKILL_NODES].sort((a, b) => {
+      const sorted = [...activeNodes].sort((a, b) => {
         const o = { locked: 0, available: 1, completed: 2 } as const;
         return o[a.status] - o[b.status];
       });
@@ -548,7 +611,7 @@ export function SkillTreeCanvas({
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(raf.current);
     };
-  }, [selectedNode]);
+  }, [selectedNode, activeNodes]);
 
   /* ============ EVENTS ============ */
   useEffect(() => {

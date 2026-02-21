@@ -13,6 +13,8 @@ from pathlib import Path
 # プロジェクトルートをパスに追加
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# 全モデルを登録するため、base をインポート（重要！）
+from app.db import base  # noqa: F401
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.models.profile import Profile
