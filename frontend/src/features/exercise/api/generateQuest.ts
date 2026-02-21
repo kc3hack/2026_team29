@@ -35,9 +35,23 @@ export async function generateQuest(
     let detail = `ステータス: ${response.status}`;
     try {
       const json = JSON.parse(errorText);
-      if (json.detail) detail = json.detail;
+      if (json.detail) {
+        // FastAPIの422バリデーションエラーは配列の場合がある
+        if (Array.isArray(json.detail)) {
+          detail = json.detail
+            .map(
+              (err: { loc?: string[]; msg: string }) =>
+                `${err.loc?.join(".") || "field"}: ${err.msg}`,
+            )
+            .join(", ");
+        } else if (typeof json.detail === "string") {
+          detail = json.detail;
+        } else {
+          detail = JSON.stringify(json.detail);
+        }
+      }
     } catch {
-      // ignore
+      detail = errorText || detail;
     }
     throw new Error(`演習の生成に失敗しました。${detail}`);
   }
