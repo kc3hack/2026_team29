@@ -52,7 +52,7 @@ def create_quest(db: Session, quest_in: QuestCreate) -> Quest:
 
 def delete_quest(db: Session, quest_id: int) -> bool:
     """クエストを削除する。存在した場合 True、存在しなかった場合 False を返す。"""
-    db_quest = db.query(Quest).filter(Quest.id == quest_id).first()
+    db_quest = get_quest(db, quest_id)
     if db_quest is None:
         return False
     db.delete(db_quest)

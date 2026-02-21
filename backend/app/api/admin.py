@@ -109,7 +109,7 @@ def admin_list_quests(
     db: Session = Depends(get_db),
     _: None = Depends(verify_admin_key),
 ) -> list[QuestSchema]:
-    """クエスト一覧取得（description 除く、フィルタリング対応）。
+    """クエスト一覧取得（フィルタリング対応）。
 
     認証: X-Admin-Key ヘッダーが必要
     """
