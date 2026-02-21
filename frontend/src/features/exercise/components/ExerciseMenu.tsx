@@ -56,19 +56,19 @@ export function ExerciseMenu() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`mr-1 flex items-center rounded-t-lg px-6 py-2 transition-all ${
+              className={`mr-2 flex items-center px-6 py-3 transition-all border-4 border-b-0 ${
                 isActive
-                  ? 'bg-[#FDFEF0] text-[#559C71] shadow-[0_-4px_8px_rgba(0,0,0,0.1)]' // Active styling (matches bg)
-                  : 'bg-[#6AB085] text-white hover:bg-[#7BC196]' // Inactive styling
+                  ? 'bg-[#FDFEF0] text-[#14532D] border-[#14532D] translate-y-[4px] shadow-none' // Active styling
+                  : 'bg-[#14532D] text-[#4ADE80] border-black hover:bg-[#1a5a37] shadow-[4px_4px_0_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.3)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]' // Inactive styling
               }`}
             >
-              <span className="text-xl">{tab.icon}</span>
-              {isActive && tab.label && <span className="ml-2 font-bold">{tab.label}</span>}
+              <span className="text-2xl">{tab.icon}</span>
+              {isActive && tab.label && <span className="ml-2 font-bold text-lg">{tab.label}</span>}
             </button>
           );
         })}
         {/* Spacer to fill the rest of the bar if needed */}
-        <div className="flex-1 border-b border-[#559C71]"></div>
+        <div className="flex-1 border-b-4 border-[#14532D]"></div>
       </div>
 
       {/* Main Content Area */}
