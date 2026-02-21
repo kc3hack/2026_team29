@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 
 from app.models.enums import SkillCategory
 from app.models.skill_tree import SkillTree
@@ -21,7 +20,12 @@ def get_skill_tree_by_user_category(
 
 
 def initialize_skill_trees_for_user(db: Session, user_id: int) -> list[SkillTree]:
-    """ユーザーに対して6カテゴリ全てのSkillTreeを初期化する"""
+    """ユーザーに対して6カテゴリ全てのSkillTreeを初期化する。
+
+    commit は呼び出し元（create_user）に委ねる。
+    User + SkillTree を 1 トランザクションで確定させるため、
+    ここでは session.add のみ行い commit / rollback は行わない。
+    """
     trees = []
     for category in SkillCategory:
         tree = SkillTree(
@@ -31,16 +35,6 @@ def initialize_skill_trees_for_user(db: Session, user_id: int) -> list[SkillTree
         )
         db.add(tree)
         trees.append(tree)
-    try:
-        db.commit()
-    except IntegrityError as e:
-        db.rollback()
-        raise ValueError(f"SkillTree for user_id={user_id} already exists") from e
-    except Exception:
-        db.rollback()
-        raise
-    for tree in trees:
-        db.refresh(tree)
     return trees
 
 

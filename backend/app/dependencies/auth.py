@@ -65,8 +65,7 @@ def get_current_user(
     Cookie（httpOnly）→ Authorization ヘッダーの順で検索する。
     どちらもない場合は 401 を返す。
 
-    - 401: トークンなし / 署名不正 / 期限切れ
-    - 404: トークンは正常だが DB に User が存在しない（削除済み等）
+    - 401: トークンなし / 署名不正 / 期限切れ / DB にユーザーが存在しない（削除済み等）
     """
     # 1. httpOnly Cookie から取得（ブラウザ通常フロー）
     token: str | None = request.cookies.get("access_token")
@@ -85,9 +84,11 @@ def get_current_user(
     user_id = _decode_token(token)
     db_user = crud_user.get_user(db, user_id)
     if db_user is None:
+        # 404 ではなく 401 を返す（ユーザーの存在有無を外部に漏らさない）
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="ユーザーが見つかりません",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="認証が必要です",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     return db_user
 

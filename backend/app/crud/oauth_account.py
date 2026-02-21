@@ -35,7 +35,15 @@ def get_by_provider_user_id(
     )
 
 
-def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAccount:
+def create_oauth_account(
+    db: Session, oauth_in: OAuthAccountCreate, commit: bool = True
+) -> OAuthAccount:
+    """OAuthAccount を作成する。
+
+    commit=True (デフォルト): 作成後に commit する。
+    commit=False: flush のみ行い commit は呼び出し元に委ねる。
+    User 作成と同一トランザクションで確定させたい場合に commit=False を使用する。
+    """
     db_account = OAuthAccount(
         user_id=oauth_in.user_id,
         provider=oauth_in.provider,
@@ -48,7 +56,11 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
     )
     db.add(db_account)
     try:
-        db.commit()
+        if commit:
+            db.commit()
+            db.refresh(db_account)
+        else:
+            db.flush()
     except IntegrityError as e:
         db.rollback()
         raise ValueError(
@@ -57,7 +69,6 @@ def create_oauth_account(db: Session, oauth_in: OAuthAccountCreate) -> OAuthAcco
     except Exception:
         db.rollback()
         raise
-    db.refresh(db_account)
     return db_account
 
 

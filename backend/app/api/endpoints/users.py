@@ -37,7 +37,13 @@ router = APIRouter()
 
 @router.post("", response_model=UserSchema, status_code=201)
 def create_user(user_in: UserCreate, db: Session = Depends(get_db)) -> UserSchema:
-    """ユーザー登録（後方互換: OAuth 実装後は /auth/github/callback が主経路）。"""
+    """ユーザー登録（後方互換 / 管理者用）。
+
+    通常のユーザー作成は以下の経路を使用すること（Spec 2.1）:
+    - GitHub OAuth: POST /auth/github/callback が自動作成
+    - ID入力:       POST /auth/login が存在しなければ自動作成
+    このエンドポイントは後方互換テスト・管理者用として残存。
+    """
     if crud_user.get_user_by_username(db, user_in.username):
         raise HTTPException(status_code=400, detail="Username already registered")
     return crud_user.create_user(db, user_in)

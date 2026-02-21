@@ -12,6 +12,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -129,11 +130,12 @@ def test_callback_new_user_creates_user_and_sets_cookie(client):
     assert "httponly" in set_cookie_header.lower()
 
 
-def test_callback_new_user_username_collision(client):
+def test_callback_new_user_username_collision(client, db):
     """GitHub のログイン名がすでに使われている場合は username に ID を付与。"""
     state = _valid_state()
-    # 同じ username を先に登録
-    client.post("/api/v1/users", json={"username": "testuser_gh"})
+    # 同じ username を先に登録（事前ユーザー作成の確認）
+    pre_res = client.post("/api/v1/users", json={"username": "testuser_gh"})
+    assert pre_res.status_code == 201
 
     mock_client = _mock_httpx_client()
     with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
@@ -141,6 +143,18 @@ def test_callback_new_user_username_collision(client):
 
     assert res.status_code == 302
     assert "access_token" in res.cookies
+    # 衝突した場合 username は "{login}_{github_id}" 形式になることを検証
+    token = res.cookies.get("access_token")
+    assert token is not None
+    # JWT デコードして user_id を取得し、DB上の username を確認
+    import jwt as _jwt
+    from app.core.config import settings as _settings
+    payload = _jwt.decode(token, _settings.JWT_SECRET_KEY, algorithms=[_settings.JWT_ALGORITHM])
+    user_id = payload["user_id"]
+    from app.crud.user import get_user
+    created_user = get_user(db, user_id)
+    assert created_user is not None
+    assert created_user.username == f"{FAKE_GITHUB_USER['login']}_{FAKE_GITHUB_USER['id']}"
 
 
 # ---------------------------------------------------------------------------
@@ -222,3 +236,155 @@ def test_logout_without_cookie_still_200(client):
     """Cookie なしでもログアウトは 200 を返す。"""
     res = client.get("/api/v1/auth/logout")
     assert res.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# GET /auth/github/callback - ネットワークエラー系 (T-1, T-2)
+# ---------------------------------------------------------------------------
+
+
+def test_callback_token_exchange_network_error(client):
+    """HTTPネットワークエラーでトークン交換が失敗した場合は 502。"""
+    state = _valid_state()
+
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_client.post = MagicMock(side_effect=httpx.HTTPError("connection error"))
+
+    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+        res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    assert res.status_code == 502
+
+
+def test_callback_user_info_network_error(client):
+    """トークン取得成功後、GitHub ユーザー情報取得で HTTP エラーが発生した場合は 502。"""
+    state = _valid_state()
+
+    # 1 回目: token exchange 成功
+    mock_token_client = MagicMock()
+    mock_token_resp = MagicMock()
+    mock_token_resp.raise_for_status = MagicMock()
+    mock_token_resp.json.return_value = {"access_token": "ghs_fake_token"}
+    mock_token_client.__enter__ = MagicMock(return_value=mock_token_client)
+    mock_token_client.__exit__ = MagicMock(return_value=False)
+    mock_token_client.post = MagicMock(return_value=mock_token_resp)
+
+    # 2 回目: user info で失敗
+    mock_user_client = MagicMock()
+    mock_user_client.__enter__ = MagicMock(return_value=mock_user_client)
+    mock_user_client.__exit__ = MagicMock(return_value=False)
+    mock_user_client.get = MagicMock(side_effect=httpx.HTTPError("user info error"))
+
+    with patch(
+        "app.api.endpoints.auth.httpx.Client",
+        side_effect=[mock_token_client, mock_user_client],
+    ):
+        res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    assert res.status_code == 502
+
+
+def test_callback_token_exchange_http_status_error(client):
+    """GitHub サーバーが 4xx/5xx を返した場合 (raise_for_status) も 502 を返す。
+
+    httpx.HTTPStatusError は httpx.HTTPError のサブクラスなので
+    except ブロックで正しくキャッチされることを確認する。
+    """
+    state = _valid_state()
+
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "503 Service Unavailable", request=MagicMock(), response=MagicMock()
+    )
+    mock_client.post = MagicMock(return_value=mock_resp)
+
+    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+        res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    assert res.status_code == 502
+
+
+# ---------------------------------------------------------------------------
+# GET /auth/github/callback - リダイレクト先検証 (T-3)
+# ---------------------------------------------------------------------------
+
+
+def test_callback_redirect_location_is_frontend_url(client):
+    """コールバック成功時のリダイレクト先が settings.FRONTEND_URL になっている。"""
+    from app.core.config import settings
+
+    state = _valid_state()
+    mock_client = _mock_httpx_client()
+    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+        res = client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    assert res.status_code == 302
+    assert res.headers["location"] == settings.FRONTEND_URL
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/login  (Spec 2.1: "GitHub OAuth または ID 入力でログイン")
+# ---------------------------------------------------------------------------
+
+
+def test_login_new_user_creates_account_and_sets_cookie(client):
+    """存在しない username + password → 新規作成 + JWT httpOnly Cookie 付与。"""
+    res = client.post(
+        "/api/v1/auth/login", json={"username": "brand_new_user", "password": "pass1234"}
+    )
+
+    assert res.status_code == 200
+    assert res.json().get("user_id") is not None
+    set_cookie_header = res.headers.get("set-cookie", "")
+    assert "access_token=" in set_cookie_header
+    assert "httponly" in set_cookie_header.lower()
+
+
+def test_login_existing_user_correct_password(client):
+    """登録済みユーザーが正しいパスワードでログイン → 200。"""
+    # 新規登録
+    client.post("/api/v1/auth/login", json={"username": "pw_user", "password": "correct_pw"})
+
+    # 2回目ログイン
+    res = client.post("/api/v1/auth/login", json={"username": "pw_user", "password": "correct_pw"})
+    assert res.status_code == 200
+    assert "access_token=" in res.headers.get("set-cookie", "")
+
+
+def test_login_existing_user_wrong_password(client):
+    """登録済みユーザーが誤ったパスワードを入力 → 401。"""
+    client.post("/api/v1/auth/login", json={"username": "pw_user2", "password": "correct_pw"})
+
+    res = client.post(
+        "/api/v1/auth/login", json={"username": "pw_user2", "password": "wrong_pw"}
+    )
+    assert res.status_code == 401
+
+
+def test_login_github_oauth_user_denied(client):
+    """GitHub OAuth 経由で登録したユーザー (hashed_password=NULL) は ID入力ログイン不可 → 403。"""
+    state = _valid_state()
+    mock_client = _mock_httpx_client()
+    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
+        client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    # 同じ username で ID入力ログインを試みる → 403
+    res = client.post(
+        "/api/v1/auth/login",
+        json={"username": FAKE_GITHUB_USER["login"], "password": "anypassword"},
+    )
+    assert res.status_code == 403
+
+
+def test_login_cookie_enables_authenticated_request(client):
+    """ログインで取得した Cookie で認証必須エンドポイントにアクセスできる。"""
+    client.post("/api/v1/auth/login", json={"username": "cookie_flow_user", "password": "pass9900"})
+
+    me_res = client.get("/api/v1/users/me")
+    assert me_res.status_code == 200
+    assert me_res.json()["username"] == "cookie_flow_user"
