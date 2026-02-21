@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.crud import quest_progress as crud_quest_progress
 from app.crud import skill_tree as crud_skill_tree
-from app.models.enums import QuestStatus, SkillCategory
+from app.models.enums import QuestStatus
 
 
 # カテゴリ色マッピング
