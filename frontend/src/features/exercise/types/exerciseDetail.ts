@@ -20,7 +20,9 @@ export interface ExerciseDetail {
     id: string;
     title: string;
     description: string;
+    type: "text" | "choice";
     problem: string;
+    choices?: string[];
     placeholder?: string;
   };
 }
