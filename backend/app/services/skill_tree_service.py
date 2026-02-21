@@ -105,6 +105,15 @@ async def generate_skill_tree_ai(
     # Step 3: ベースラインJSON読み込み
     baseline_data = _load_baseline_json(category)
 
+    # 開発モード: LLMをスキップしてベースラインJSONを直接返す
+    from app.core.config import settings
+
+    if settings.SKIP_LLM_FOR_SKILL_TREE:
+        logger.info(
+            f"Skipping LLM for development mode, using baseline JSON for {category.value}"
+        )
+        return _fallback_to_baseline(category, baseline_data, github_analysis)
+
     # Step 4: LLMプロンプト生成
     prompt = _build_skill_tree_prompt(
         profile=profile,
@@ -298,7 +307,9 @@ def _build_skill_tree_prompt(
 
 
 def _fallback_to_baseline(
-    category: SkillCategory, baseline_data: dict[str, Any], github_analysis: dict[str, Any]
+    category: SkillCategory,
+    baseline_data: dict[str, Any],
+    github_analysis: dict[str, Any],
 ) -> SkillTreeResponse:
     """
     LLM呼び出し失敗時のフォールバック: ベースラインJSONを返却（GitHub分析結果は適用）
@@ -314,7 +325,7 @@ def _fallback_to_baseline(
     logger.warning(
         f"Falling back to baseline JSON for category={category.value} due to LLM failure"
     )
-    
+
     # GitHub分析結果でcompletedフラグを更新
     completion_signals = github_analysis.get("completion_signals", {})
     if completion_signals:
@@ -340,7 +351,7 @@ def _fallback_to_baseline(
             baseline_data["metadata"] = {}
         baseline_data["metadata"]["completed_nodes"] = completed_nodes
         baseline_data["metadata"]["progress_percentage"] = round(progress_percentage, 1)
-    
+
     return SkillTreeResponse(
         category=category.value,
         tree_data=baseline_data,

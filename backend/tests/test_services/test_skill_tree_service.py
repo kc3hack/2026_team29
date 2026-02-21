@@ -210,6 +210,9 @@ class TestSkillTreeService:
             "app.services.skill_tree_service.invoke_llm",
             new_callable=AsyncMock,
             return_value=json.dumps(llm_response),
+        ), patch(
+            "app.core.config.settings.SKIP_LLM_FOR_SKILL_TREE",
+            False,
         ):
             # Act
             result = await generate_skill_tree_ai(user.id, category, db)
@@ -284,6 +287,9 @@ class TestSkillTreeService:
             "app.services.skill_tree_service.invoke_llm",
             new_callable=AsyncMock,
             return_value=json.dumps(llm_response),
+        ), patch(
+            "app.core.config.settings.SKIP_LLM_FOR_SKILL_TREE",
+            False,
         ):
             # Act
             result = await generate_skill_tree_ai(user.id, category, db)

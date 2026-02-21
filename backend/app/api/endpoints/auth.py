@@ -64,7 +64,9 @@ def create_access_token(user_id: int) -> str:
         "exp": expire,
         "iat": datetime.now(timezone.utc),
     }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return jwt.encode(
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
 
 def set_auth_cookie(response: Response, token: str) -> None:
@@ -138,10 +140,14 @@ def github_login() -> RedirectResponse:
     """
     if not settings.GITHUB_CLIENT_ID:
         raise HTTPException(
-            status_code=503, detail="GitHub OAuth は設定されていません (GITHUB_CLIENT_ID)"
+            status_code=503,
+            detail="GitHub OAuth は設定されていません (GITHUB_CLIENT_ID)",
         )
     # JWT 署名用設定が未整備の場合は HMAC を安全に生成できないため早期に失敗させる
-    if not getattr(settings, "JWT_SECRET_KEY", None) or not settings.JWT_SECRET_KEY.strip():
+    if (
+        not getattr(settings, "JWT_SECRET_KEY", None)
+        or not settings.JWT_SECRET_KEY.strip()
+    ):
         raise HTTPException(
             status_code=503, detail="JWT 設定が正しくありません (JWT_SECRET_KEY)"
         )
@@ -194,10 +200,14 @@ async def github_callback(
     # これにより「攻撃者が取得した state を被害者に踏ませる」Login CSRF を防ぐ。
     state_cookie = request.cookies.get("oauth_state")
     if not state_cookie or not secrets.compare_digest(state_cookie, state):
-        raise HTTPException(status_code=400, detail="Invalid or expired state parameter")
+        raise HTTPException(
+            status_code=400, detail="Invalid or expired state parameter"
+        )
     # さらに HMAC 署名を検証してサーバー発行の state かを確認する
     if not _verify_state(state):
-        raise HTTPException(status_code=400, detail="Invalid or expired state parameter")
+        raise HTTPException(
+            status_code=400, detail="Invalid or expired state parameter"
+        )
 
     # --- 2. GitHub アクセストークン取得 ---
     # 環境変数未設定時は外部 API を呼ばずに早期に 503 を返す（運用上の切り分け用）
@@ -234,7 +244,9 @@ async def github_callback(
     access_token: str | None = token_data.get("access_token")
     if not access_token:
         # GitHub は 200 でエラーを返すことがある
-        error_desc = token_data.get("error_description", token_data.get("error", "No access token"))
+        error_desc = token_data.get(
+            "error_description", token_data.get("error", "No access token")
+        )
         raise HTTPException(status_code=400, detail=error_desc)
 
     # --- 3. GitHub ユーザー情報取得 ---
@@ -258,7 +270,9 @@ async def github_callback(
     github_user_id_raw = github_user.get("id")
     github_login_name: str | None = github_user.get("login")
     if not github_user_id_raw or not github_login_name:
-        raise HTTPException(status_code=502, detail="GitHub ユーザー情報の取得に失敗しました")
+        raise HTTPException(
+            status_code=502, detail="GitHub ユーザー情報の取得に失敗しました"
+        )
     github_user_id = str(github_user_id_raw)
 
     # --- 4. 既存ユーザー照合 or 新規作成 ---
@@ -283,7 +297,9 @@ async def github_callback(
         # これにより「User だけが永続化されるゾンビレコード」を防ぐ。
         # create_user / create_oauth_account の flush も含めて全体を囲う（C-1修正）
         try:
-            db_user = crud_user.create_user(db, UserCreate(username=username), commit=False)
+            db_user = crud_user.create_user(
+                db, UserCreate(username=username), commit=False
+            )
             # OAuthAccount 作成（GitHubトークンは暗号化保存: ADR 005）
             crud_oauth.create_oauth_account(
                 db,
@@ -298,16 +314,22 @@ async def github_callback(
             db.commit()
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail="ユーザー登録に失敗しました") from e
+            raise HTTPException(
+                status_code=500, detail="ユーザー登録に失敗しました"
+            ) from e
         db.refresh(db_user)  # commit 後に refresh（rollback 対象外）
 
     if db_user is None:
-        raise HTTPException(status_code=500, detail="User lookup failed after OAuth flow")
+        raise HTTPException(
+            status_code=500, detail="User lookup failed after OAuth flow"
+        )
 
     # --- 5. JWT を httpOnly Cookie にセットしてフロントへリダイレクト ---
     # JWT を URL パラメータに含めない（ブラウザ履歴・Referer への漏洩防止）
     jwt_token = create_access_token(db_user.id)
-    redirect = RedirectResponse(url=settings.FRONTEND_URL, status_code=302)
+    # GitHub OAuth 成功後はダッシュボードへリダイレクト（Issue #74）
+    dashboard_url = f"{settings.FRONTEND_URL}/dashboard"
+    redirect = RedirectResponse(url=dashboard_url, status_code=302)
     set_auth_cookie(redirect, jwt_token)
     # oauth_state Cookie を使用済みにする（ワンタイム化）
     is_https = urlparse(settings.FRONTEND_URL).scheme == "https"
@@ -429,4 +451,3 @@ def login_by_username(
         )
     set_auth_cookie(response, token)
     return {"message": "ログインしました", "user_id": db_user.id}
-
