@@ -32,9 +32,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.main import app
 from app.core.config import settings
-from app.models.user import User
 from app.models.profile import Profile
-from app.crud.skill_tree import initialize_skill_trees_for_user
 from app.crud.user import create_user
 from app.schemas.user import UserCreate
 from app.db.session import get_db

@@ -44,7 +44,7 @@ def _setup_authenticated_user(client, db):
     from app.schemas.user import UserCreate
 
     # テストユーザー作成
-    test_user = create_user(
+    create_user(
         db, UserCreate(username="test_skill_tree_mock_user", password="testpass123")
     )
 
