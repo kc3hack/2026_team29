@@ -45,7 +45,7 @@ class QuestSummary(BaseModel):
     """クエスト一覧用スキーマ（description 除外）。
 
     一覧表示時にMarkdown本文全体を転送しないための軽量スキーマ。
-    演習内容は GET /quests/{quest_id} の Quest スキーマで取得する（ADR 012）。
+    演習内容は GET /api/v1/quest/{quest_id} の Quest スキーマで取得する（ADR 012）。
     """
 
     id: int

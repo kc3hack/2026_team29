@@ -96,7 +96,7 @@ def test_list_quests_pagination(client, db):
 
 
 def test_list_quests_response_schema(client, db):
-    """GET /quests は QuestSummary を返す（description 除外）。"""
+    """GET /api/v1/quest は QuestSummary を返す（description 除外）。"""
     _make_quest(db, title="Schema Check")
     data = client.get("/api/v1/quest").json()[0]
     assert "id" in data
