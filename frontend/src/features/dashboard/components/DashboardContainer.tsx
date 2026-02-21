@@ -122,21 +122,16 @@ export function DashboardContainer() {
           },
           // メタデータコールバック
           (metadata) => {
-            console.log("Metadata:", metadata);
+            // メタデータ受信（必要に応じて処理を追加）
           },
           // 完了コールバック（ここで一度だけ変換）
           () => {
             if (isCompleted || !isMounted) {
-              console.log("⚠️ 完了コールバック重複実行を防止");
               return; // 既に完了済み、またはアンマウント済みなら何もしない
             }
 
             isCompleted = true;
             if (progressInterval) clearInterval(progressInterval);
-
-            console.log("🔍 完了コールバック開始");
-            console.log("  receivedNodes count:", receivedNodes.length);
-            console.log("  receivedNodes sample:", receivedNodes.slice(0, 3));
 
             // 全ノード受信完了 → 座標計算して表示
             const canvasNodes = convertApiNodesToCanvasNodes(
@@ -144,29 +139,12 @@ export function DashboardContainer() {
               category,
             );
 
-            console.log("  ✅ canvasNodes 計算完了:", canvasNodes.length);
-            console.log(
-              "  Tier 0 nodes:",
-              canvasNodes.filter((n) => n.tier === 0).length,
-            );
-            console.log(
-              "  Tier distribution:",
-              Array.from(new Set(canvasNodes.map((n) => n.tier)))
-                .sort((a, b) => a - b)
-                .map(
-                  (tier) =>
-                    `Tier${tier}:${canvasNodes.filter((n) => n.tier === tier).length}`,
-                ),
-            );
-
             setSkillTreeNodes(canvasNodes);
-            console.log("  ✅ setSkillTreeNodes 完了");
             setStreamProgress(100);
 
             // 0.5秒後にプログレスバーを非表示
             setTimeout(() => {
               if (!isMounted) return;
-              console.log("  ℹ️ setIsStreaming(false) - 0.5秒後");
               setIsStreaming(false);
             }, 500);
           },
@@ -195,14 +173,11 @@ export function DashboardContainer() {
 
     // クリーンアップ: カテゴリ変更時にストリーミング停止
     return () => {
-      console.log("🧹 useEffect クリーンアップ実行");
       isMounted = false; // アンマウント状態を記録
       if (eventSource) {
-        console.log("  EventSource をクローズ");
         eventSource.close();
       }
       if (progressInterval) {
-        console.log("  プログレスバーをクリア");
         clearInterval(progressInterval);
       }
     };

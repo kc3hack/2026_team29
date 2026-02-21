@@ -14,9 +14,6 @@ export function convertApiNodesToCanvasNodes(
   apiNodes: ApiSkillNode[],
   category: string = "web",
 ): SkillNode[] {
-  console.log("🟦 convertApiNodesToCanvasNodes 開始");
-  console.log("  Input nodes:", apiNodes.length);
-
   if (!apiNodes || apiNodes.length === 0) {
     return [];
   }
