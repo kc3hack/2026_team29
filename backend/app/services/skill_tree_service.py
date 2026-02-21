@@ -365,12 +365,8 @@ def _build_skill_tree_prompt(
         rank=user_rank,
         rank_name=rank_name,
         github_username=profile.github_username or "未設定",
-        languages=", ".join(github_analysis.get("languages", [])) or "なし",
-        repo_count=github_analysis.get("repo_count", 0),
         tech_stack=", ".join(github_analysis.get("tech_stack", [])) or "なし",
-        recent_activity=github_analysis.get("recent_activity", "不明"),
         acquired_skills=", ".join(acquired_skills) or "なし",
-        completed_quests=", ".join(completed_quests) or "なし",
         category=category.value,
         baseline_json=simplified_baseline,  # 簡略化版を使用
     )
