@@ -48,8 +48,6 @@ export async function fetchSkillTree(category: string): Promise<SkillTreeData> {
   // 認証済みユーザーは /users/me エンドポイントを使用（Issue #61, ADR 014）
   const url = `${baseUrl}/api/v1/users/me/skill-trees?category=${category}`;
 
-  console.log(`Fetching skill tree: category=${category}`);
-
   const response = await fetch(url, {
     credentials: "include",
     headers: {
@@ -69,15 +67,17 @@ export async function fetchSkillTree(category: string): Promise<SkillTreeData> {
 
   // 空配列が返ってきた場合（初回アクセス）は自動生成
   if (Array.isArray(data) && data.length === 0) {
-    console.log(
-      `カテゴリ '${category}' のスキルツリーが存在しないため、生成します...`,
-    );
     return await generateSkillTree(category);
   }
 
   // 配列の場合は最初の要素を返す（通常は1つのみ）
   if (Array.isArray(data)) {
-    return data[0];
+    const firstItem = data[0];
+    // tree_dataが空オブジェクトの場合は自動生成
+    if (!firstItem.tree_data || Object.keys(firstItem.tree_data).length === 0) {
+      return await generateSkillTree(category);
+    }
+    return firstItem;
   }
 
   return data;
