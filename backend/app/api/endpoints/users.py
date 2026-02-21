@@ -21,12 +21,15 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.models.enums import SkillCategory
 from app.schemas.badge import Badge as BadgeSchema
+from app.schemas.grades import GradeStats as GradeStatsSchema
+from app.schemas.grades import HighestRank as HighestRankSchema
 from app.schemas.profile import Profile as ProfileSchema
 from app.schemas.profile import ProfileCreate, ProfileUpdate
 from app.schemas.quest_progress import QuestProgress as QuestProgressSchema
 from app.schemas.skill_tree import SkillTree as SkillTreeSchema
 from app.schemas.user import User as UserSchema
 from app.schemas.user import UserUpdate
+from app.services import grades_service
 
 router = APIRouter()
 
@@ -140,3 +143,34 @@ def get_my_quest_progress(
 ) -> list[QuestProgressSchema]:
     """認証済みユーザー自身のクエスト進捗一覧取得。"""
     return crud_quest_progress.get_quest_progress_by_user(db, current_user.id)
+
+
+@router.get("/me/grade-stats", response_model=GradeStatsSchema)
+def get_my_grade_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> GradeStatsSchema:
+    """認証済みユーザー自身の成績統計情報を取得。"""
+    # 連続記録日数を取得
+    consecutive_days = grades_service.get_consecutive_days(db, current_user.id)
+
+    # 修了したクエスト数を取得
+    completed_quests = grades_service.get_completed_quests_count(db, current_user.id)
+
+    # 最も進捗が高いカテゴリを取得
+    category, _ = grades_service.get_highest_progress_category(db, current_user.id)
+
+    # 最高ランク情報を構築（現在の実装では全体で一つのrankを使用）
+    highest_rank = HighestRankSchema(
+        rank=current_user.rank,
+        category=category,
+        category_name=grades_service.CATEGORY_NAMES.get(category, "総合"),
+        rank_name=grades_service.RANK_NAMES.get(current_user.rank, "種子"),
+        color=grades_service.CATEGORY_COLORS.get(category, "#55aaff"),
+    )
+
+    return GradeStatsSchema(
+        consecutive_days=consecutive_days,
+        completed_quests=completed_quests,
+        highest_rank=highest_rank,
+    )
