@@ -77,13 +77,17 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 ## CRITICAL: ノード数の配分（下に行くほど多く）
 
-**【必須】Tier 0からTier 5までのノード数配分:**
-- Tier 0（基礎）: 1-2個
+**【必須】Tier 0からTier 5までのノード数配分（厳格に遵守）:**
+- Tier 0（基礎）: 1-2個 ← 最上層、最小
 - Tier 1（初級）: 2-4個
 - Tier 2（中級）: 4-8個
 - Tier 3（応用）: 8-12個
 - Tier 4（高度）: 12-16個
-- Tier 5（極限）: 16-20個
+- Tier 5（極限）: 16-20個 ← 最下層、最大
+
+**三角形△構造の形成:**
+上に行くほど狭く、下に行くほど広い逆三角形を形成。
+各Tierで**指定範囲内でできるだけ多くのノード**を生成すること。
 
 **依存関係のルール:**
 - 各ノードのprerequisitesは、**必ず一つ前のTierのノード**のみを指定
@@ -103,19 +107,20 @@ GitHub:{github_username} | スタック:{tech_stack}
 - 良い例: "TypeScript型設計" (簡潔)
 - 良い例: "REST API設計" (簡潔)
 
-## 説明（description）の要件:
-- **スキル名で伝えきれない詳細情報をここに記載**
-- 最低60文字以上
-- 何ができるようになるか、関連技術・ツール・パターン名を含める
+## 説明（desc）の要件:
+- **スキル名で伝えきれない詳細情報を簡潔に記載**
+- 30文字以内の簡潔な説明
+- 何ができるようになるかのポイントのみ
 
 ## 出力ルール:
 1. **合計50-60ノード程度**（Tier 0からTier 5まで、下層ほど多く）
 2. completed:trueは習得済みのみ
 3. prerequisitesを正確に設定
+4. **CRITICAL: 下層（Tier 3-5）ほど、指定範囲の上限に近い数を生成**
 
 ## 出力形式（JSON）
 ```json
-{{"nodes":[{{"id":"skill-id","name":"キーワード(3-5単語)","completed":true/false,"description":"最低60文字以上の詳細な説明。何ができるようになるか、関連技術・ツール・パターン名を含める","prerequisites":[],"estimated_hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":30,"completed_nodes":1,"progress_percentage":3.3,"next_recommended":["x","y","z"]}}}}
+{{"nodes":[{{"id":"skill-id","name":"キーワード(3-5単語)","completed":true/false,"desc":"30文字以内の簡潔な説明","prerequisites":[],"hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":30,"completed_nodes":1,"progress_percentage":3.3,"next_recommended":["x","y","z"]}}}}
 ```
 
 **重要: Tier 0からTier 5まで、下層ほどノード数を増やし、段階的に広がる三角形△を形成（合計50-60ノード程度）**。JSON形式のみ出力してください（説明不要）。"""

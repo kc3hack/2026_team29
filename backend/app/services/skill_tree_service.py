@@ -289,9 +289,9 @@ def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
             {
                 "id": node.get("id"),
                 "name": node.get("name"),
-                "description": node.get("description", "")[:40] + "...",
+                "desc": node.get("desc", "")[:30] + "...",
                 "prerequisites": [],
-                "estimated_hours": node.get("estimated_hours", 0),
+                "hours": node.get("hours", 0),
             }
         )
 
@@ -303,9 +303,9 @@ def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
             {
                 "id": node.get("id"),
                 "name": node.get("name"),
-                "description": node.get("description", "")[:40] + "...",
+                "desc": node.get("desc", "")[:30] + "...",
                 "prerequisites": node.get("prerequisites", []),
-                "estimated_hours": node.get("estimated_hours", 0),
+                "hours": node.get("hours", 0),
             }
         )
 
@@ -317,9 +317,9 @@ def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
             {
                 "id": node.get("id"),
                 "name": node.get("name"),
-                "description": node.get("description", "")[:40] + "...",
+                "desc": node.get("desc", "")[:30] + "...",
                 "prerequisites": node.get("prerequisites", [])[:2],  # 最大2個まで
-                "estimated_hours": node.get("estimated_hours", 0),
+                "hours": node.get("hours", 0),
             }
         )
 

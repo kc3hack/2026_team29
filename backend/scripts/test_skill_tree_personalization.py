@@ -4,7 +4,6 @@
 パーソナライズ可能な20-30ノードに変更されたことを検証する。
 """
 
-import asyncio
 from app.core import prompts
 
 

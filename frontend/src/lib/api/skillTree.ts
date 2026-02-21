@@ -7,9 +7,9 @@ export interface SkillTreeNode {
   id: string;
   name: string;
   completed: boolean;
-  description: string;
+  desc: string;
   prerequisites: string[];
-  estimated_hours: number;
+  hours: number;
 }
 
 export interface SkillTreeData {
@@ -169,9 +169,9 @@ export function streamSkillTree(
           id: data.id,
           name: data.name,
           completed: data.completed,
-          description: data.description,
+          desc: data.desc,
           prerequisites: data.prerequisites || [],
-          estimated_hours: data.estimated_hours || 0,
+          hours: data.hours || 0,
         };
         onNode(node);
       } else if (data.type === "metadata") {
@@ -325,9 +325,9 @@ export function streamSkillTreeBuffered(
           id: data.id,
           name: data.name,
           completed: data.completed,
-          description: data.description,
+          desc: data.desc,
           prerequisites: data.prerequisites || [],
-          estimated_hours: data.estimated_hours || 0,
+          hours: data.hours || 0,
         };
         nodeBuffer.push(node);
       } else if (data.type === "metadata") {

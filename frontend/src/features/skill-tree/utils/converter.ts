@@ -89,10 +89,10 @@ export function convertApiNodesToCanvasNodes(
     const yPos = BASE_Y + tier * TIER_HEIGHT;
     const nodeCount = nodes.length;
 
-    // X座標: ノード数に応じた幅で等間隔配置
-    // tierが深いほどノード数が多く、自然に横幅が広がる（三角形△）
-    const nodeSpacing = 180;
-    const tierWidth = nodeCount > 1 ? (nodeCount - 1) * nodeSpacing : 200;
+    // X座標: tierが深くなるほど横幅を広げて三角形△を形成
+    // Tier 0: 狭い幅（頂点）→ Tier 5: 広い幅（底辺）
+    const baseSpacing = 100 + tier * 25; // Tier 0:100px → Tier 5:225px
+    const tierWidth = nodeCount > 1 ? (nodeCount - 1) * baseSpacing : 200;
     const spacing = nodeCount > 1 ? tierWidth / (nodeCount - 1) : 0;
     const startX = nodeCount > 1 ? -tierWidth / 2 : 0;
 
@@ -125,7 +125,7 @@ export function convertApiNodesToCanvasNodes(
         x: xPos,
         y: yPos,
         tier,
-        description: apiNode.description,
+        description: apiNode.desc,
         children,
       });
     });
@@ -153,13 +153,13 @@ export function convertApiNodesToCanvasNodes(
   //   console.log(`   Children: [${node.children.join(", ")}]`);
   // });
 
-  const tierDistribution = Array.from(new Set(canvasNodes.map((n) => n.tier)))
-    .sort((a, b) => a - b)
-    .map(
-      (tier) =>
-        `Tier${tier}:${canvasNodes.filter((n) => n.tier === tier).length}`,
-    )
-    .join(", ");
+  // const tierDistribution = Array.from(new Set(canvasNodes.map((n) => n.tier)))
+  //   .sort((a, b) => a - b)
+  //   .map(
+  //     (tier) =>
+  //       `Tier${tier}:${canvasNodes.filter((n) => n.tier === tier).length}`,
+  //   )
+  //   .join(", ");
 
   return canvasNodes;
 }

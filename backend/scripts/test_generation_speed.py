@@ -6,11 +6,9 @@ Few-shot promptingによる最適化効果を測定
 import asyncio
 import json
 import time
-from pathlib import Path
 
 from app.core.llm import get_llm
 from app.services.skill_tree_service import (
-    RANK_NAMES,
     _build_skill_tree_prompt,
     _load_baseline_json,
 )
@@ -71,7 +69,7 @@ async def test_generation_speed():
         baseline_data=baseline_data,
     )
 
-    print(f"\n📊 プロンプト統計:")
+    print("\n📊 プロンプト統計:")
     print(f"   - 文字数: {len(prompt):,} 文字")
     print(f"   - 推定トークン数: {len(prompt) // 3:,} tokens (概算)")
 
@@ -98,16 +96,16 @@ async def test_generation_speed():
         tree_data = json.loads(json_str)
 
         # 結果表示
-        print(f"\n✅ 生成完了!")
+        print("\n✅ 生成完了!")
         print("=" * 80)
         print(f"⏱️  生成時間: {elapsed_time:.2f}秒")
-        print(f"📊 生成結果:")
+        print("📊 生成結果:")
         print(f"   - ノード数: {tree_data['metadata']['total_nodes']}")
         print(f"   - 完了ノード数: {tree_data['metadata']['completed_nodes']}")
         print(f"   - 進捗率: {tree_data['metadata']['progress_percentage']}%")
 
         # 速度評価
-        print(f"\n📈 パフォーマンス評価:")
+        print("\n📈 パフォーマンス評価:")
         if elapsed_time < 5:
             print("   🚀 非常に高速! (5秒未満)")
         elif elapsed_time < 10:
@@ -121,7 +119,7 @@ async def test_generation_speed():
         baseline_tokens = len(json.dumps(baseline_data, ensure_ascii=False)) // 3
         optimized_tokens = len(prompt) // 3
         reduction = ((baseline_tokens - optimized_tokens) / baseline_tokens) * 100
-        print(f"\n🔧 最適化効果:")
+        print("\n🔧 最適化効果:")
         print(f"   - ベースライン全体: 約{baseline_tokens:,} tokens")
         print(f"   - Few-shot最適化後: 約{optimized_tokens:,} tokens")
         print(f"   - トークン削減率: {reduction:.1f}%")

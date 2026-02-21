@@ -18,7 +18,10 @@ import { ZoomControls } from "../../skill-tree/components/ZoomControls";
 import { LoadingSpinner } from "../../skill-tree/components/LoadingSpinner";
 import { ErrorMessage } from "../../skill-tree/components/ErrorMessage";
 import type { SkillNode as TreeSkillNode } from "../../skill-tree/types/data";
-import { streamSkillTreeBuffered } from "@/lib/api/skillTree";
+import {
+  streamSkillTreeBuffered,
+  type SkillTreeNode as ApiSkillTreeNode,
+} from "@/lib/api/skillTree";
 import { convertApiNodesToCanvasNodes } from "../../skill-tree/utils/converter";
 
 // Canvas component を動的インポート（SSR無効化でパフォーマンス改善）
@@ -59,11 +62,6 @@ export function DashboardContainer() {
     type: string;
     ts: number;
   } | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleSelectNode = useCallback((node: TreeSkillNode | null) => {
     setSelectedNode(node);
@@ -72,7 +70,7 @@ export function DashboardContainer() {
   useEffect(() => {
     let eventSource: EventSource | null = null;
     let progressInterval: NodeJS.Timeout | null = null;
-    const receivedNodes: any[] = []; // バッファ: 生ノードを溜める
+    const receivedNodes: ApiSkillTreeNode[] = [];
     let isCompleted = false;
     let isMounted = true; // マウント状態を追跡
 
@@ -114,11 +112,11 @@ export function DashboardContainer() {
         eventSource = streamSkillTreeBuffered(
           category,
           // 進捗コールバック（無視 - 疑似プログレスを使用）
-          (percentage) => {
+          () => {
             // バックエンドの進捗は使わない
           },
           // ソート済みノード受信コールバック（バッファに溜めるのみ）
-          (node, index, total) => {
+          (node) => {
             receivedNodes.push(node);
             // 途中では座標計算せず、最後に一度だけ変換
           },

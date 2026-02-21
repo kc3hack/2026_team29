@@ -6,10 +6,8 @@
 
 import asyncio
 import json
-import os
 from pathlib import Path
 from app.core.llm import get_llm
-from app.core.prompts import SKILL_TREE_ANALYSIS_TEMPLATE
 from app.services.skill_tree_service import RANK_NAMES
 
 # 既存のベースラインを読み込み（例示用）
@@ -145,7 +143,7 @@ JSON以外の形式や追加の説明は含めず、JSONのみを出力してく
         # 結果表示
         print("\n✅ スキルツリー生成完了！")
         print("=" * 80)
-        print(f"📊 生成結果:")
+        print("📊 生成結果:")
         print(f"   - 総ノード数: {tree_data['metadata']['total_nodes']}")
         print(f"   - 完了ノード数: {tree_data['metadata']['completed_nodes']}")
         print(f"   - 進捗率: {tree_data['metadata']['progress_percentage']}%")
@@ -153,7 +151,7 @@ JSON以外の形式や追加の説明は含めず、JSONのみを出力してく
             f"   - 次の推奨スキル: {', '.join(tree_data['metadata']['next_recommended'])}"
         )
 
-        print(f"\n📝 生成されたスキルノード（最初の5件）:")
+        print("\n📝 生成されたスキルノード（最初の5件）:")
         for i, node in enumerate(tree_data["nodes"][:5], 1):
             status = "✅" if node["completed"] else "🔒"
             print(f"   {i}. {status} {node['name']} ({node['estimated_hours']}h)")

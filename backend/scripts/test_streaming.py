@@ -57,7 +57,7 @@ async def test_streaming():
         baseline_json=baseline_json,
     )
 
-    print(f"\n📝 プロンプト送信:")
+    print("\n📝 プロンプト送信:")
     print(f"   カテゴリ: {user_info['category']}")
     print(f"   ランク: {user_info['rank']} ({user_info['rank_name']})")
     print(f"   プロンプト長: {len(prompt)} 文字")
@@ -92,7 +92,7 @@ async def test_streaming():
                     elif data_type == "edge":
                         print(f"🔗 エッジ: {data.get('from')} → {data.get('to')}")
                     elif data_type == "metadata":
-                        print(f"\n📊 メタデータ:")
+                        print("\n📊 メタデータ:")
                         print(f"   - 総ノード数: {data.get('total_nodes')}")
                         print(f"   - 完了ノード数: {data.get('completed_nodes')}")
                         print(f"   - 進捗率: {data.get('progress_percentage')}%")
@@ -116,7 +116,7 @@ async def test_streaming():
                 pass
 
         print("-" * 80)
-        print(f"\n🎉 ストリーミング完了!")
+        print("\n🎉 ストリーミング完了!")
         print(f"   - 受信ノード数: {node_count}")
 
         # 順序検証

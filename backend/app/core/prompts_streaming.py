@@ -11,13 +11,17 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 ## CRITICAL: ノード数の配分（下に行くほど多く）
 
-**【必須】Tier 0からTier 5までのノード数配分:**
-- Tier 0（基礎）: 1-2個
+**【必須】Tier 0からTier 5までのノード数配分（厳格に遵守）:**
+- Tier 0（基礎）: 1-2個 ← 最上層、最小
 - Tier 1（初級）: 2-4個
 - Tier 2（中級）: 4-8個
 - Tier 3（応用）: 8-12個
 - Tier 4（高度）: 12-16個
-- Tier 5（極限）: 16-20個
+- Tier 5（極限）: 16-20個 ← 最下層、最大
+
+**三角形△構造の形成:**
+上に行くほど狭く、下に行くほど広い逆三角形を形成。
+各Tierで**指定範囲内でできるだけ多くのノード**を生成すること。
 
 **依存関係のルール:**
 - 各ノードのprerequisitesは、**必ず一つ前のTierのノード**のみを指定
@@ -34,20 +38,20 @@ GitHub:{github_username} | スタック:{tech_stack}
 - **キーワード中心、3-5単語以内**
 - **名詞・技術用語のみ、動詞は不要**
 
-## 説明（description）の要件:
-- **スキル名で伝えきれない詳細情報をここに記載**
-- 最低60文字以上の詳細な説明
-- 何ができるようになるか、関連技術・ツール・パターン名を含める
+## 説明（desc）の要件:
+- **スキル名で伝えきれない詳細情報を簡潔に記載**
+- 30文字以内の簡潔な説明
+- 何ができるようになるかのポイントのみ
 
 ## 生成手順（厳守）:
-1. Tier 0: 1-2個のノードを出力
+1. Tier 0: 1-2個のノードを出力（少なく）
 2. Tier 1: 2-4個のノードを出力
-3. Tier 2: 4-8個のノードを出力
-4. Tier 3: 8-12個のノードを出力
-5. Tier 4: 12-16個のノードを出力
-6. Tier 5: 16-20個のノードを出力
+3. Tier 2: 4-8個のノードを出力（範囲内でできるだけ多く）
+4. Tier 3: 8-12個のノードを出力（範囲内でできるだけ多く）
+5. Tier 4: 12-16個のノードを出力（範囲内でできるだけ多く）
+6. Tier 5: 16-20個のノードを出力（最も多く）
 
-**Tierが深くなるほど、ノード数を増やす**
+**CRITICAL: 下層（Tier 3-5）ほど、指定範囲の上限に近い数を生成**
 各ノードのprerequisites: [一つ前のTierのノード]
 
 ## 出力ルール:
@@ -56,24 +60,13 @@ GitHub:{github_username} | スタック:{tech_stack}
 3. **出力順序**: Tier 0 → Tier 1 → Tier 2 → Tier 3 → Tier 4 → Tier 5
 4. JSON Lines形式: 1行1ノード、```jsonは不要
 
-## 例(8ノード - 4層構造、キーワード中心の短い名前):
-{{"type":"node","id":"web_foundation","name":"HTTP/HTML/CSS基礎","completed":true,"description":"HTTPリクエスト/レスポンスの仕組み、HTMLのセマンティック構造、CSSのボックスモデルとレイアウト、ブラウザのレンダリングプロセスを理解し、基本的なWebページを構築できる","prerequisites":[],"estimated_hours":30}}
-{{"type":"node","id":"web_js_basic","name":"JavaScript基礎文法","completed":false,"description":"変数、関数、オブジェクト、配列、制御構文などJavaScriptの基本文法を理解し、DOMイベントや非同期処理（Promise/async-await）を用いた動的なWebページを実装できる","prerequisites":["web_foundation"],"estimated_hours":25}}
-{{"type":"node","id":"web_rest_api","name":"REST API設計","completed":false,"description":"RESTfulなAPIエンドポイント設計の原則を理解し、HTTPメソッド（GET/POST/PUT/DELETE）とステータスコードを適切に使い分けた基本的なAPIを設計・実装できる","prerequisites":["web_foundation"],"estimated_hours":20}}
-{{"type":"node","id":"web_css_advanced","name":"CSS設計","completed":false,"description":"Flexbox/Gridレイアウト、レスポンシブデザイン、BEM等のCSS設計手法を理解し、保守性の高いスタイルシートを構築できる","prerequisites":["web_foundation"],"estimated_hours":15}}
-{{"type":"node","id":"web_react","name":"Reactコンポーネント設計","completed":false,"description":"Propsによるデータの受け渡しだけでなく、useEffect等のライフサイクルを用いて、APIリクエストのタイミングやクリーンアップを適切に制御し、再利用可能なコンポーネントを設計できる","prerequisites":["web_js_basic"],"estimated_hours":30}}
-{{"type":"node","id":"web_typescript","name":"TypeScript型設計","completed":false,"description":"型システムを活用してコンパイル時エラーを検出し、Interface/Type Alias/Genericsを用いた堅牢なAPI型定義とビジネスロジックを実装できる","prerequisites":["web_js_basic"],"estimated_hours":25}}
-{{"type":"node","id":"web_db_design","name":"データベース正規化","completed":false,"description":"データの重複を排除した3層正規化設計を行い、複数のテーブルを結合（JOIN）して必要な情報を効率的に抽出するSQLを構築できる","prerequisites":["web_rest_api"],"estimated_hours":25}}
-{{"type":"node","id":"web_nextjs","name":"Next.jsフルスタック開発","completed":false,"description":"SSR/CSR/ISRのハイブリッドレンダリング制御、App Router、Server Actionsを用いて、パフォーマンスとSEOを最適化したフルスタックアプリを構築できる","prerequisites":["web_react","web_typescript"],"estimated_hours":40}}
+## 例(3ノード - フォーマット参考のみ):
+{{"type":"node","id":"web_foundation","name":"HTTP/HTML/CSS基礎","completed":true,"desc":"HTTPとHTMLの仕組み理解","prerequisites":[],"hours":30}}
+{{"type":"node","id":"web_js_basic","name":"JavaScript基礎","completed":false,"desc":"変数・関数・非同期処理の実装","prerequisites":["web_foundation"],"hours":25}}
+{{"type":"node","id":"web_react","name":"React設計","completed":false,"desc":"Component設計とHooks活用","prerequisites":["web_js_basic"],"hours":30}}
 {{"type":"edge","from":"web_foundation","to":"web_js_basic"}}
-{{"type":"edge","from":"web_foundation","to":"web_rest_api"}}
-{{"type":"edge","from":"web_foundation","to":"web_css_advanced"}}
 {{"type":"edge","from":"web_js_basic","to":"web_react"}}
-{{"type":"edge","from":"web_js_basic","to":"web_typescript"}}
-{{"type":"edge","from":"web_rest_api","to":"web_db_design"}}
-{{"type":"edge","from":"web_react","to":"web_nextjs"}}
-{{"type":"edge","from":"web_typescript","to":"web_nextjs"}}
-{{"type":"metadata","total_nodes":50,"completed_nodes":1,"progress_percentage":2.0,"next_recommended":["web_js_basic","web_rest_api"]}}
+{{"type":"metadata","total_nodes":50,"completed_nodes":1,"progress_percentage":2.0,"next_recommended":["web_js_basic"]}}
 
 **【CRITICAL】Tier 0からTier 5まで、深くなるほどノード数を増やす:**
 
@@ -88,7 +81,7 @@ GitHub:{github_username} | スタック:{tech_stack}
 
 **合計50-60ノード** - 下に行くほど数を増やし、三角形△を形成
 
-名前は短く（3-5単語）、詳細はdescriptionで。
+名前は短く（3-5単語）、詳細はdescで（30文字以内）。
 
 説明や```json不要。上記の構成で1行1JSONを出力開始:
 """
