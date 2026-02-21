@@ -84,6 +84,7 @@ export async function fetchUserDashboard(userId: string): Promise<UserStatus> {
     userId,
     displayName: 'Sample User',
     avatar: '👨‍💻',
+    githubUsername: 'sampleuser',
     totalExp: 12300,
     currentRank: mockRank,
     badges: mockBadges,
