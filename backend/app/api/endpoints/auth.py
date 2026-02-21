@@ -352,6 +352,41 @@ async def github_callback(
             status_code=500, detail="User lookup failed after OAuth flow"
         )
 
+    # --- 4.5. GitHub統計情報を取得してランク判定を実行 (Issue #105) ---
+    # OAuth完了時に自動でランク判定を実行し、ユーザーのrankとexpを更新する。
+    # GitHub API障害時でもログインは継続する（Warning のみ）。
+    try:
+        from app.services.github_stats_service import fetch_github_user_stats
+        from app.services.rank_service import analyze_user_rank_from_github
+
+        logger.info(f"Starting auto rank analysis for user {db_user.id}")
+
+        # GitHub統計情報を取得
+        github_stats = await fetch_github_user_stats(access_token)
+
+        # ユーザーのProfileを取得（補足情報として使用）
+        user_profile = crud_profile.get_profile_by_user_id(db, db_user.id)
+
+        # LLMでランク判定を実行
+        rank_result = await analyze_user_rank_from_github(
+            github_stats=github_stats, profile=user_profile
+        )
+
+        # ユーザーのランクと経験値を更新
+        db_user.rank = rank_result["rank"]
+        db_user.exp = rank_result.get("estimated_exp", 0)
+        db.commit()
+        db.refresh(db_user)
+
+        logger.info(
+            f"Auto rank analysis completed for user {db_user.id}: "
+            f"rank={rank_result['rank']}, exp={rank_result.get('estimated_exp', 0)}"
+        )
+    except Exception as e:
+        # ランク判定失敗してもOAuthログインは継続（デフォルト値で運用）
+        logger.warning(f"Auto rank analysis failed for user {db_user.id}: {e}")
+        # デフォルト値はモデルの初期値（rank=0: 種子）を使用
+
     # --- 5. JWT を httpOnly Cookie にセットしてフロントへリダイレクト ---
     # JWT を URL パラメータに含めない（ブラウザ履歴・Referer への漏洩防止）
     jwt_token = create_access_token(db_user.id)
