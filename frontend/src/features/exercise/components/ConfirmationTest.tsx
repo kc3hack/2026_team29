@@ -6,12 +6,14 @@ interface ConfirmationTestProps {
   testId: string;
   title: string;
   description: string;
+  problem: string;
   placeholder?: string;
   onSubmit: (answer: string) => void;
 }
 
 export default function ConfirmationTest({
   title,
+  problem,
   placeholder,
   onSubmit,
 }: ConfirmationTestProps) {
@@ -31,7 +33,17 @@ export default function ConfirmationTest({
         </h2>
       </div>
 
+      {/* 問題文表示エリア */}
+      <div className="bg-white border-4 border-[#14532D] p-6 mb-4" style={{ boxShadow: "6px 6px 0 #14532D" }}>
+        <h3 className="text-lg font-bold text-[#14532D] mb-3">【問題】</h3>
+        <pre className="whitespace-pre-wrap text-[#14532D] leading-relaxed font-sans">
+          {problem}
+        </pre>
+      </div>
+
+      {/* 解答入力エリア */}
       <div className="bg-[#FDFEF0] border-4 border-[#14532D] p-6" style={{ boxShadow: "6px 6px 0 #14532D" }}>
+        <h3 className="text-lg font-bold text-[#14532D] mb-3">【解答欄】</h3>
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}

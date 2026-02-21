@@ -20,6 +20,7 @@ export interface ExerciseDetail {
     id: string;
     title: string;
     description: string;
+    problem: string;
     placeholder?: string;
   };
 }

@@ -32,26 +32,25 @@ export default function ExerciseDetailPage({ params }: PageProps) {
 
   const handleLessonClick = (lessonId: string) => {
     console.log("Lesson clicked:", lessonId);
-    // TODO: レッスン詳細画面への遷移を実装
   };
 
   const handleTestSubmit = (answer: string) => {
     console.log("Test submitted:", answer);
-    // TODO: 解答送信処理を実装
+    alert("解答を送信しました！実際のアプリではここで採点処理を行います。");
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#14532D] flex items-center justify-center">
-        <div className="text-[#4ADE80] text-2xl font-bold">Loading...</div>
+      <div className="min-h-screen bg-[#FDFEF0] flex items-center justify-center">
+        <div className="text-[#14532D] text-2xl font-bold">Loading...</div>
       </div>
     );
   }
 
   if (!exercise) {
     return (
-      <div className="min-h-screen bg-[#14532D] flex items-center justify-center">
-        <div className="text-[#4ADE80] text-2xl font-bold">
+      <div className="min-h-screen bg-[#FDFEF0] flex items-center justify-center">
+        <div className="text-[#14532D] text-2xl font-bold">
           演習が見つかりません
         </div>
       </div>
@@ -59,7 +58,7 @@ export default function ExerciseDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#14532D] p-8">
+    <div className="min-h-screen bg-[#FDFEF0] p-8">
       <div className="max-w-5xl mx-auto">
         {/* ヘッダー */}
         <div className="mb-8">
@@ -105,6 +104,7 @@ export default function ExerciseDetailPage({ params }: PageProps) {
             testId={exercise.confirmationTest.id}
             title={exercise.confirmationTest.title}
             description={exercise.confirmationTest.description}
+            problem={exercise.confirmationTest.problem}
             placeholder={exercise.confirmationTest.placeholder}
             onSubmit={handleTestSubmit}
           />

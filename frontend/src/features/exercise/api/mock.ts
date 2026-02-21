@@ -7,7 +7,7 @@ export const getExercisesByCategory = async (category: string): Promise<Exercise
   const exercises: Record<string, Exercise[]> = {
     web: [
       {
-        id: 'web-1',
+        id: 'web-html-basics',
         title: 'HTML/CSSの基礎',
         category: 'web',
         difficulty: 'beginner',
@@ -17,7 +17,7 @@ export const getExercisesByCategory = async (category: string): Promise<Exercise
         completionRate: 100,
       },
       {
-        id: 'web-2',
+        id: 'web-responsive-design',
         title: 'レスポンシブデザイン入門',
         category: 'web',
         difficulty: 'beginner',
@@ -27,7 +27,7 @@ export const getExercisesByCategory = async (category: string): Promise<Exercise
         completionRate: 60,
       },
       {
-        id: 'web-3',
+        id: 'web-javascript-basics',
         title: 'JavaScript基礎',
         category: 'web',
         difficulty: 'intermediate',
@@ -36,7 +36,7 @@ export const getExercisesByCategory = async (category: string): Promise<Exercise
         description: 'JavaScriptの基本文法とDOM操作',
       },
       {
-        id: 'web-4',
+        id: 'web-react-intro',
         title: 'React入門',
         category: 'web',
         difficulty: 'intermediate',
@@ -45,7 +45,7 @@ export const getExercisesByCategory = async (category: string): Promise<Exercise
         description: 'Reactコンポーネントの作成方法',
       },
       {
-        id: 'web-5',
+        id: 'web-nextjs-app',
         title: 'Next.jsでアプリ開発',
         category: 'web',
         difficulty: 'advanced',
