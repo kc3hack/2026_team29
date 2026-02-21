@@ -69,63 +69,63 @@ JSON以外の形式や追加の説明は含めず、JSONのみを出力してく
 # スキルツリー生成用プロンプト（Phase 3 - LLMパーソナライゼーション）
 # ============================================================
 
-SKILL_TREE_ANALYSIS_TEMPLATE = """あなたは優秀なキャリアアドバイザーです。
-このエンジニアの現在のスキルレベルと目標に基づいて、
-パーソナライズされたスキルツリー（学習ロードマップ）を生成してください。
+SKILL_TREE_ANALYSIS_TEMPLATE = """スキルツリー: {category} | ランク{rank}({rank_name})
+GitHub:{github_username} | スタック:{tech_stack}
+習得済み:{acquired_skills}
 
-## エンジニア情報
-- 現在のランク: {rank} ({rank_name})
-- GitHub: {github_username}
-  - 主な使用言語: {languages}
-  - リポジトリ数: {repo_count}
-  - 技術スタック: {tech_stack}
-  - 最近の活動: {recent_activity}
-- 習得済みスキル（GitHub分析結果）: {acquired_skills}
-- 完了したQuest: {completed_quests}
+参考:{baseline_json}
 
-## 選択されたカテゴリ: {category}
+## CRITICAL: ノード数の配分（下に行くほど多く）
 
-## ベースラインスキルツリー
-{baseline_json}
+**【必須】Tier 0からTier 5までのノード数配分（厳格に遵守）:**
+- Tier 0（基礎）: 1-2個 ← 最上層、最小
+- Tier 1（初級）: 2-4個
+- Tier 2（中級）: 4-8個
+- Tier 3（応用）: 8-12個
+- Tier 4（高度）: 12-16個
+- Tier 5（極限）: 16-20個 ← 最下層、最大
 
-## 生成要件
-1. **ベースラインをベースに**: ベースラインスキルツリーの全ノードを含めつつ、ユーザーのレベルに応じてカスタマイズ
-2. **completed判定（最重要）**: 
-   - 「習得済みスキル」リストに含まれるスキルIDは必ず `completed: true` に設定
-   - 含まれないスキルは `completed: false` に設定
-   - GitHub分析結果を最優先で反映すること
-3. **前提条件の定義**: スキル間の依存関係（prerequisites）を技術的に正確に
-4. **難易度調整**: ユーザーのランクに応じた学習時間を推定
-   - rank 0-2（初心者）: 基礎スキルを手厚く、長めの学習時間
-   - rank 3-5（中級者）: 実践的スキル中心、標準的な学習時間
-   - rank 6-9（上級者）: 先端技術・アーキテクチャスキル、短めの学習時間
-5. **優先順位付け**: 次に取り組むべきスキル（next_recommended）を3つ提示
-6. **ベースラインの全ノードを含める**: ノード数を減らさず、ベースラインの20個程度のノードをすべて含めてください
+**三角形△構造の形成:**
+上に行くほど狭く、下に行くほど広い逆三角形を形成。
+各Tierで**指定範囲内でできるだけ多くのノード**を生成すること。
+
+**依存関係のルール:**
+- 各ノードのprerequisitesは、**必ず一つ前のTierのノード**のみを指定
+- Tier 0: prerequisites:[]
+- Tier 1: prerequisites:[Tier 0のノード]
+- Tier 2: prerequisites:[Tier 1のノード]
+- Tier 3: prerequisites:[Tier 2のノード]
+- Tier 4: prerequisites:[Tier 3のノード]
+- Tier 5: prerequisites:[Tier 4のノード]
+
+**重要:** Tierが深くなるほど、ノード数を増やすこと。これにより下に行くほど横に広がる三角形△を形成する。
+
+**【絶対厳守】 9, 10...などの階層は絶対に生成しないでください。**
+
+## スキル名の命名規則（必須）:
+- **キーワード中心、3-5単語以内**
+- **名詞・技術用語のみ、動詞は不要**
+- 悪い例: "型システムを活用した堅牢なAPI型定義の実装" (長すぎる)
+- 良い例: "TypeScript型設計" (簡潔)
+- 良い例: "REST API設計" (簡潔)
+
+## 説明（desc）の要件:
+- **スキル名で伝えきれない詳細情報を簡潔に記載**
+- 30文字以内の簡潔な説明
+- 何ができるようになるかのポイントのみ
+
+## 出力ルール:
+1. **合計50-60ノード程度**（Tier 0からTier 5まで、下層ほど多く）
+2. completed:trueは習得済みのみ
+3. prerequisitesを正確に設定
+4. **CRITICAL: 下層（Tier 3-5）ほど、指定範囲の上限に近い数を生成**
 
 ## 出力形式（JSON）
-{{
-  "nodes": [
-    {{
-      "id": "unique-skill-id",
-      "name": "スキル名",
-      "completed": true/false,
-      "description": "スキルの説明",
-      "prerequisites": ["前提スキルID"],
-      "estimated_hours": 30
-    }}
-  ],
-  "edges": [
-    {{"from": "skill-a", "to": "skill-b"}}
-  ],
-  "metadata": {{
-    "total_nodes": 8,
-    "completed_nodes": 3,
-    "progress_percentage": 37.5,
-    "next_recommended": ["skill-x", "skill-y", "skill-z"]
-  }}
-}}
+```json
+{{"nodes":[{{"id":"skill-id","name":"キーワード(3-5単語)","completed":true/false,"desc":"30文字以内の簡潔な説明","prerequisites":[],"hours":30}}],"edges":[{{"from":"a","to":"b"}}],"metadata":{{"total_nodes":30,"completed_nodes":1,"progress_percentage":3.3,"next_recommended":["x","y","z"]}}}}
+```
 
-JSON以外の形式や追加の説明は含めず、JSONのみを出力してください。"""
+**重要: Tier 0からTier 5まで、下層ほどノード数を増やし、段階的に広がる三角形△を形成（合計50-60ノード程度）**。JSON形式のみ出力してください（説明不要）。"""
 
 
 SKILL_TREE_TEMPLATE = ChatPromptTemplate.from_messages(

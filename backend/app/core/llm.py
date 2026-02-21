@@ -15,7 +15,7 @@ from app.core.config import settings
 def get_llm(
     model: str | None = None,
     temperature: float = 0.7,
-    timeout: int = 30,
+    timeout: int = 60,
     max_retries: int = 3,
 ) -> BaseChatModel:
     """
@@ -96,6 +96,43 @@ async def invoke_llm(
     except Exception as e:
         # ログ出力（本番環境ではロギングライブラリ使用推奨）
         print(f"LLM invocation failed: {e}")
+        raise
+
+
+async def stream_llm(
+    prompt: str,
+    model: str | None = None,
+    temperature: float = 0.7,
+):
+    """
+    LLMに非同期でプロンプトを送信し、応答をストリーミングで取得
+
+    Args:
+        prompt: 入力プロンプト
+        model: モデル名（Noneの場合はデフォルト）
+        temperature: 応答のランダム性
+
+    Yields:
+        str: LLMの応答チャンク
+
+    Raises:
+        Exception: API呼び出し失敗時
+
+    Example:
+        async for chunk in stream_llm(prompt):
+            print(chunk, end="", flush=True)
+    """
+    llm = get_llm(model=model, temperature=temperature)
+
+    try:
+        async for chunk in llm.astream(prompt):
+            content = chunk.content
+            if isinstance(content, list):
+                content = "".join(str(item) for item in content)
+            if content:
+                yield str(content)
+    except Exception as e:
+        print(f"LLM streaming failed: {e}")
         raise
 
 
