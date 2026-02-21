@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Exercise, DifficultyLevel, DIFFICULTY_LABELS } from '../types';
 import { ExerciseListItem } from './ExerciseListItem';
-import { getExercisesByCategory } from '../api/mock';
+import { getQuestsByCategory } from '../api/questApi';
 
 interface ExerciseListProps {
   category: string;
@@ -20,7 +20,7 @@ export function ExerciseList({ category }: ExerciseListProps) {
     const fetchExercises = async () => {
       setLoading(true);
       try {
-        const data = await getExercisesByCategory(category);
+        const data = await getQuestsByCategory(category);
         setExercises(data);
       } catch (error) {
         console.error('Failed to fetch exercises:', error);
