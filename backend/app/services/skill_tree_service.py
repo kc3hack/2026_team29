@@ -125,7 +125,9 @@ async def generate_skill_tree_ai(
 
     # Step 5: LLM呼び出し
     try:
-        response_text = await invoke_llm(prompt=prompt, temperature=0.3)
+        response_text = await invoke_llm(
+            prompt=prompt, temperature=0.1
+        )  # 0.1で決定論的＆高速化
         logger.debug(f"LLM Response: {response_text}")
     except Exception as e:
         logger.error(f"LLM invocation failed: {e}")
@@ -257,6 +259,54 @@ def _load_baseline_json(category: SkillCategory) -> dict[str, Any]:
         )
 
 
+def _simplify_baseline_for_prompt(baseline_data: dict[str, Any]) -> str:
+    """
+    Few-shot promptingのため、ベースラインから重要ノード2個のみを抽出
+
+    トークン数削減により生成時間を大幅短縮:
+    - 全ノード（20-30個）→ サンプル2個
+    - エッジは削除（構造例のみ示せば十分）
+
+    Args:
+        baseline_data: ベースラインJSON（全ノード・エッジ含む）
+
+    Returns:
+        簡略化されたJSON文字列（Few-shot example用）
+    """
+    nodes = baseline_data.get("nodes", [])
+    if not nodes:
+        return "[]"
+
+    # 重要ノードを2個のみ抽出（初級・上級から1個ずつ）
+    sample_nodes = []
+    if len(nodes) > 0:
+        # 初級ノード（最初）
+        node = nodes[0]
+        sample_nodes.append(
+            {
+                "id": node.get("id"),
+                "name": node.get("name"),
+                "description": node.get("description", "")[:40] + "...",
+                "prerequisites": [],
+                "estimated_hours": node.get("estimated_hours", 0),
+            }
+        )
+    if len(nodes) > len(nodes) // 2:
+        # 中級ノード（中間）
+        node = nodes[len(nodes) // 2]
+        sample_nodes.append(
+            {
+                "id": node.get("id"),
+                "name": node.get("name"),
+                "description": node.get("description", "")[:40] + "...",
+                "prerequisites": node.get("prerequisites", [])[:1],  # 1個のみ
+                "estimated_hours": node.get("estimated_hours", 0),
+            }
+        )
+
+    return json.dumps(sample_nodes, ensure_ascii=False)
+
+
 def _build_skill_tree_prompt(
     profile: Any,
     category: SkillCategory,
@@ -265,7 +315,7 @@ def _build_skill_tree_prompt(
     baseline_data: dict[str, Any],
 ) -> str:
     """
-    LLMプロンプトを生成
+    LLMプロンプトを生成（Few-shot形式で簡潔化）
 
     Args:
         profile: Profileモデルインスタンス
@@ -288,6 +338,9 @@ def _build_skill_tree_prompt(
     user_rank = profile.user.rank if profile.user else 0
     rank_name = RANK_NAMES.get(user_rank, "不明")
 
+    # ベースライン簡略化（Few-shot用に3-5ノードのみ）
+    simplified_baseline = _simplify_baseline_for_prompt(baseline_data)
+
     # プロンプトテンプレートに埋め込み
     prompt = SKILL_TREE_ANALYSIS_TEMPLATE.format(
         rank=user_rank,
@@ -300,7 +353,7 @@ def _build_skill_tree_prompt(
         acquired_skills=", ".join(acquired_skills) or "なし",
         completed_quests=", ".join(completed_quests) or "なし",
         category=category.value,
-        baseline_json=json.dumps(baseline_data, ensure_ascii=False, indent=2),
+        baseline_json=simplified_baseline,  # 簡略化版を使用
     )
 
     return prompt
