@@ -13,12 +13,24 @@ export default function ExerciseLayout({
   return (
     <div className="min-h-screen bg-[#FDFEF0]">
       {/* Top Header Bar - Full Width */}
-      <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-end bg-[#559C71] px-6 text-white shadow-md">
-         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-sm cursor-pointer hover:bg-gray-100 transition-colors">
-            {/* User Icon Placeholder */}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-400">
-              <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-            </svg>
+      <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between bg-[#14532D] px-6 text-white border-b-4 border-black shadow-[0_4px_0_rgba(0,0,0,0.2)]">
+         {/* Logo / Brand Area */}
+         <div className="flex items-center gap-2">
+            <div className="h-8 w-8 bg-[#FCD34D] border-2 border-black animate-pulse"></div>
+            <span className="font-sans font-bold text-xl tracking-widest text-[#FCD34D] [text-shadow:2px_2px_0_black]">
+              KC3 HACK
+            </span>
+         </div>
+
+         {/* User Profile */}
+         <div className="flex items-center gap-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-xs font-bold text-[#4ADE80] tracking-wider">PLAYER 1</p>
+              <p className="text-sm font-bold tracking-widest leading-none">READY</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center bg-white border-2 border-black text-black text-xl shadow-[2px_2px_0_black] hover:translate-y-1 hover:shadow-none transition-all cursor-pointer">
+              👤
+            </div>
          </div>
       </header>
 
