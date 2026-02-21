@@ -2,7 +2,7 @@ services:
   # FastAPI Backend
   - type: web
     name: team29-backend
-    env: python
+    runtime: python
     region: oregon
     plan: free
     buildCommand: cd backend && pip install poetry && poetry install --no-dev
@@ -58,10 +58,3 @@ services:
       # Skill Tree Cache
       - key: SKILL_TREE_CACHE_MINUTES
         value: 10
-
-  # PostgreSQL Database (推奨)
-  - type: pserv
-    name: team29-db
-    env: docker
-    plan: free
-    repo: https://github.com/render-examples/postgresql
