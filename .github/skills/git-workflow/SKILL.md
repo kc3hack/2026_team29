@@ -111,6 +111,11 @@ hotfix/{short-description}
 
 ## 4. Pull Request (PR) Rules
 
+- **CI Clean Before PR (Must)**: PRを作成する前に、必ずローカルでLint・テストを実行し、すべてのエラーを解消してください。
+  - **フロントエンド**: `npm run lint` → `npm run build`
+  - **バックエンド**: `poetry run ruff check .` → `poetry run pytest`
+  - CI/CDでエラーが出たPRは、修正が完了するまでレビュー対象外とします。
+  - 自力で解消が難しい場合は、**PR前に**Copilotに修正を依頼してください（PR後の修正より60-80%効率的）。
 - **Issue Linking (Must)**: すべてのPRは必ずIssueと紐づけてください。
   - **PR本文の先頭**に `**Issue**: #issue-number` を記載（PRテンプレートのデフォルト形式）
   - **PR本文の末尾**に以下のキーワードを含めることで、マージ時に自動でIssueをクローズ:
@@ -118,6 +123,7 @@ hotfix/{short-description}
     - `Fixes #issue-number` (バグ修正完了)
     - `Resolves #issue-number` (問題解決完了)
   - **例**: PR本文末尾に `Closes #36` と記載すると、PRマージ時にIssue #36が自動クローズ
+  - **例外**: 初回コミット（`chore: 初期セットアップ`）やhotfixのみIssue番号なしで可
 - **Evidence of Functionality (Must)**: 機能追加やバグ修正を行った場合は、**動作を保証する客観的な証拠**を必ずPRに添付してください。証拠がないPRはレビューしません（Closeします）。
   - **UI等の視覚的な変更**: 変更前後のスクリーンショット、または操作動画（GIF/MP4）。
   - **API/ロジックの変更**: テストスイートがPassしたログ、またはcURL等の実行コマンドとそのレスポンス結果。
