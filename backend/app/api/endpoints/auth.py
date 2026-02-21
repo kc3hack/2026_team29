@@ -78,7 +78,7 @@ def set_auth_cookie(response: Response, token: str) -> None:
 
     - httpOnly: JS からアクセス不可 → XSS によるトークン盗取を防止
     - Secure: HTTPS 経由のみ送信（開発環境では localhost のため False でも可）
-    - SameSite=Lax: CSRF 対策（外部サイトからの POST リクエストでは送信しない）
+    - SameSite=None: 異なるドメイン間（Vercel ↔ Render）でCookie送信
     """
     is_https = urlparse(settings.FRONTEND_URL).scheme == "https"
     response.set_cookie(
@@ -86,7 +86,7 @@ def set_auth_cookie(response: Response, token: str) -> None:
         value=token,
         httponly=True,
         secure=is_https,
-        samesite="lax",
+        samesite="none" if is_https else "lax",
         max_age=settings.JWT_EXPIRE_HOURS * 3600,
         path="/",
     )
@@ -176,7 +176,7 @@ def github_login() -> RedirectResponse:
         value=state,
         httponly=True,
         secure=is_https,
-        samesite="lax",
+        samesite="none" if is_https else "lax",
         max_age=600,  # 10分（HMAC ウィンドウと同期）
         path="/",
     )
