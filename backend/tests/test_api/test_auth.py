@@ -134,7 +134,7 @@ def test_callback_new_user_username_collision(client, db):
     """GitHub のログイン名がすでに使われている場合は username に ID を付与。"""
     state = _valid_state()
     # 同じ username を先に登録（事前ユーザー作成の確認）
-    pre_res = client.post("/api/v1/users", json={"username": "testuser_gh"})
+    pre_res = client.post("/api/v1/auth/register", json={"username": "testuser_gh", "password": "testpass123"})
     assert pre_res.status_code == 201
 
     mock_client = _mock_httpx_client()
@@ -328,29 +328,40 @@ def test_callback_redirect_location_is_frontend_url(client):
 
 
 # ---------------------------------------------------------------------------
-# POST /auth/login  (Spec 2.1: "GitHub OAuth または ID 入力でログイン")
+# POST /auth/register  +  POST /auth/login  (Spec 2.1: 登録と認証の分離)
 # ---------------------------------------------------------------------------
 
 
-def test_login_new_user_creates_account_and_sets_cookie(client):
-    """存在しない username + password → 新規作成 + JWT httpOnly Cookie 付与。"""
+def test_register_creates_account_and_sets_cookie(client):
+    """新規登録: username + password → 201 + JWT httpOnly Cookie 付与。"""
     res = client.post(
-        "/api/v1/auth/login", json={"username": "brand_new_user", "password": "pass1234"}
+        "/api/v1/auth/register", json={"username": "brand_new_user", "password": "pass1234"}
     )
 
-    assert res.status_code == 200
+    assert res.status_code == 201
     assert res.json().get("user_id") is not None
     set_cookie_header = res.headers.get("set-cookie", "")
     assert "access_token=" in set_cookie_header
     assert "httponly" in set_cookie_header.lower()
 
 
+def test_register_duplicate_username_returns_409(client):
+    """同一 username の再登録 → 409 Conflict。"""
+    client.post("/api/v1/auth/register", json={"username": "dup_user", "password": "pass1234"})
+    res = client.post("/api/v1/auth/register", json={"username": "dup_user", "password": "pass1234"})
+    assert res.status_code == 409
+
+
+def test_login_unknown_user_returns_401(client):
+    """存在しない username でログイン → 401（ユーザー列挙防止）。"""
+    res = client.post("/api/v1/auth/login", json={"username": "nobody", "password": "pass1234"})
+    assert res.status_code == 401
+
+
 def test_login_existing_user_correct_password(client):
     """登録済みユーザーが正しいパスワードでログイン → 200。"""
-    # 新規登録
-    client.post("/api/v1/auth/login", json={"username": "pw_user", "password": "correct_pw"})
+    client.post("/api/v1/auth/register", json={"username": "pw_user", "password": "correct_pw"})
 
-    # 2回目ログイン
     res = client.post("/api/v1/auth/login", json={"username": "pw_user", "password": "correct_pw"})
     assert res.status_code == 200
     assert "access_token=" in res.headers.get("set-cookie", "")
@@ -358,7 +369,7 @@ def test_login_existing_user_correct_password(client):
 
 def test_login_existing_user_wrong_password(client):
     """登録済みユーザーが誤ったパスワードを入力 → 401。"""
-    client.post("/api/v1/auth/login", json={"username": "pw_user2", "password": "correct_pw"})
+    client.post("/api/v1/auth/register", json={"username": "pw_user2", "password": "correct_pw"})
 
     res = client.post(
         "/api/v1/auth/login", json={"username": "pw_user2", "password": "wrong_pw"}
@@ -366,12 +377,12 @@ def test_login_existing_user_wrong_password(client):
     assert res.status_code == 401
 
 
-def test_login_github_oauth_user_denied(client):
+def test_login_github_oauth_user_denied(client, db):
     """GitHub OAuth 経由で登録したユーザー (hashed_password=NULL) は ID入力ログイン不可 → 403。"""
-    state = _valid_state()
-    mock_client = _mock_httpx_client()
-    with patch("app.api.endpoints.auth.httpx.Client", return_value=mock_client):
-        client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+    # コールバック経由ではなく DB 直接作成（hashed_password=None の GH OAuth ユーザーを模倣）
+    from app.crud.user import create_user as db_create_user
+    from app.schemas.user import UserCreate
+    db_create_user(db, UserCreate(username=FAKE_GITHUB_USER["login"], password=None))
 
     # 同じ username で ID入力ログインを試みる → 403
     res = client.post(
@@ -383,7 +394,7 @@ def test_login_github_oauth_user_denied(client):
 
 def test_login_cookie_enables_authenticated_request(client):
     """ログインで取得した Cookie で認証必須エンドポイントにアクセスできる。"""
-    client.post("/api/v1/auth/login", json={"username": "cookie_flow_user", "password": "pass9900"})
+    client.post("/api/v1/auth/register", json={"username": "cookie_flow_user", "password": "pass9900"})
 
     me_res = client.get("/api/v1/users/me")
     assert me_res.status_code == 200

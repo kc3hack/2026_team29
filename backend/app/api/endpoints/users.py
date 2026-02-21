@@ -5,7 +5,7 @@
 rank 管理方針は ADR 010 参照。
 
 /users/me   → 認証済みユーザー自身の操作 (ADR 015)
-/users/{id} → 管理者用（ADR 006 管理者API に移行予定）
+/users/{id} → 管理者用として別 Issue で管理 API に移行予定（現在は未公開）
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,28 +25,9 @@ from app.schemas.profile import ProfileCreate, ProfileUpdate
 from app.schemas.quest_progress import QuestProgress as QuestProgressSchema
 from app.schemas.skill_tree import SkillTree as SkillTreeSchema
 from app.schemas.user import User as UserSchema
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserUpdate
 
 router = APIRouter()
-
-
-# ---------------------------------------------------------------------------
-# User 登録（OAuth フロー実装後は /auth/github/callback 経由が主経路）
-# ---------------------------------------------------------------------------
-
-
-@router.post("", response_model=UserSchema, status_code=201)
-def create_user(user_in: UserCreate, db: Session = Depends(get_db)) -> UserSchema:
-    """ユーザー登録（後方互換 / 管理者用）。
-
-    通常のユーザー作成は以下の経路を使用すること（Spec 2.1）:
-    - GitHub OAuth: POST /auth/github/callback が自動作成
-    - ID入力:       POST /auth/login が存在しなければ自動作成
-    このエンドポイントは後方互換テスト・管理者用として残存。
-    """
-    if crud_user.get_user_by_username(db, user_in.username):
-        raise HTTPException(status_code=400, detail="Username already registered")
-    return crud_user.create_user(db, user_in)
 
 
 # ---------------------------------------------------------------------------
@@ -136,57 +117,3 @@ def get_my_quest_progress(
 ) -> list[QuestProgressSchema]:
     """認証済みユーザー自身のクエスト進捗一覧取得。"""
     return crud_quest_progress.get_quest_progress_by_user(db, current_user.id)
-
-
-# ---------------------------------------------------------------------------
-# /users/{user_id}  管理者用（ADR 006 管理者 API に移行予定）
-# 後方互換として残存。認証不要の読み取りのみ許容。
-# ---------------------------------------------------------------------------
-
-
-@router.get("/{user_id}", response_model=UserSchema)
-def get_user(user_id: int, db: Session = Depends(get_db)) -> UserSchema:
-    """ユーザー情報取得（後方互換 / 管理者用）。"""
-    user = crud_user.get_user(db, user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-
-@router.get("/{user_id}/profile", response_model=ProfileSchema)
-def get_profile(user_id: int, db: Session = Depends(get_db)) -> ProfileSchema:
-    """プロフィール取得（後方互換 / 管理者用）。"""
-    if crud_user.get_user(db, user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    profile = crud_profile.get_profile_by_user_id(db, user_id)
-    if profile is None:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    return profile
-
-
-@router.get("/{user_id}/badges", response_model=list[BadgeSchema])
-def get_badges(user_id: int, db: Session = Depends(get_db)) -> list[BadgeSchema]:
-    """バッジ一覧取得（後方互換 / 管理者用）。"""
-    if crud_user.get_user(db, user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud_badge.get_badges_by_user(db, user_id)
-
-
-@router.get("/{user_id}/skill-trees", response_model=list[SkillTreeSchema])
-def get_skill_trees(
-    user_id: int, db: Session = Depends(get_db)
-) -> list[SkillTreeSchema]:
-    """スキルツリー一覧取得（後方互換 / 管理者用）。"""
-    if crud_user.get_user(db, user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud_skill_tree.get_skill_trees_by_user(db, user_id)
-
-
-@router.get("/{user_id}/quest-progress", response_model=list[QuestProgressSchema])
-def get_quest_progress(
-    user_id: int, db: Session = Depends(get_db)
-) -> list[QuestProgressSchema]:
-    """クエスト進捗一覧取得（後方互換 / 管理者用）。"""
-    if crud_user.get_user(db, user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud_quest_progress.get_quest_progress_by_user(db, user_id)

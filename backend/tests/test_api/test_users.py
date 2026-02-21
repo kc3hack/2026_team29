@@ -26,47 +26,14 @@ def client(db):
 
 
 def create_user(client, username: str) -> dict:
-    """ユーザーを作成して dict を返すヘルパー。"""
-    return client.post("/api/v1/users", json={"username": username}).json()
-
-
-# ---------------------------------------------------------------------------
-# POST /users
-# ---------------------------------------------------------------------------
-
-
-def test_create_user_success(client):
-    res = client.post("/api/v1/users", json={"username": "testuser"})
-    assert res.status_code == 201
+    """POST /auth/register でユーザーを作成して dict を返すテストヘルパー。"""
+    res = client.post(
+        "/api/v1/auth/register",
+        json={"username": username, "password": "testpass123"},
+    )
+    assert res.status_code == 201, res.json()
     data = res.json()
-    assert data["username"] == "testuser"
-    assert data["level"] == 1
-    assert data["exp"] == 0
-    assert data["rank"] == 0
-    assert "id" in data
-
-
-def test_create_user_duplicate_username(client):
-    client.post("/api/v1/users", json={"username": "duplicate"})
-    res = client.post("/api/v1/users", json={"username": "duplicate"})
-    assert res.status_code == 400
-
-
-# ---------------------------------------------------------------------------
-# GET /users/{user_id}  （後方互換・認証不要）
-# ---------------------------------------------------------------------------
-
-
-def test_get_user_success(client):
-    user_id = create_user(client, "getme")["id"]
-    res = client.get(f"/api/v1/users/{user_id}")
-    assert res.status_code == 200
-    assert res.json()["username"] == "getme"
-
-
-def test_get_user_not_found(client):
-    res = client.get("/api/v1/users/9999")
-    assert res.status_code == 404
+    return {"id": data["user_id"], "username": username}
 
 
 # ---------------------------------------------------------------------------
@@ -140,28 +107,13 @@ def test_delete_me_success(client):
     user = create_user(client, "todelete")
     res = client.delete("/api/v1/users/me", headers=auth_headers(user["id"]))
     assert res.status_code == 204
-    assert client.get(f"/api/v1/users/{user['id']}").status_code == 404
+    # 削除後は同トークンで /me にアクセスしても 401
+    assert client.get("/api/v1/users/me", headers=auth_headers(user["id"])).status_code == 401
 
 
 def test_delete_me_unauthorized(client):
     res = client.delete("/api/v1/users/me")
     assert res.status_code == 401
-
-
-# ---------------------------------------------------------------------------
-# GET /users/{user_id}/profile  （後方互換・認証不要）
-# ---------------------------------------------------------------------------
-
-
-def test_get_profile_not_found(client):
-    user_id = create_user(client, "noprofile")["id"]
-    res = client.get(f"/api/v1/users/{user_id}/profile")
-    assert res.status_code == 404
-
-
-def test_get_profile_user_not_found(client):
-    res = client.get("/api/v1/users/9999/profile")
-    assert res.status_code == 404
 
 
 # ---------------------------------------------------------------------------
@@ -202,67 +154,52 @@ def test_upsert_profile_unauthorized(client):
     assert res.status_code == 401
 
 
-def test_get_profile_after_upsert(client):
+def test_get_my_profile(client):
     user = create_user(client, "profget")
     client.put(
         "/api/v1/users/me/profile",
         json={"github_username": "gh"},
         headers=auth_headers(user["id"]),
     )
-    res = client.get(f"/api/v1/users/{user['id']}/profile")
+    res = client.get("/api/v1/users/me/profile", headers=auth_headers(user["id"]))
     assert res.status_code == 200
     assert res.json()["github_username"] == "gh"
 
 
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/badges  （後方互換・認証不要）
+# GET /users/me/badges  （認証必須）
 # ---------------------------------------------------------------------------
 
 
-def test_get_badges_empty(client):
-    user_id = create_user(client, "badger")["id"]
-    res = client.get(f"/api/v1/users/{user_id}/badges")
+def test_get_my_badges_empty(client):
+    user = create_user(client, "badger")
+    res = client.get("/api/v1/users/me/badges", headers=auth_headers(user["id"]))
     assert res.status_code == 200
     assert res.json() == []
 
 
-def test_get_badges_user_not_found(client):
-    res = client.get("/api/v1/users/9999/badges")
-    assert res.status_code == 404
-
-
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/skill-trees  （後方互換・認証不要）
+# GET /users/me/skill-trees  （認証必須）
 # ---------------------------------------------------------------------------
 
 
-def test_get_skill_trees_six_categories(client):
-    user_id = create_user(client, "treeman")["id"]
-    res = client.get(f"/api/v1/users/{user_id}/skill-trees")
+def test_get_my_skill_trees_six_categories(client):
+    user = create_user(client, "treeman")
+    res = client.get("/api/v1/users/me/skill-trees", headers=auth_headers(user["id"]))
     assert res.status_code == 200
     assert len(res.json()) == 6
 
 
-def test_get_skill_trees_user_not_found(client):
-    res = client.get("/api/v1/users/9999/skill-trees")
-    assert res.status_code == 404
-
-
 # ---------------------------------------------------------------------------
-# GET /users/{user_id}/quest-progress  （後方互換・認証不要）
+# GET /users/me/quest-progress  （認証必須）
 # ---------------------------------------------------------------------------
 
 
-def test_get_quest_progress_empty(client):
-    user_id = create_user(client, "quester")["id"]
-    res = client.get(f"/api/v1/users/{user_id}/quest-progress")
+def test_get_my_quest_progress_empty(client):
+    user = create_user(client, "quester")
+    res = client.get("/api/v1/users/me/quest-progress", headers=auth_headers(user["id"]))
     assert res.status_code == 200
     assert res.json() == []
-
-
-def test_get_quest_progress_user_not_found(client):
-    res = client.get("/api/v1/users/9999/quest-progress")
-    assert res.status_code == 404
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +210,7 @@ def test_get_quest_progress_user_not_found(client):
 def test_get_me_expired_token_is_rejected(client):
     """期限切れ JWT は 401 を返すこと（Token Expiry 後保証）"""
     user = create_user(client, "expired_user")
+    client.cookies.clear()  # register で付与された有効 Cookie を除去
     headers = {"Authorization": f"Bearer {make_expired_token(user['id'])}"}
     res = client.get("/api/v1/users/me", headers=headers)
     assert res.status_code == 401
@@ -281,6 +219,7 @@ def test_get_me_expired_token_is_rejected(client):
 def test_get_me_tampered_token_is_rejected(client):
     """署名改ざん JWT は 401 を返すこと（Signature Validation 後保証）"""
     user = create_user(client, "tampered_user")
+    client.cookies.clear()  # register で付与された有効 Cookie を除去
     headers = {"Authorization": f"Bearer {make_tampered_token(user['id'])}"}
     res = client.get("/api/v1/users/me", headers=headers)
     assert res.status_code == 401

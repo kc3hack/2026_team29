@@ -320,30 +320,50 @@ def logout(response: Response) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# ID 入力ログイン (Spec 2.1: "GitHub OAuth または ID入力でログイン")
+# ID 入力認証 (Spec 2.1: "GitHub OAuth または ID入力でログイン")
 # ---------------------------------------------------------------------------
 
 
 class LoginRequest(BaseModel):
-    """username + password ログインのリクエストボディ。"""
+    """username + password リクエストボディ。"""
 
     username: str
     password: str
 
 
-@router.post("/login", summary="username 入力ログイン")
+@router.post("/register", summary="username + password 新規登録", status_code=201)
+def register_by_username(
+    body: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> dict:
+    """username + password で新規アカウントを作成し JWT Cookie を返す（Spec 2.1: ID入力フロー）。
+
+    - username が既に存在する場合は 409 Conflict。
+    - 競合状態（TOCTOU）対策: IntegrityError（UNIQUE 制約違反）を 409 として返す。
+    """
+    try:
+        db_user = crud_user.create_user(
+            db, UserCreate(username=body.username, password=body.password)
+        )
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="username が既に使用されています")
+
+    token = create_access_token(db_user.id)
+    set_auth_cookie(response, token)
+    return {"message": "登録しました", "user_id": db_user.id}
+
+
+@router.post("/login", summary="username + password ログイン")
 def login_by_username(
     body: LoginRequest,
     response: Response,
     db: Session = Depends(get_db),
 ) -> dict:
-    """username + password で JWT Cookie を取得する（Spec 2.1: ID入力フロー）。
+    """username + password で既存アカウントを認証し JWT Cookie を返す。
 
-    新規登録 / ログインの判定ロジック:
-    - 存在しない username → 新規ユーザーを作成してログイン。
-    - 存在する username で hashed_password あり → bcrypt検証。不一致は 401。
-    - 存在する username で hashed_password なし（GitHub OAuthユーザー）
-      → ID入力パスを許可しない（GitHubログインを記識できる。403返却）。
+    - username が存在しない場合は 401（ユーザー列挙防止のため「存在しない」とは返さない）。
+    - GitHub OAuth 経由で登録したユーザー（hashed_password=NULL）は 403。
     """
     _INVALID = HTTPException(
         status_code=401,
@@ -354,15 +374,7 @@ def login_by_username(
     db_user = crud_user.get_user_by_username(db, body.username)
 
     if db_user is None:
-        # 新規登録: username + password でアカウント作成
-        # 競合状態（TOCTOU）対策: get→None 確認後に別リクエストが同名を作成する可能性があるため
-        # IntegrityError（UNIQUE 制約違反）を 409 Conflict として返す
-        try:
-            db_user = crud_user.create_user(
-                db, UserCreate(username=body.username, password=body.password)
-            )
-        except IntegrityError:
-            raise HTTPException(status_code=409, detail="username が既に使用されています")
+        raise _INVALID
     elif db_user.hashed_password is None:
         # GitHub OAuth 経由で登録したユーザー: ID入力ログイン不可
         raise HTTPException(
