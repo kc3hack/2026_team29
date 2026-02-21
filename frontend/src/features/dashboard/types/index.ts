@@ -16,6 +16,7 @@ export interface Rank {
   title: string;
   progress: number; // 0-100
   nextLevelExp?: number;
+  rankNumber?: number; // ランク番号(0-9): 0=種子, 9=世界樹
 }
 
 export interface SkillNode {
@@ -32,6 +33,7 @@ export interface UserStatus {
   userId: string;
   displayName: string;
   avatar?: string;
+  githubUsername?: string;
   totalExp: number;
   currentRank: Rank;
   badges: Badge[];

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.enums import QuestCategory
 from app.models.quest import Quest
-from app.schemas.quest import QuestCreate
+from app.schemas.quest import QuestCreate, QuestUpdate
 
 
 def get_quest(db: Session, quest_id: int) -> Quest | None:
@@ -50,8 +50,26 @@ def create_quest(db: Session, quest_in: QuestCreate) -> Quest:
     return db_quest
 
 
+def update_quest(db: Session, quest_id: int, quest_in: QuestUpdate) -> Quest | None:
+    """クエストを部分更新する。存在しない場合は None を返す。"""
+    db_quest = get_quest(db, quest_id)
+    if db_quest is None:
+        return None
+    update_data = quest_in.model_dump(exclude_unset=True)
+    if "category" in update_data and update_data["category"] is not None:
+        update_data["category"] = update_data["category"].value
+    for field, value in update_data.items():
+        setattr(db_quest, field, value)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(db_quest)
+    return db_quest
+
+
 def delete_quest(db: Session, quest_id: int) -> bool:
-    """クエストを削除する。存在した場合 True、存在しなかった場合 False を返す。"""
     db_quest = get_quest(db, quest_id)
     if db_quest is None:
         return False

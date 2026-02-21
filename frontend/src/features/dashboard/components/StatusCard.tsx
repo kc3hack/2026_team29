@@ -7,6 +7,8 @@
 
 import Image from 'next/image';
 import type { UserStatus } from '../types';
+import { useRankAnalysis } from '../hooks/useRankAnalysis';
+import { RankBadge } from './RankBadge';
 
 interface StatusCardProps {
   userStatus: UserStatus;
@@ -21,6 +23,7 @@ const getRankImage = (rankTitle: string) => {
 };
 
 export function StatusCard({ userStatus }: StatusCardProps) {
+  const { rank, loading } = useRankAnalysis(userStatus.githubUsername);
   const progressPercentage = userStatus.currentRank.progress;
 
   return (
@@ -45,6 +48,25 @@ export function StatusCard({ userStatus }: StatusCardProps) {
           </p>
         </div>
       </div>
+
+      {/* ランクバッジ（新規追加） */}
+      {loading ? (
+        <div className="mb-4 animate-pulse">
+          <div className="h-8 w-48 rounded-full bg-gray-200"></div>
+        </div>
+      ) : rank ? (
+        <div className="mb-4 space-y-2">
+          <RankBadge 
+            rank={rank.rank} 
+            label={rank.rank_name} 
+            size="lg" 
+            displayMode="image"
+          />
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {rank.reasoning}
+          </p>
+        </div>
+      ) : null}
 
       {/* ランク情報 */}
       <div className="mb-6 space-y-2">

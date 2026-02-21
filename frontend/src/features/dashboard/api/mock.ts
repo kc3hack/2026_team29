@@ -72,6 +72,7 @@ const mockRank: Rank = {
   title: 'Senior Developer',
   progress: 65,
   nextLevelExp: 5000,
+  rankNumber: 4, // 母樹
 };
 
 /**
@@ -84,6 +85,7 @@ export async function fetchUserDashboard(userId: string): Promise<UserStatus> {
     userId,
     displayName: 'Sample User',
     avatar: '👨‍💻',
+    githubUsername: 'sampleuser',
     totalExp: 12300,
     currentRank: mockRank,
     badges: mockBadges,
