@@ -6,15 +6,22 @@ Swagger UI: /admin/docs（認証必須）
 
 import secrets
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.rank import calculate_rank
+from app.crud import quest as crud_quest
 from app.db.session import get_db
+from app.models.enums import QuestCategory
 from app.models.user import User
+from app.schemas.quest import Quest as QuestSchema
+from app.schemas.quest import QuestCreate
+
+# limit 値の上限（運用上大量取得を防ぐ）
+_ADMIN_LIST_MAX = 200
 
 # Admin専用のFastAPIアプリ（独立したSwagger UI用）
 admin_app = FastAPI(
@@ -86,3 +93,58 @@ def fix_user_ranks(
         raise
 
     return {"fixed_count": fixed_count, "total_users": len(users)}
+
+
+# ---------------------------------------------------------------------------
+# Quest 管理 (Issue #77: 管理者向け CRUD)
+# ---------------------------------------------------------------------------
+
+
+@admin_app.get("/quests", response_model=list[QuestSchema])
+def admin_list_quests(
+    category: QuestCategory | None = None,
+    difficulty: int | None = None,
+    skip: int = Query(0, ge=0, description="スキップ件数（0以上）"),
+    limit: int = Query(50, ge=1, le=_ADMIN_LIST_MAX, description=f"取得件数（1〜{_ADMIN_LIST_MAX}）"),
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_key),
+) -> list[QuestSchema]:
+    """クエスト一覧取得（フィルタリング対応）。
+
+    認証: X-Admin-Key ヘッダーが必要
+    """
+    return crud_quest.list_quests(db, skip=skip, limit=limit, category=category, difficulty=difficulty)
+
+
+@admin_app.post("/quests", response_model=QuestSchema, status_code=201)
+def admin_create_quest(
+    quest_in: QuestCreate,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_key),
+) -> QuestSchema:
+    """手動クエスト作成（ボディを直接埋める）。
+
+    認証: X-Admin-Key ヘッダーが必要
+
+    LLM を使わずに管理者が直接 title / description / difficulty / category を指定する。
+    description は Markdown 形式で入力すること（ADR 012）。
+    """
+    return crud_quest.create_quest(db, quest_in)
+
+
+@admin_app.delete("/quests/{quest_id}", status_code=204)
+def admin_delete_quest(
+    quest_id: int,
+    db: Session = Depends(get_db),
+    _: None = Depends(verify_admin_key),
+) -> None:
+    """クエスト削除。
+
+    認証: X-Admin-Key ヘッダーが必要
+
+    - 204: 削除成功
+    - 404: 指定 ID のクエストが存在しない
+    """
+    deleted = crud_quest.delete_quest(db, quest_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quest not found")
