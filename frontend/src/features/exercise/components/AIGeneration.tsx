@@ -19,12 +19,11 @@ export function AIGeneration() {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     const pdfFiles = files.filter(file => file.type === "application/pdf");
-    
+
     if (pdfFiles.length > 0) {
-      console.log("PDF files dropped:", pdfFiles);
       alert(`${pdfFiles.length}個のPDFファイルをアップロードしました`);
     }
   };
@@ -32,17 +31,13 @@ export function AIGeneration() {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      console.log("PDF files selected:", files);
       alert(`${files.length}個のPDFファイルを選択しました`);
     }
   };
 
   const handleUrlSubmit = () => {
-    if (url.trim()) {
-      console.log("URL submitted:", url);
-      alert(`URL: ${url} から問題を生成します`);
-      setUrl("");
-    }
+    if (!url.trim()) return;
+    alert(`URLから問題を生成します: ${url}`);
   };
 
   return (
@@ -75,7 +70,7 @@ export function AIGeneration() {
           onChange={handleFileInput}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        
+
         <div className="pointer-events-none">
           <div className="flex justify-center mb-4">
             <div className="text-6xl animate-bounce">
@@ -119,7 +114,7 @@ export function AIGeneration() {
           />
           <button
             onClick={handleUrlSubmit}
-            className="px-8 py-3 bg-[#4ADE80] border-4 border-[#14532D] text-[#14532D] font-bold hover:bg-[#86EFAC] transition-all shadow-[4px_4px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] flex items-center gap-2"
+            className="px-8 py-3 bg-[#4ADE80] border-4 border-[#14532D] text-[#14532D] font-bold hover:bg-[#86EFAC] transition-all shadow-[4px_4px_0_#000] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
           >
             <span className="text-lg">生成</span>
             <span className="text-xl">🚀</span>
@@ -127,6 +122,7 @@ export function AIGeneration() {
         </div>
         <p className="text-[#559C71] text-sm mt-3 ml-1">💡 記事、ブログ、技術ドキュメントなどのURLを入力</p>
       </div>
+
     </div>
   );
 }
