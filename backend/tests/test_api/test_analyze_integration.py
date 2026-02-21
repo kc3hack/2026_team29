@@ -21,6 +21,10 @@ GitHub API Token の取得:
     2. "Generate new token (classic)"
     3. スコープ: repo, read:user, user:email
     4. export GITHUB_API_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+
+統合テスト (JWT認証付き):
+    - POST /api/v1/analyze/skill-tree は JWT Cookie 認証が必須
+    - テストは _setup_authenticated_user() で認証用Cookieを取得
 """
 
 import pytest
@@ -31,10 +35,57 @@ from app.core.config import settings
 from app.models.user import User
 from app.models.profile import Profile
 from app.crud.skill_tree import initialize_skill_trees_for_user
+from app.crud.user import create_user
+from app.schemas.user import UserCreate
 from app.db.session import get_db
 
 
 client = TestClient(app)
+
+
+def _setup_authenticated_user(
+    db: Session, github_username: str = "torvalds"
+) -> dict[str, str]:
+    """
+    認証済みユーザーを作成してJWT Cookieを取得
+
+    Args:
+        db: データベースセッション
+        github_username: プロフィールに設定するGitHubユーザー名
+
+    Returns:
+        dict[str, str]: 認証用Cookie (例: {"access_token": "Bearer xxx"})
+    """
+    # テストユーザー作成（パスワードハッシュ化）
+    test_user = create_user(
+        db=db,
+        user=UserCreate(username="test_integration_user", password="test_password"),
+        commit=False,
+    )
+    test_user.rank = 3  # 任意のrankを設定
+
+    # プロフィール作成
+    test_profile = Profile(
+        user_id=test_user.id,
+        github_username=github_username,
+        qiita_id="",
+    )
+    db.add(test_profile)
+
+    # スキルツリー初期化（create_user内で既に初期化済み）
+    # initialize_skill_trees_for_user(db, test_user.id)  # 重複呼び出し回避
+
+    db.commit()
+
+    # ログインしてCookie取得
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"username": "test_integration_user", "password": "test_password"},
+    )
+    assert login_response.status_code == 200, f"Login failed: {login_response.text}"
+
+    # CookieをTestClient用に返す
+    return {"access_token": login_response.cookies.get("access_token")}
 
 
 @pytest.mark.integration
@@ -255,26 +306,14 @@ def test_generate_skill_tree_real_api(db: Session):
     app.dependency_overrides[get_db] = override_get_db
 
     try:
-        # テストユーザー作成
-        test_user = User(username="test_skill_tree_user", rank=3)
-        db.add(test_user)
-        db.flush()
+        # 認証済みユーザーを作成してCookie取得
+        cookies = _setup_authenticated_user(db, github_username="torvalds")
 
-        test_profile = Profile(
-            user_id=test_user.id,
-            github_username="torvalds",  # Linux創始者のGitHubアカウント
-            qiita_id="",
-        )
-        db.add(test_profile)
-        db.commit()
-
-        # スキルツリー初期化
-        initialize_skill_trees_for_user(db, test_user.id)
-
-        # スキルツリー生成リクエスト（WEBカテゴリ）
+        # スキルツリー生成リクエスト（WEBカテゴリ）（user_id削除・JWT Cookie認証）
         response = client.post(
             "/api/v1/analyze/skill-tree",
-            json={"user_id": test_user.id, "category": "web"},
+            json={"category": "web"},
+            cookies=cookies,
         )
 
         # レスポンス検証
@@ -316,9 +355,7 @@ def test_generate_skill_tree_real_api(db: Session):
         print(f"Generated At: {data['generated_at']}")
         print("=" * 40)
 
-        # クリーンアップ
-        db.delete(test_user)
-        db.commit()
+        # クリーンアップ（ユーザーは自動削除される）
     finally:
         # dependency_overridesをクリア
         app.dependency_overrides.clear()
@@ -374,21 +411,8 @@ def test_generate_skill_tree_custom_github(db: Session):
     app.dependency_overrides[get_db] = override_get_db
 
     try:
-        # テストユーザー作成
-        test_user = User(username=f"test_{github_username}", rank=3)
-        db.add(test_user)
-        db.flush()
-
-        test_profile = Profile(
-            user_id=test_user.id,
-            github_username=github_username,
-            qiita_id="",
-        )
-        db.add(test_profile)
-        db.commit()
-
-        # スキルツリー初期化
-        initialize_skill_trees_for_user(db, test_user.id)
+        # 認証済みユーザーを作成してCookie取得
+        cookies = _setup_authenticated_user(db, github_username=github_username)
 
         # 全カテゴリでスキルツリー生成
         categories = ["web", "ai", "security", "infrastructure", "design", "game"]
@@ -400,7 +424,8 @@ def test_generate_skill_tree_custom_github(db: Session):
 
             response = client.post(
                 "/api/v1/analyze/skill-tree",
-                json={"user_id": test_user.id, "category": category},
+                json={"category": category},
+                cookies=cookies,
             )
 
             assert (
@@ -430,9 +455,7 @@ def test_generate_skill_tree_custom_github(db: Session):
         print("全カテゴリのスキルツリー生成が完了しました!")
         print("=" * 50)
 
-        # クリーンアップ
-        db.delete(test_user)
-        db.commit()
+        # クリーンアップ（ユーザーは自動削除される）
     finally:
         # dependency_overridesをクリア
         app.dependency_overrides.clear()
