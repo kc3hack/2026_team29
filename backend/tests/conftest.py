@@ -13,6 +13,9 @@ TEST_JWT_SECRET = "test-jwt-secret-key-for-testing-only"
 # この設定はapp.core.configが読み込まれる前に行う必要がある
 os.environ.setdefault("ENCRYPTION_KEY", TEST_ENCRYPTION_KEY)
 os.environ.setdefault("JWT_SECRET_KEY", TEST_JWT_SECRET)
+# GitHub OAuth テスト用ダミー値（本番環境では絶対に使用しないこと）
+os.environ.setdefault("GITHUB_CLIENT_ID", "test_github_client_id")
+os.environ.setdefault("GITHUB_CLIENT_SECRET", "test_github_client_secret")
 
 from app.core.encryption import reset_fernet  # noqa: E402
 from app.db.base import Base  # noqa: E402, F401  # 全モデル登録のためbase経由でimport
