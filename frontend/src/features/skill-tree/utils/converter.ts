@@ -14,9 +14,9 @@ export function convertApiNodesToCanvasNodes(
   apiNodes: ApiSkillNode[],
   category: string = "web",
 ): SkillNode[] {
-  // console.log("=== Converter Debug ===");
-  // console.log("Input API Nodes:", apiNodes?.length);
-  // console.log("Category:", category);
+  console.log("=== Converter Debug ===");
+  console.log("Input API Nodes:", apiNodes?.length);
+  console.log("Category:", category);
 
   if (!apiNodes || apiNodes.length === 0) {
     console.warn("No API nodes provided!");

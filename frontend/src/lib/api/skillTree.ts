@@ -67,6 +67,14 @@ export async function fetchSkillTree(category: string): Promise<SkillTreeData> {
 
   const data = await response.json();
 
+  console.log("=== fetchSkillTree Response ===");
+  console.log("Raw data:", data);
+  console.log("Is array:", Array.isArray(data));
+  if (Array.isArray(data) && data.length > 0) {
+    console.log("First item:", data[0]);
+    console.log("tree_data keys:", Object.keys(data[0].tree_data || {}));
+  }
+
   // 空配列が返ってきた場合（初回アクセス）は自動生成
   if (Array.isArray(data) && data.length === 0) {
     console.log(
@@ -77,7 +85,15 @@ export async function fetchSkillTree(category: string): Promise<SkillTreeData> {
 
   // 配列の場合は最初の要素を返す（通常は1つのみ）
   if (Array.isArray(data)) {
-    return data[0];
+    const firstItem = data[0];
+    // tree_dataが空オブジェクトの場合は自動生成
+    if (!firstItem.tree_data || Object.keys(firstItem.tree_data).length === 0) {
+      console.log(
+        `カテゴリ '${category}' のスキルツリーが空のため、生成します...`,
+      );
+      return await generateSkillTree(category);
+    }
+    return firstItem;
   }
 
   return data;

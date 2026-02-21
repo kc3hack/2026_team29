@@ -87,18 +87,18 @@ export function DashboardContainer({
 
         setUserStatus(statusData);
 
-        // console.log("=== Dashboard API Response Debug ===");
-        // console.log("Category:", category);
-        // console.log("Tree Data:", treeData);
-        // console.log("API Nodes count:", treeData?.tree_data?.nodes?.length);
+        console.log("=== Dashboard API Response Debug ===");
+        console.log("Category:", category);
+        console.log("Tree Data:", treeData);
+        console.log("API Nodes count:", treeData?.tree_data?.nodes?.length);
 
         // APIデータをキャンバス用のデータ構造に変換
         const canvasNodes = convertApiNodesToCanvasNodes(
           treeData.tree_data.nodes,
           category,
         );
-        // console.log("Canvas Nodes count:", canvasNodes.length);
-        // console.log("Canvas Nodes:", canvasNodes);
+        console.log("Canvas Nodes count:", canvasNodes.length);
+        console.log("Canvas Nodes:", canvasNodes);
         setSkillTreeNodes(canvasNodes);
       } catch (err) {
         const errorMessage =
