@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, register } from "@/lib/api/auth";
-import { RankMeasurement } from "@/features/dashboard/components/RankMeasurement";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,7 +11,6 @@ export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showRankMeasurement, setShowRankMeasurement] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,12 +33,7 @@ export default function LoginPage() {
   };
 
   const handleGitHubLogin = () => {
-    // ランク測定UIを表示
-    setShowRankMeasurement(true);
-  };
-
-  const handleRankMeasurementComplete = () => {
-    // ランク測定完了後、GitHub OAuth フローを開始
+    // GitHub OAuth フローを直接開始（ADR 018に基づく）
     const apiBaseUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     window.location.href = `${apiBaseUrl}/api/v1/auth/github/login`;
@@ -191,17 +184,6 @@ export default function LoginPage() {
           }
         }
       `}</style>
-
-      {/* ランク測定モーダル */}
-      {showRankMeasurement && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full h-full overflow-auto">
-            <RankMeasurement 
-              onComplete={handleRankMeasurementComplete}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
