@@ -1,4 +1,4 @@
-"""GitHub OAuth 認証エンドポイント (Issue #59, ADR 014)
+"""GitHub OAuth 認証エンドポイント (Issue #59, ADR 014, Issue #125)
 
 フロー:
   GET /auth/github/login      → GitHub 認可ページへリダイレクト
@@ -11,6 +11,9 @@
   httpOnly により JavaScript から Cookie へのアクセスを禁止し、XSS によるトークン盗取を防ぐ。
   フロントは Cookie を自動送信するため Authorization ヘッダー不要。
   ただし get_current_user は Authorization: Bearer <token> ヘッダーも受け付ける（テスト互換）。
+
+レート制限 (Issue #125):
+  /auth/github/login, /auth/github/callback: 5req/min（ブルートフォース防止）
 """
 
 import hashlib
@@ -31,6 +34,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.password import verify_password
+from app.core.rate_limit import auth_rate_limit
 from app.crud import oauth_account as crud_oauth
 from app.crud import user as crud_user
 from app.crud import profile as crud_profile
@@ -134,7 +138,8 @@ def _verify_state(signed_state: str) -> bool:
 
 
 @router.get("/github/login", summary="GitHub OAuth ログイン開始")
-def github_login() -> RedirectResponse:
+@auth_rate_limit()
+def github_login(request: Request) -> RedirectResponse:
     """GitHub の認可ページへリダイレクトする。
 
     CSRF 対策として HMAC 署名済み state パラメータを付与し、
@@ -184,6 +189,7 @@ def github_login() -> RedirectResponse:
 
 
 @router.get("/github/callback", summary="GitHub OAuth コールバック")
+@auth_rate_limit()
 async def github_callback(
     request: Request,
     code: str = Query(..., description="GitHub から返される認可コード"),
@@ -418,7 +424,8 @@ async def github_callback(
 
 
 @router.post("/logout", summary="ログアウト（Cookie クリア）")
-def logout(response: Response) -> dict:
+@auth_rate_limit()
+def logout(request: Request, response: Response) -> dict:
     """httpOnly Cookie を削除してログアウトする。
 
     フロント側のストレージ操作は不要。
@@ -455,7 +462,9 @@ class LoginRequest(BaseModel):
 
 
 @router.post("/register", summary="username + password 新規登録", status_code=201)
+@auth_rate_limit()
 def register_by_username(
+    request: Request,
     body: LoginRequest,
     response: Response,
     db: Session = Depends(get_db),
@@ -485,7 +494,9 @@ def register_by_username(
 
 
 @router.post("/login", summary="username + password ログイン")
+@auth_rate_limit()
 def login_by_username(
+    request: Request,
     body: LoginRequest,
     response: Response,
     db: Session = Depends(get_db),

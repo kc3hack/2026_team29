@@ -5,6 +5,7 @@ Issue #35: AI実装Phase 2 - モックAPIエンドポイント
 Issue #36: AI実装Phase 3 - ランク判定AI（LLM実装）
 Issue #54: AI実装Phase 3 - スキルツリー生成（LLMパーソナライゼーション）
 Issue #57: AI実装Phase 3 - 演習生成（LLM実装）
+Issue #125: APIリクエスト制限（レートリミット）機能の実装
 
 POST /api/v1/analyze/rank - ユーザーランクの判定（LLM実装、issue #36）
 POST /api/v1/analyze/skill-tree - スキルツリー生成（LLM実装、issue #54）
@@ -12,7 +13,7 @@ POST /api/v1/analyze/quest - 演習生成（LLM実装、issue #57）
 """
 
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import json
@@ -34,12 +35,16 @@ from app.crud.user import get_user
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.db.session import get_db
+from app.core.rate_limit import llm_rate_limit
 
 router = APIRouter()
 
 
 @router.post("/rank", response_model=RankAnalysisResponse)
-async def analyze_rank(request: RankAnalysisRequest) -> RankAnalysisResponse:
+@llm_rate_limit()
+async def analyze_rank(
+    request: Request, rank_request: RankAnalysisRequest
+) -> RankAnalysisResponse:
     """
     ユーザーのランクをLLMで判定
 
@@ -71,10 +76,10 @@ async def analyze_rank(request: RankAnalysisRequest) -> RankAnalysisResponse:
     """
     try:
         result = await analyze_user_rank(
-            github_username=request.github_username,
-            portfolio_text=request.portfolio_text,
-            qiita_id=request.qiita_id,
-            other_info=request.other_info,
+            github_username=rank_request.github_username,
+            portfolio_text=rank_request.portfolio_text,
+            qiita_id=rank_request.qiita_id,
+            other_info=rank_request.other_info,
         )
         return RankAnalysisResponse(**result)
     except Exception as e:
@@ -82,8 +87,10 @@ async def analyze_rank(request: RankAnalysisRequest) -> RankAnalysisResponse:
 
 
 @router.post("/skill-tree", response_model=SkillTreeResponse)
+@llm_rate_limit()
 async def generate_skill_tree(
-    request: SkillTreeRequest,
+    request: Request,
+    skill_tree_request: SkillTreeRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> SkillTreeResponse:
@@ -123,7 +130,7 @@ async def generate_skill_tree(
     """
     try:
         result = await generate_skill_tree_ai(
-            user_id=current_user.id, category=request.category, db=db
+            user_id=current_user.id, category=skill_tree_request.category, db=db
         )
         return result
     except HTTPException:
@@ -136,7 +143,9 @@ async def generate_skill_tree(
 
 
 @router.get("/skill-tree/stream")
+@llm_rate_limit()
 async def stream_skill_tree(
+    request: Request,
     category: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -339,8 +348,11 @@ async def stream_skill_tree(
 
 
 @router.post("/quest", response_model=QuestGenerationResponse)
+@llm_rate_limit()
 async def generate_quest(
-    request: QuestGenerationRequest, db: Session = Depends(get_db)
+    request: Request,
+    quest_request: QuestGenerationRequest,
+    db: Session = Depends(get_db),
 ) -> QuestGenerationResponse:
     """
     演習生成（LLM実装 - Issue #57）
@@ -383,25 +395,25 @@ async def generate_quest(
     """
     try:
         # ユーザーのrankを取得
-        user = get_user(db, request.user_id)
+        user = get_user(db, quest_request.user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
         # LLMでクエスト生成
         llm_result = await generate_handson_quest(
-            document_content=request.document_text or "基礎的な内容",
+            document_content=quest_request.document_text or "基礎的な内容",
             user_rank=user.rank,
             user_skills="",  # 今後、skill_treeやbadgeから推測可能
         )
 
         # LLM出力をAPIレスポンスにマッピング
         difficulty_map = {
-            "beginner": max(0, min(2, request.difficulty)),
-            "intermediate": max(3, min(5, request.difficulty)),
-            "advanced": max(6, min(9, request.difficulty)),
+            "beginner": max(0, min(2, quest_request.difficulty)),
+            "intermediate": max(3, min(5, quest_request.difficulty)),
+            "advanced": max(6, min(9, quest_request.difficulty)),
         }
         mapped_difficulty = difficulty_map.get(
-            llm_result.get("difficulty", "intermediate"), request.difficulty
+            llm_result.get("difficulty", "intermediate"), quest_request.difficulty
         )
 
         # steps: list[dict] → list[str]
@@ -438,7 +450,7 @@ async def generate_quest(
             title=llm_result.get("title", "演習"),
             description=description,
             difficulty=mapped_difficulty,
-            category=request.category,
+            category=quest_request.category,
             is_generated=True,
             steps=steps_list,
             estimated_time_minutes=llm_result.get("estimated_time_minutes", 60),

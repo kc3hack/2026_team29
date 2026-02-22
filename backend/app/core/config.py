@@ -79,6 +79,14 @@ class Settings(BaseSettings):
     # フロントエンドURL（OAuth コールバック後のリダイレクト先）
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # レート制限設定（Issue #125: DoS対策）
+    # 一般ユーザー: 分あたり60リクエスト、1時間あたり500リクエスト
+    RATE_LIMIT_PER_MINUTE: str = "60/minute"
+    # LLM使用エンドポイント: 分あたり10リクエスト（負荷が高いため厳しく制限）
+    RATE_LIMIT_LLM_PER_MINUTE: str = "10/minute"
+    # 認証エンドポイント: 分あたり5リクエスト（ブルートフォース防止）
+    RATE_LIMIT_AUTH_PER_MINUTE: str = "5/minute"
+
 
 settings = Settings()
 

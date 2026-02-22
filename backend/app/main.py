@@ -2,8 +2,11 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+
 from app.api.api import api_router
 from app.core.config import settings, validate_encryption_key, validate_jwt_config
+from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.api.admin import admin_app
 from app.db import base  # noqa: F401  # SQLAlchemyモデルの登録
 
@@ -19,6 +22,10 @@ app = FastAPI(
     description="KC3HACK2026 Team29 Backend",
     version="0.1.0",
 )
+
+# レートリミット機能の設定（Issue #125）
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # CORS設定
 # BACKEND_CORS_ORIGINS が未設定の場合は "*" にフォールバック（ローカル開発専用）。
