@@ -9,6 +9,26 @@ from app.db import base  # noqa: F401  # SQLAlchemyモデルの登録
 
 logger = logging.getLogger(__name__)
 
+# Sentry統合（エラー追跡）
+if settings.SENTRY_DSN:
+    try:
+        import sentry_sdk
+
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            traces_sample_rate=0.1,  # 10%のトランザクションを追跡
+            environment=(
+                "production"
+                if settings.FRONTEND_URL.startswith("https://")
+                else "development"
+            ),
+        )
+        logger.info("Sentry initialized successfully")
+    except ImportError:
+        logger.warning("sentry-sdk not installed. Install with: poetry add sentry-sdk")
+    except Exception as e:
+        logger.error(f"Failed to initialize Sentry: {e}")
+
 # 起動時に必須設定を検証する。未設定なら ValueError で起動を止める。
 # テストは conftest.py でダミーキーを注入済み。
 validate_encryption_key()
