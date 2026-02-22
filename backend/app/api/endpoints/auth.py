@@ -412,7 +412,7 @@ async def github_callback(
         path="/",
         httponly=True,
         secure=is_https,
-        samesite="lax",
+        samesite="none" if is_https else "lax",
     )
     return redirect
 
@@ -431,7 +431,7 @@ def logout(response: Response) -> dict:
         path="/",
         httponly=True,
         secure=is_https,
-        samesite="lax",
+        samesite="none" if is_https else "lax",
     )
     return {"message": "ログアウトしました"}
 

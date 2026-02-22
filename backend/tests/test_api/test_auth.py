@@ -338,6 +338,51 @@ def test_logout_without_cookie_still_200(client):
     assert res.status_code == 200
 
 
+def test_logout_cookie_samesite_secure_for_https(client, monkeypatch):
+    """HTTPS環境でログアウト時、Set-Cookieにsamesite=none; secureが設定される（Issue #122）。
+
+    背景: Cookie削除は設定時と同じ属性（SameSite/Secure）が必須。
+    本番環境（FRONTEND_URL=https://...）で確実に削除されることを担保する。
+    """
+    # FRONTEND_URLをHTTPSに設定
+    monkeypatch.setattr("app.core.config.settings.FRONTEND_URL", "https://example.com")
+
+    # まずCookieをセット（認証済みにする）
+    state = _valid_state()
+    client.cookies.set("oauth_state", state)
+    mock_client = _mock_httpx_client()
+    with patch("app.api.endpoints.auth.httpx.AsyncClient", return_value=mock_client):
+        client.get(f"/api/v1/auth/github/callback?code=fake_code&state={state}")
+
+    # ログアウト
+    res = client.post("/api/v1/auth/logout")
+    assert res.status_code == 200
+
+    # Set-Cookieヘッダーを取得（access_token のみ削除される）
+    set_cookie_headers = res.headers.get_list("set-cookie")
+    assert len(set_cookie_headers) >= 1, "access_token の Cookie削除が必要"
+
+    # access_tokenのSet-Cookieヘッダーを特定
+    access_token_header = next(
+        (h for h in set_cookie_headers if "access_token" in h), None
+    )
+    assert (
+        access_token_header is not None
+    ), "access_token の Cookie削除ヘッダーが見つからない"
+
+    # HTTPS環境では samesite=none と secure が設定されることを確認
+    access_token_header_lower = access_token_header.lower()
+    assert (
+        "samesite=none" in access_token_header_lower
+    ), "HTTPS環境では samesite=none が必要（Cookie削除時も設定時と同じ属性が必須）"
+    assert (
+        "secure" in access_token_header_lower
+    ), "HTTPS環境では secure が必要（Cookie削除時も設定時と同じ属性が必須）"
+
+    # Cookieが削除されていることも確認（max-age=0）
+    assert "max-age=0" in access_token_header_lower, "Cookie削除には max-age=0 が必要"
+
+
 # ---------------------------------------------------------------------------
 # GET /auth/github/callback - ネットワークエラー系 (T-1, T-2)
 # ---------------------------------------------------------------------------
