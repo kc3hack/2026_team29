@@ -8,25 +8,23 @@ interface BadgeListProps {
   badges: Badge[];
 }
 
-// バッジタイプに応じた画像マッピング関数
-const getBadgeImage = (badge: Badge) => {
-  // まずtypeで判別
-  if (badge.type === 'trophy') return '/images/badges/Trophy.png';
-  if (badge.type === 'gold') return '/images/badges/AI_basic.png';
-  if (badge.type === 'silver') return '/images/badges/Web_base.png';
-  if (badge.type === 'bronze') return '/images/badges/Seed.png';
-  
-  // IDや名前でも判別（後方互換性）
-  if (badge.id.includes('web')) return '/images/badges/Web_base.png';
-  if (badge.id.includes('ai')) return '/images/badges/AI_basic.png';
-  if (badge.name.includes('Seed')) return '/images/badges/Seed.png';
-  if (badge.name.includes('Trophy') || badge.id.includes('trophy')) return '/images/badges/Trophy.png';
-  
-  // デフォルト
-  return '/images/badges/Trophy.png';
+// カテゴリ色定義
+const CATEGORY_COLORS: Record<string, string> = {
+  web: "#55aaff",
+  ai: "#e8b849",
+  security: "#e85555",
+  infra: "#55cc55",
+  design: "#cc66dd",
 };
 
 export const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
+  // ソート: トロフィー → 初級 → 中級 → 上級
+  const sortedBadges = [...badges].sort((a, b) => {
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder;
+    }
+    return parseInt(a.id) - parseInt(b.id);
+  });
   return (
     <div className="mx-auto w-full max-w-5xl px-4">
       <div className="mb-4 flex items-center gap-4 pl-2">
@@ -53,8 +51,8 @@ export const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
         {/* バッジ一覧を横スクロール表示 */}
         {badges.length > 0 ? (
           <div className="flex min-w-max gap-6 items-end pb-4">
-            {badges.map((badge, index) => {
-              const isTrophy = badge.name.includes('Trophy') || badge.id.includes('trophy');
+            {sortedBadges.map((badge, index) => {
+              const isTrophy = badge.type === 'trophy';
               const sizeClass = isTrophy ? 'h-80 w-80' : 'h-60 w-60';
               const animationDelay = index * 0.2;
               
@@ -63,20 +61,62 @@ export const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
                   key={badge.id}
                   className="flex flex-col items-center gap-2 group"
                 >
-                  <span className="text-xl font-bold text-[#1a4023] opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity">▼</span>
+                  <span className="text-xl font-bold text-[#2C5F2D] opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity">
+                    ▼
+                  </span>
                   <div 
-                    className={`relative ${sizeClass} filter drop-shadow-[4px_4px_0_rgba(26,64,35,0.2)]`}
+                    className={`relative ${sizeClass} filter drop-shadow-[4px_4px_0_rgba(0,0,0,0.2)]`}
                     style={{
                       animation: 'float 2s steps(2) infinite',
                       animationDelay: `${animationDelay}s`,
                     }}
                   >
-                    <Image
-                      src={getBadgeImage(badge)}
-                      alt={badge.name}
-                      fill
-                      className="object-contain"
-                    />
+                    {/* 光の粒エフェクト（ランクバッジのみ） */}
+                    {!isTrophy && badge.category && (
+                      <>
+                        {[...Array(16)].map((_, i) => {
+                          const sparkleColor = CATEGORY_COLORS[badge.category!];
+                          // 不規則な遅延とポジション
+                          const delays = [
+                            0, 0.3, 0.7, 1.1, 0.5, 0.9, 1.3, 0.2, 0.8, 1.0, 0.4,
+                            1.2, 0.6, 1.4, 0.1, 1.5,
+                          ];
+                          const positions = [
+                            5, 15, 25, 35, 45, 55, 65, 75, 10, 20, 30, 40, 50, 60,
+                            70, 80,
+                          ];
+                          const delay = delays[i];
+                          const leftPosition = positions[i];
+
+                          return (
+                            <div
+                              key={i}
+                              className="absolute w-6 h-6 rounded-full"
+                              style={{
+                                backgroundColor: sparkleColor,
+                                left: `${leftPosition}%`,
+                                bottom: 0,
+                                opacity: 0.7,
+                                boxShadow: `0 0 10px ${sparkleColor}`,
+                                animation: "sparkle-rise 3s ease-in-out infinite",
+                                animationDelay: `${delay}s`,
+                                zIndex: 1,
+                              }}
+                            />
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* バッジ画像 */}
+                    <div className="relative w-full h-full" style={{ zIndex: 2 }}>
+                      <Image
+                        src={badge.image}
+                        alt={badge.name}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
                   <span className="mt-2 text-center text-sm font-medium text-[#1a4023]">
                     {badge.name}
