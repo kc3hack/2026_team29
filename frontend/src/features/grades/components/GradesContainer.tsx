@@ -29,7 +29,7 @@ function apiBadgeToDisplay(apiBadge: ApiBadge): Badge {
     name: `${category} Tier ${tier}`,
     type: 'rank',
     image: '/images/badges/Trophy.png',
-    category,
+    category: undefined, // APIカテゴリはUIカテゴリと異なるため未定義
     rankLevel: tier,
     sortOrder: 10,
   };
