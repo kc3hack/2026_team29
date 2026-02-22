@@ -338,6 +338,35 @@ def test_logout_without_cookie_still_200(client):
     assert res.status_code == 200
 
 
+def test_logout_https_sets_samesite_none_and_secure(client):
+    """FRONTEND_URL が HTTPS の場合、Cookie 削除ヘッダーに samesite=none と secure が付く。"""
+    with patch("app.api.endpoints.auth.settings") as mock_settings:
+        mock_settings.FRONTEND_URL = "https://example.com"
+        res = client.post("/api/v1/auth/logout")
+
+    assert res.status_code == 200
+    set_cookie_header = res.headers.get("set-cookie", "").lower()
+    assert "access_token" in set_cookie_header
+    assert "samesite=none" in set_cookie_header
+    assert "secure" in set_cookie_header
+
+
+def test_logout_http_sets_samesite_lax_and_no_secure(client):
+    """FRONTEND_URL が HTTP の場合、Cookie 削除ヘッダーは samesite=lax で secure なし。"""
+    with patch("app.api.endpoints.auth.settings") as mock_settings:
+        mock_settings.FRONTEND_URL = "http://localhost:3000"
+        res = client.post("/api/v1/auth/logout")
+
+    assert res.status_code == 200
+    set_cookie_header = res.headers.get("set-cookie", "").lower()
+    assert "access_token" in set_cookie_header
+    assert "samesite=lax" in set_cookie_header
+    # HTTP 環境では secure 属性が付いてはいけない
+    # "secure" が独立した属性として含まれていないことを確認（httponly等の他の属性は除く）
+    cookie_parts = [p.strip() for p in set_cookie_header.split(";")]
+    assert not any(part == "secure" for part in cookie_parts)
+
+
 # ---------------------------------------------------------------------------
 # GET /auth/github/callback - ネットワークエラー系 (T-1, T-2)
 # ---------------------------------------------------------------------------
