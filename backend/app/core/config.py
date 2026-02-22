@@ -79,6 +79,12 @@ class Settings(BaseSettings):
     # フロントエンドURL（OAuth コールバック後のリダイレクト先）
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # スキルツリーキャッシュ時間（分）
+    SKILL_TREE_CACHE_MINUTES: int = 10
+
+    # 監視・エラー追跡（Sentry）
+    SENTRY_DSN: str = ""  # オプション: Sentryでエラー追跡する場合に設定
+
 
 settings = Settings()
 
