@@ -18,12 +18,73 @@ export const getGradeStats = async (): Promise<GradeStats> => {
 export const getBadges = async (): Promise<Badge[]> => {
   // TODO: Replace with actual API call
   return [
-    { id: '1', name: 'Master', icon: '🏆', type: 'trophy', earnedAt: '2025-01-01' },
-    { id: '2', name: 'Gold', icon: '🥇', type: 'gold', earnedAt: '2025-01-02' },
-    { id: '3', name: 'Silver', icon: '🥈', type: 'silver', earnedAt: '2025-01-03' },
-    { id: '4', name: 'Silver', icon: '🥈', type: 'silver', earnedAt: '2025-01-04' },
-    { id: '5', name: 'Bronze', icon: '🥉', type: 'bronze', earnedAt: '2025-01-05' },
-    { id: '6', name: 'Bronze', icon: '🥉', type: 'bronze', earnedAt: '2025-01-06' },
-    { id: '7', name: 'Bronze', icon: '🥉', type: 'bronze', earnedAt: '2025-01-07' },
+    { 
+      id: '1', 
+      name: 'Master Trophy', 
+      type: 'trophy', 
+      image: '/images/badges/Trophy.png',
+      sortOrder: 1,
+      earnedAt: '2025-01-01' 
+    },
+    { 
+      id: '5', 
+      name: 'Design Seed', 
+      type: 'rank', 
+      image: '/images/ranks/rank_tree_0.png',
+      category: 'design',
+      rankLevel: 0,
+      sortOrder: 2,
+      earnedAt: '2025-01-05' 
+    },
+    { 
+      id: '2', 
+      name: 'AI Sprout', 
+      type: 'rank', 
+      image: '/images/ranks/rank_tree_1.png',
+      category: 'ai',
+      rankLevel: 1,
+      sortOrder: 3,
+      earnedAt: '2025-01-02' 
+    },
+    { 
+      id: '3', 
+      name: 'Web Sprout', 
+      type: 'rank', 
+      image: '/images/ranks/rank_tree_1.png',
+      category: 'web',
+      rankLevel: 1,
+      sortOrder: 3,
+      earnedAt: '2025-01-03' 
+    },
+    { 
+      id: '4', 
+      name: 'Security Giant Tree', 
+      type: 'rank', 
+      image: '/images/ranks/rank_tree_3.png',
+      category: 'security',
+      rankLevel: 3,
+      sortOrder: 4,
+      earnedAt: '2025-01-04' 
+    },
+    { 
+      id: '7', 
+      name: 'Web Giant Tree', 
+      type: 'rank', 
+      image: '/images/ranks/rank_tree_3.png',
+      category: 'web',
+      rankLevel: 3,
+      sortOrder: 4,
+      earnedAt: '2025-01-07' 
+    },
+    { 
+      id: '6', 
+      name: 'Infra Grove', 
+      type: 'rank', 
+      image: '/images/ranks/rank_tree_5.png',
+      category: 'infra',
+      rankLevel: 5,
+      sortOrder: 5,
+      earnedAt: '2025-01-06' 
+    },
   ];
 };
