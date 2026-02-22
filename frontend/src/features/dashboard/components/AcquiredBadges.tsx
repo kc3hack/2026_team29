@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { getUserBadges, type Badge as ApiBadge } from "@/lib/api/badge";
 
 // カテゴリ色定義
 const CATEGORY_COLORS: Record<string, string> = {
@@ -9,81 +11,129 @@ const CATEGORY_COLORS: Record<string, string> = {
   security: "#e85555",
   infra: "#55cc55",
   design: "#cc66dd",
+  builder: "#4ADE80",
 };
 
-interface Badge {
+interface BadgeDisplay {
   id: number;
   name: string;
-  type: "trophy" | "rank";
+  type: "trophy" | "builder";
   image: string;
   category?: keyof typeof CATEGORY_COLORS;
-  rankLevel?: number;
-  sortOrder: number; // トロフィー=1, 初級=2, 中級=3, 上級=4
+  tier?: number;
+  sortOrder: number; // トロフィー=1, builder tier1=2, tier2=3, tier3=4, tier4=5, tier5=6
+}
+
+function apiBadgeToDisplay(apiBadge: ApiBadge): BadgeDisplay {
+  const { id, category, tier } = apiBadge;
+  
+  if (category === 'builder') {
+    // BUILDERバッジ（演習完了）
+    return {
+      id,
+      name: `Builder Tier ${tier}`,
+      type: "builder",
+      image: `/images/ranks/rank_tree_${tier}.png`,
+      category: 'builder',
+      tier,
+      sortOrder: tier + 1, // tier 1 = sortOrder 2
+    };
+  }
+  
+  if (category === 'github') {
+    // GitHubバッジ（GitHub連携）
+    return {
+      id,
+      name: `GitHub連携`,
+      type: "trophy",
+      image: "/images/badges/Trophy.png",
+      category: 'web',
+      tier,
+      sortOrder: 1, // トロフィーは最初に表示
+    };
+  }
+  
+  // 他のバッジは現在未実装（将来対応）
+  return {
+    id,
+    name: `${category} Tier ${tier}`,
+    type: "builder",
+    image: "/images/badges/Trophy.png",
+    category: category as keyof typeof CATEGORY_COLORS,
+    tier,
+    sortOrder: 10,
+  };
 }
 
 export function AcquiredBadges() {
-  const badges: Badge[] = [
-    {
-      id: 1,
-      name: "Trophy",
-      type: "trophy",
-      image: "/images/badges/Trophy.png",
-      sortOrder: 1,
-    },
-    {
-      id: 2,
-      name: "AI Basic",
-      type: "rank",
-      image: "/images/ranks/rank_tree_1.png",
-      category: "ai",
-      rankLevel: 1,
-      sortOrder: 2,
-    },
-    {
-      id: 3,
-      name: "Web Basic",
-      type: "rank",
-      image: "/images/ranks/rank_tree_1.png",
-      category: "web",
-      rankLevel: 1,
-      sortOrder: 2,
-    },
-    {
-      id: 4,
-      name: "Security Basic",
-      type: "rank",
-      image: "/images/ranks/rank_tree_1.png",
-      category: "security",
-      rankLevel: 1,
-      sortOrder: 2,
-    },
-    {
-      id: 5,
-      name: "AI Intermediate",
-      type: "rank",
-      image: "/images/ranks/rank_tree_3.png",
-      category: "ai",
-      rankLevel: 3,
-      sortOrder: 3,
-    },
-    {
-      id: 6,
-      name: "Web Advanced",
-      type: "rank",
-      image: "/images/ranks/rank_tree_5.png",
-      category: "web",
-      rankLevel: 5,
-      sortOrder: 4,
-    },
-  ];
+  const [badges, setBadges] = useState<BadgeDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    async function fetchBadges() {
+      try {
+        const apiBadges = await getUserBadges();
+        const displayBadges = apiBadges.map(apiBadgeToDisplay);
+        setBadges(displayBadges);
+      } catch (error) {
+        console.error('Failed to fetch badges:', error);
+        // エラー時は空配列
+        setBadges([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchBadges();
+  }, []);
+  
+  if (loading) {
+    return (
+      <div className="mt-8 font-sans">
+        <h3 className="mb-4 text-2xl font-bold tracking-widest text-[#2C5F2D] [text-shadow:2px_2px_0_#a3e635]">
+          獲得バッチ
+        </h3>
+        <div
+          className="bg-[#FDFEF0] px-6 py-6 h-64 flex items-center justify-center"
+          style={{
+            border: "4px solid #2C5F2D",
+            boxShadow: "8px 8px 0 #2C5F2D",
+            imageRendering: "pixelated",
+          }}
+        >
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3A7E56]"></div>
+        </div>
+      </div>
+    );
+  }
 
-  // ソート: トロフィー → 初級 → 中級 → 上級
+  // ソート: sortOrder順
   const sortedBadges = [...badges].sort((a, b) => {
     if (a.sortOrder !== b.sortOrder) {
       return a.sortOrder - b.sortOrder;
     }
     return a.id - b.id;
   });
+  
+  if (badges.length === 0) {
+    return (
+      <div className="mt-8 font-sans">
+        <h3 className="mb-4 text-2xl font-bold tracking-widest text-[#2C5F2D] [text-shadow:2px_2px_0_#a3e635]">
+          獲得バッチ
+        </h3>
+        <div
+          className="bg-[#FDFEF0] px-6 py-6 h-64 flex items-center justify-center"
+          style={{
+            border: "4px solid #2C5F2D",
+            boxShadow: "8px 8px 0 #2C5F2D",
+            imageRendering: "pixelated",
+          }}
+        >
+          <p className="text-[#2C5F2D] text-xl font-bold">演習を完了してバッジを獲得しよう！</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-8 font-sans">
@@ -102,8 +152,7 @@ export function AcquiredBadges() {
         {/* Badges in horizontal scroll */}
         <div className="flex gap-6 min-w-max items-end pb-4">
           {sortedBadges.map((badge, index) => {
-            const isTrophy = badge.type === "trophy";
-            const sizeClass = isTrophy ? "h-80 w-80" : "h-60 w-60";
+            const sizeClass = "h-60 w-60";
             const animationDelay = index * 0.2;
 
             return (
@@ -121,8 +170,8 @@ export function AcquiredBadges() {
                     animationDelay: `${animationDelay}s`,
                   }}
                 >
-                  {/* 光の粒エフェクト（ランクバッジのみ） */}
-                  {!isTrophy && badge.category && (
+                  {/* 光の粒エフェクト（全バッジ） */}
+                  {badge.category && (
                     <>
                       {[...Array(16)].map((_, i) => {
                         const sparkleColor = CATEGORY_COLORS[badge.category!];
@@ -167,6 +216,9 @@ export function AcquiredBadges() {
                       className="object-contain"
                     />
                   </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-[#2C5F2D]">{badge.name}</p>
                 </div>
               </div>
             );

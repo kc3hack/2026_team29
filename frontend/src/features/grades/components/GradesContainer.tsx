@@ -3,8 +3,37 @@
 import React, { useEffect, useState } from 'react';
 import { StatusCard } from './StatusCard';
 import { BadgeList } from './BadgeList';
-import { getGradeStats, getBadges } from '../api/mock';
+import { getGradeStats } from '../api/mock';
+import { getUserBadges, type Badge as ApiBadge } from '@/lib/api/badge';
 import type { GradeStats, Badge } from '../types';
+
+function apiBadgeToDisplay(apiBadge: ApiBadge): Badge {
+  const { id, category, tier } = apiBadge;
+  
+  if (category === 'builder') {
+    // BUILDERバッジ（演習完了）
+    return {
+      id: String(id),
+      name: `Builder Tier ${tier}`,
+      type: 'rank',
+      image: `/images/ranks/rank_tree_${tier}.png`,
+      category: 'builder',
+      rankLevel: tier,
+      sortOrder: tier + 1, // tier 1 = sortOrder 2
+    };
+  }
+  
+  // 他のバッジは現在未実装（将来対応）
+  return {
+    id: String(id),
+    name: `${category} Tier ${tier}`,
+    type: 'rank',
+    image: '/images/badges/Trophy.png',
+    category,
+    rankLevel: tier,
+    sortOrder: 10,
+  };
+}
 
 export const GradesContainer: React.FC = () => {
   const [stats, setStats] = useState<GradeStats | null>(null);
@@ -14,14 +43,17 @@ export const GradesContainer: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, badgesData] = await Promise.all([
+        const [statsData, apiBadges] = await Promise.all([
           getGradeStats(),
-          getBadges(),
+          getUserBadges(),
         ]);
         setStats(statsData);
-        setBadges(badgesData);
+        const displayBadges = apiBadges.map(apiBadgeToDisplay);
+        setBadges(displayBadges);
       } catch (error) {
         console.error('Failed to fetch grade data:', error);
+        // エラー時は空配列
+        setBadges([]);
       } finally {
         setLoading(false);
       }

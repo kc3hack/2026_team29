@@ -326,6 +326,403 @@ cursor.execute(query)
       placeholder: "各問題について、セキュリティの観点から詳しく説明してください...",
     },
   },
+  "web-react-intro": {
+    id: "web-react-intro",
+    title: "React入門",
+    category: "web",
+    difficulty: "intermediate",
+    description: "Reactコンポーネントの作成方法を学びます。StateとPropsの使い方、イベント処理の基本をマスターしましょう。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "Reactコンポーネント基礎",
+        type: "reading",
+        description: "Reactコンポーネントの基本構造を理解します",
+        completed: false,
+      },
+      {
+        id: "lesson-2",
+        number: 2,
+        title: "Stateの管理",
+        type: "practice",
+        description: "useStateフックを使った状態管理",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-react-1",
+      title: "確認テスト",
+      description: "カウンターコンポーネントを作成してください",
+      type: "text",
+      problem: `以下の仕様を満たすReactコンポーネントを作成してください：
+
+【要件】
+1. カウンターの値を表示する
+2. 「+」ボタンでカウントを増やす
+3. 「-」ボタンでカウントを減らす
+4. 「リセット」ボタンで0に戻す
+
+【ヒント】
+- useStateを使用してカウントを管理
+- ボタンのonClickでカウントを更新`,
+      placeholder: "Reactコンポーネントのコードを記述してください...",
+    },
+  },
+  "web-nextjs-app": {
+    id: "web-nextjs-app",
+    title: "Next.jsでアプリ開発",
+    category: "web",
+    difficulty: "advanced",
+    description: "Next.jsを使ったフルスタックアプリケーション開発を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "Next.jsプロジェクト構成",
+        type: "reading",
+        description: "App Routerの基礎",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-nextjs-1",
+      title: "確認テスト",
+      description: "Next.jsの基本を確認しましょう",
+      type: "text",
+      problem: `Next.jsのApp Routerについて説明してください。
+
+【記述内容】
+1. page.tsxとlayout.tsxの役割
+2. Server ComponentsとClient Componentsの違い
+3. データフェッチングの方法`,
+      placeholder: "Next.jsの特徴を説明してください...",
+    },
+  },
+  "ai-1": {
+    id: "ai-1",
+    title: "機械学習の基礎",
+    category: "ai",
+    difficulty: "beginner",
+    description: "機械学習の基本概念と手法を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "機械学習とは",
+        type: "reading",
+        description: "教師あり学習と教師なし学習",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-ai-1",
+      title: "確認テスト",
+      description: "機械学習の基礎知識を確認します",
+      type: "text",
+      problem: `以下の質問に答えてください：
+
+1. 教師あり学習と教師なし学習の違いを説明してください
+2. 過学習（Overfitting）とは何か説明してください
+3. 訓練データとテストデータを分ける理由を説明してください`,
+      placeholder: "各質問に答えてください...",
+    },
+  },
+  "ai-2": {
+    id: "ai-2",
+    title: "Python for AI",
+    category: "ai",
+    difficulty: "beginner",
+    description: "AI開発に必要なPythonの基礎を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "NumPy入門",
+        type: "practice",
+        description: "配列操作の基礎",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-ai-2",
+      title: "確認テスト",
+      description: "NumPyの基本操作",
+      type: "text",
+      problem: `NumPyを使って以下の処理を実装してください：
+
+1. 1から10までの配列を作成
+2. 全要素を2倍にする
+3. 平均値を計算する
+
+【ヒント】
+- np.arange()
+- 配列の演算
+- np.mean()`,
+      placeholder: "Pythonコードを記述してください...",
+    },
+  },
+  "game-1": {
+    id: "game-1",
+    title: "Unity基礎",
+    category: "game",
+    difficulty: "beginner",
+    description: "Unityエンジンの基本操作を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "Unity画面構成",
+        type: "reading",
+        description: "Scene、Game、Hierarchyビューの使い方",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-game-1",
+      title: "確認テスト",
+      description: "Unityの基本を確認します",
+      type: "text",
+      problem: `Unityエディタの各ビューについて説明してください：
+
+1. Sceneビュー：
+2. Gameビュー：
+3. Hierarchyビュー：
+4. Inspectorビュー：
+5. Projectビュー：`,
+      placeholder: "各ビューの役割を説明してください...",
+    },
+  },
+  "game-2": {
+    id: "game-2",
+    title: "C#ゲームプログラミング",
+    category: "game",
+    difficulty: "beginner",
+    description: "UnityでのC#スクリプティングを学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "MonoBehaviour基礎",
+        type: "practice",
+        description: "Start()とUpdate()の使い方",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-game-2",
+      title: "確認テスト",
+      description: "キューブを動かすスクリプトを作成",
+      type: "text",
+      problem: `UnityでGameObjectを動かすC#スクリプトを作成してください：
+
+【要件】
+1. 矢印キーで上下左右に移動
+2. 移動速度は変数で調整可能
+3. Transformコンポーネントを使用
+
+【ヒント】
+- Input.GetAxis()
+- transform.Translate()`,
+      placeholder: "C#コードを記述してください...",
+    },
+  },
+  "infrastructure-1": {
+    id: "infrastructure-1",
+    title: "Docker基礎",
+    category: "infrastructure",
+    difficulty: "beginner",
+    description: "コンテナ技術の基礎を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "Dockerとは",
+        type: "reading",
+        description: "コンテナとイメージの概念",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-infra-1",
+      title: "確認テスト",
+      description: "Dockerfileを作成してください",
+      type: "text",
+      problem: `Node.jsアプリケーション用のDockerfileを作成してください：
+
+【要件】
+1. Node.js 20を使用
+2. package.jsonをコピー
+3. npm installを実行
+4. アプリケーションコードをコピー
+5. ポート3000を公開
+6. npm startで起動
+
+【ヒント】
+- FROM node:20
+- COPY, RUN, EXPOSE, CMD`,
+      placeholder: "Dockerfileを記述してください...",
+    },
+  },
+  "infrastructure-2": {
+    id: "infrastructure-2",
+    title: "Kubernetes入門",
+    category: "infrastructure",
+    difficulty: "intermediate",
+    description: "コンテナオーケストレーションを学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "Kubernetesの概念",
+        type: "reading",
+        description: "Pod、Service、Deploymentの役割",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-infra-2",
+      title: "確認テスト",
+      description: "Kubernetesの基本を確認",
+      type: "text",
+      problem: `Kubernetesの主要なリソースについて説明してください：
+
+1. Pod：
+2. Service：
+3. Deployment：
+4. ReplicaSet：`,
+      placeholder: "各リソースの役割を説明してください...",
+    },
+  },
+  "design-1": {
+    id: "design-1",
+    title: "UI/UX基礎",
+    category: "design",
+    difficulty: "beginner",
+    description: "ユーザーインターフェース設計の原則を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "UIデザインの原則",
+        type: "reading",
+        description: "一貫性、フィードバック、制約",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-design-1",
+      title: "確認テスト",
+      description: "UIデザインの原則",
+      type: "text",
+      problem: `良いUIデザインの原則について説明してください：
+
+1. 一貫性（Consistency）：
+2. フィードバック（Feedback）：
+3. 可視性（Visibility）：
+4. 制約（Constraints）：`,
+      placeholder: "各原則について説明してください...",
+    },
+  },
+  "design-2": {
+    id: "design-2",
+    title: "Figma実践",
+    category: "design",
+    difficulty: "beginner",
+    description: "Figmaでのデザイン制作を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "Figmaの基本操作",
+        type: "practice",
+        description: "フレーム、シェイプ、テキストの作成",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-design-2",
+      title: "確認テスト",
+      description: "簡単なボタンをデザイン",
+      type: "text",
+      problem: `Figmaでボタンコンポーネントを作成する手順を説明してください：
+
+【要件】
+1. 角丸の長方形
+2. テキストラベル
+3. ホバー状態のバリエーション
+4. コンポーネント化
+
+【記述内容】
+- 各ステップの手順
+- 使用するツールと機能`,
+      placeholder: "作成手順を説明してください...",
+    },
+  },
+  "security-1": {
+    id: "security-1",
+    title: "セキュリティ基礎",
+    category: "security",
+    difficulty: "beginner",
+    description: "情報セキュリティの基本を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "セキュリティの3要素",
+        type: "reading",
+        description: "機密性、完全性、可用性",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-security-1",
+      title: "確認テスト",
+      description: "セキュリティの基礎知識",
+      type: "text",
+      problem: `情報セキュリティの3要素（CIA）について説明してください：
+
+1. 機密性（Confidentiality）：
+2. 完全性（Integrity）：
+3. 可用性（Availability）：
+
+それぞれの例も挙げてください。`,
+      placeholder: "各要素について説明してください...",
+    },
+  },
+  "security-2": {
+    id: "security-2",
+    title: "Webセキュリティ",
+    category: "security",
+    difficulty: "intermediate",
+    description: "XSSやCSRFなどの脆弱性対策を学びます。",
+    lessons: [
+      {
+        id: "lesson-1",
+        number: 1,
+        title: "XSS対策",
+        type: "practice",
+        description: "クロスサイトスクリプティングの防止",
+        completed: false,
+      },
+    ],
+    confirmationTest: {
+      id: "test-security-2",
+      title: "確認テスト",
+      description: "XSSとCSRFの対策",
+      type: "text",
+      problem: `以下の脆弱性について説明し、対策方法を記述してください：
+
+1. XSS（クロスサイトスクリプティング）：
+   - 攻撃方法：
+   - 対策方法：
+
+2. CSRF（クロスサイトリクエストフォージェリ）：
+   - 攻撃方法：
+   - 対策方法：`,
+      placeholder: "各脆弱性と対策を説明してください...",
+    },
+  },
 };
 
 export const getExerciseDetail = async (

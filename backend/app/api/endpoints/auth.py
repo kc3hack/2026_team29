@@ -398,6 +398,21 @@ async def github_callback(
 
     logger.info(f"[DEBUG] Rank analysis section completed for user {db_user.id}")
 
+    # --- 4.6. GitHub連携バッジを付与 (Issue #121) ---
+    # GitHub OAuth認証成功時、初回のみGitHub連携バッジを付与する
+    try:
+        from app.services.badge_service import award_github_badge
+        
+        github_badge = award_github_badge(db, db_user.id)
+        if github_badge:
+            logger.info(f"Awarded GitHub badge to user {db_user.id}")
+    except Exception as e:
+        # バッジ付与失敗してもOAuthログインは継続
+        logger.warning(
+            f"GitHub badge award failed for user {db_user.id}: {e}",
+            exc_info=True,
+        )
+
     # --- 5. JWT を httpOnly Cookie にセットしてフロントへリダイレクト ---
     # JWT を URL パラメータに含めない（ブラウザ履歴・Referer への漏洩防止）
     jwt_token = create_access_token(db_user.id)
