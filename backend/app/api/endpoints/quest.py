@@ -25,6 +25,7 @@ from app.schemas.quest import Quest as QuestSchema
 from app.schemas.quest import QuestGenerationRequest, QuestGenerationResponse, QuestSummary
 from app.schemas.quest_progress import QuestProgress as QuestProgressSchema
 from app.services.quest_service import generate_handson_quest
+from app.services.badge_service import award_builder_badge_if_eligible
 
 router = APIRouter()
 
@@ -98,6 +99,8 @@ def complete_quest(
     current_user: User = Depends(get_current_user),
 ) -> QuestProgressSchema:
     """クエスト完了。user_id は認証トークンから取得（ADR 015, Issue #65）。
+    
+    クエスト完了時にBUILDERバッジを自動付与（Issue #121）。
 
     - 404: クエストが存在しない / 進捗が存在しない
     - 400: ステータスが IN_PROGRESS でない（未開始または既に完了済み）
@@ -113,7 +116,12 @@ def complete_quest(
             detail=f"Quest is not in progress (current status: {progress.status})",
         )
     try:
-        return crud_quest_progress.complete_quest(db, current_user.id, quest_id)
+        result = crud_quest_progress.complete_quest(db, current_user.id, quest_id)
+        
+        # クエスト完了後、BUILDERバッジを付与（Issue #121）
+        award_builder_badge_if_eligible(db, current_user.id)
+        
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

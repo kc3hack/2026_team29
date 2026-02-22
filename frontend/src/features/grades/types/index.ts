@@ -17,7 +17,7 @@ export interface Badge {
   name: string;
   type: 'trophy' | 'rank';
   image: string;           // 画像パス
-  category?: 'web' | 'ai' | 'security' | 'infra' | 'design';
+  category?: 'web' | 'ai' | 'security' | 'infra' | 'design' | 'builder';
   rankLevel?: number;      // 0-9
   sortOrder: number;       // トロフィー=1, 初級=2, 中級=3, 上級=4
   earnedAt?: string;

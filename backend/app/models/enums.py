@@ -11,6 +11,7 @@ class BadgeCategory(str, enum.Enum):
     BUILDER = "builder"
     WRITER = "writer"
     SEEKER = "seeker"
+    GITHUB = "github"  # GitHub連携バッジ
 
 
 class SkillCategory(str, enum.Enum):
