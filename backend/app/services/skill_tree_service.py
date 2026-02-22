@@ -13,6 +13,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.llm import invoke_llm
 from app.core.prompts import SKILL_TREE_ANALYSIS_TEMPLATE
 from app.crud.profile import get_profile_by_user_id
@@ -23,9 +24,6 @@ from app.schemas.analyze import SkillTreeResponse
 from app.services.github_service import analyze_github_profile
 
 logger = logging.getLogger(__name__)
-
-# キャッシュ有効期間（10分間: ハッカソン用、本番では環境変数で調整可能）
-CACHE_VALID_MINUTES = 10
 
 # ベースラインJSONファイルのディレクトリ
 SKILL_TREE_DATA_DIR = Path(__file__).parent.parent.parent / "data" / "skill_trees"
@@ -63,7 +61,7 @@ async def generate_skill_tree_ai(
         HTTPException: ユーザーが見つからない、またはLLM呼び出しに失敗した場合
 
     Flow:
-        1. キャッシュチェック（generated_atがCACHE_VALID_MINUTES以内ならDBから返却）
+        1. キャッシュチェック（settings.SKILL_TREE_CACHE_MINUTES以内ならDBから返却）
         2. ユーザー情報収集（Profile, QuestProgress, GitHub API）
         3. ベースラインJSON読み込み
         4. LLMプロンプト生成
@@ -215,7 +213,7 @@ def _is_cache_valid(generated_at: datetime | None) -> bool:
         generated_at: 生成日時
 
     Returns:
-        CACHE_VALID_MINUTES以内ならTrue
+        settings.SKILL_TREE_CACHE_MINUTES以内ならTrue
     """
     if generated_at is None:
         return False
@@ -225,7 +223,7 @@ def _is_cache_valid(generated_at: datetime | None) -> bool:
     if generated_at.tzinfo is None:
         generated_at = generated_at.replace(tzinfo=UTC)
 
-    return (now - generated_at) < timedelta(minutes=CACHE_VALID_MINUTES)
+    return (now - generated_at) < timedelta(minutes=settings.SKILL_TREE_CACHE_MINUTES)
 
 
 def _load_baseline_json(category: SkillCategory) -> dict[str, Any]:

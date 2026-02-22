@@ -63,8 +63,11 @@ class TestSkillTreeService:
         db.add(skill_tree)
         db.commit()
 
-        # Act: generate_skill_tree_ai を呼び出し
-        result = await generate_skill_tree_ai(user.id, category, db)
+        # Mock: settings.SKILL_TREE_CACHE_MINUTES = 10 (5分前のキャッシュが有効)
+        with patch("app.services.skill_tree_service.settings") as mock_settings:
+            mock_settings.SKILL_TREE_CACHE_MINUTES = 10
+            # Act: generate_skill_tree_ai を呼び出し
+            result = await generate_skill_tree_ai(user.id, category, db)
 
         # Assert: キャッシュから返却されることを確認
         assert result.category == category.value
@@ -99,7 +102,7 @@ class TestSkillTreeService:
         db.add(skill_tree)
         db.commit()
 
-        # Mock: LLM呼び出しとGitHub API
+        # Mock: LLM呼び出しとGitHub API、settings
         new_tree_data = {
             "nodes": [
                 {
@@ -134,7 +137,11 @@ class TestSkillTreeService:
                 "recent_activity": "過去30日で10コミット",
                 "completion_signals": {"ai_python_basics": True},
             },
-        ):
+        ), patch(
+            "app.services.skill_tree_service.settings"
+        ) as mock_settings:
+            mock_settings.SKILL_TREE_CACHE_MINUTES = 10  # 15分前のキャッシュは無効
+            mock_settings.SKIP_LLM_FOR_SKILL_TREE = False  # LLMを使用
             # Act: generate_skill_tree_ai を呼び出し
             result = await generate_skill_tree_ai(user.id, category, db)
 
@@ -365,14 +372,18 @@ class TestSkillTreeService:
         assert len(result.tree_data["nodes"]) > 0  # ベースラインデータが存在
 
     def test_is_cache_valid_within_10_minutes(self):
-        """10分以内のキャッシュは有効"""
-        generated_at = datetime.now(UTC) - timedelta(minutes=5)
-        assert _is_cache_valid(generated_at) is True
+        """settings.SKILL_TREE_CACHE_MINUTES以内のキャッシュは有効"""
+        with patch("app.services.skill_tree_service.settings") as mock_settings:
+            mock_settings.SKILL_TREE_CACHE_MINUTES = 10
+            generated_at = datetime.now(UTC) - timedelta(minutes=5)
+            assert _is_cache_valid(generated_at) is True
 
     def test_is_cache_valid_over_10_minutes(self):
-        """10分以上前のキャッシュは無効"""
-        generated_at = datetime.now(UTC) - timedelta(minutes=15)
-        assert _is_cache_valid(generated_at) is False
+        """settings.SKILL_TREE_CACHE_MINUTES以上前のキャッシュは無効"""
+        with patch("app.services.skill_tree_service.settings") as mock_settings:
+            mock_settings.SKILL_TREE_CACHE_MINUTES = 10
+            generated_at = datetime.now(UTC) - timedelta(minutes=15)
+            assert _is_cache_valid(generated_at) is False
 
     def test_is_cache_valid_none(self):
         """Noneの場合は無効"""
