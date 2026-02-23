@@ -19,7 +19,7 @@ cryptography = "^44.0.0"
 # AI/LLM dependencies (CVE-2025-68664, CVE-2025-65106対策)
 langchain = "^0.3.0"
 langchain-core = "^0.3.81"
-langchain-openai = "^0.2.0"
+langchain-openai = "^0.3.35"
 langchain-anthropic = "^0.3.0"
 httpx = "^0.28.0"
 PyJWT = "^2.10.0"  # GitHub OAuth コールバック後の JWT 発行 (ADR 014)
