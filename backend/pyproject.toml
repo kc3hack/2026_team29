@@ -28,7 +28,7 @@ psycopg2-binary = "^2.9.11"
 [tool.poetry.group.dev.dependencies]
 # Decision: Pin dev dependencies to prevent CI instability
 # Reason: Unpinned versions can introduce breaking changes unexpectedly
-ruff = "^0.8.0"
+ruff = "^0.15.2"
 pytest = "^8.3.0"
 pytest-asyncio = "^0.25.0"
 # Note: pip-audit removed - security scanning consolidated to Trivy (security.yml)
