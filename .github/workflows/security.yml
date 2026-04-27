@@ -28,7 +28,7 @@ jobs:
 
       # 1. Console output for immediate feedback in CI logs
       - name: Run Trivy (Log Output)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -39,7 +39,7 @@ jobs:
 
       # 2. SARIF output for GitHub Security tab integration
       - name: Run Trivy (SARIF Output)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: "fs"
           scan-ref: "."
