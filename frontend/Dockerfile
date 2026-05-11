@@ -1,5 +1,5 @@
 # M2チップ対応の Node.js イメージを使用
-FROM node:20-slim 
+FROM node:26-slim 
 
 WORKDIR /app
 
